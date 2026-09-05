@@ -277,7 +277,7 @@ let W,H,roadX,roadW,run=false,last=0,t=0,dist=0,score=0,nearMissBonus=0,spawn=0,
 
 const cars=[
   {id:'civic',name:'Honda Civic',price:0,hp:158,top:126,weight:2935,drive:'FWD',zero:'7.8s',desc:'Reliable starter car'},
-  {id:'mx5',name:'Mazda MX-5',price:14000,hp:181,top:135,weight:2341,drive:'RWD',zero:'5.7s',desc:'Lightweight roadster'},
+  {id:'mx5',name:'Mazda MX-5',price:14000,hp:181,top:130,weight:2341,drive:'RWD',zero:'5.7s',desc:'Lightweight roadster'},
   {id:'gti',name:'Volkswagen GTI',price:21000,hp:241,top:155,weight:3137,drive:'FWD',zero:'5.4s',desc:'Quick turbo hot hatch'},
   {id:'wrx',name:'Subaru WRX',price:31000,hp:271,top:155,weight:3329,drive:'AWD',zero:'5.5s',desc:'AWD turbo sport sedan'},
   {id:'mustang',name:'Ford Mustang GT',price:38000,hp:480,top:155,weight:3827,drive:'RWD',zero:'4.2s',desc:'V8 rear-wheel-drive muscle car'},
@@ -998,7 +998,7 @@ function update(dt){
 updateWeather(dt);
 const carData=cars.find(c=>c.id===selectedCar)||cars[0];
 let throttle=keys.gas?1:0,braking=keys.brake?1:0;
-let target=throttle?Math.min(carData.top,108):68;
+let target=throttle?carData.top:8;
 if(braking)target=0;
 if(performance.now()<nosUntil)target=Math.min(carData.top+40,148);
 
