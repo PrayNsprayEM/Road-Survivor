@@ -1,6 +1,6 @@
 <!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><title>Road Survivor</title>
 <style>
-*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#151515;font-family:system-ui;color:white;touch-action:none}canvas{width:100%;height:100%;display:block;image-rendering:pixelated}.p{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(92%,430px);padding:22px;background:#111e;border:2px solid white;border-radius:14px;text-align:center;box-shadow:0 8px 30px #000}.hide{display:none}button{margin:5px;padding:13px 18px;border:2px solid white;border-radius:10px;background:#292933;color:white;font-weight:800;font-size:17px;min-width:145px}.diff{font-size:21px}.easy{background:#2e9b4b}.medium{background:#c6a51b}.hard{background:#d66b18}.extreme{background:#c93636}.card{background:#202027;border:1px solid #555;border-radius:9px;padding:10px;margin:6px;text-align:left}.price{float:right}.stat{position:absolute;top:10px;background:#000a;padding:7px 10px;border-radius:8px;font-weight:800}.leftstat{left:10px}.rightstat{right:10px}.status{position:absolute;top:52px;left:50%;transform:translateX(-50%);font-weight:900}.controls{position:absolute;bottom:14px;left:0;right:0;display:flex;justify-content:space-between;padding:0 14px}.ctrl{width:74px;height:65px;padding:0;margin:0;font-size:25px;background:#222c}.pedal{width:78px;height:75px;font-size:15px}.brake{background:#a32f2fcc}.gas{background:#309346cc}
+*{box-sizing:border-box;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#151515;font-family:system-ui;color:white;touch-action:none}canvas{width:100%;height:100%;display:block;image-rendering:pixelated}.p{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(92%,430px);padding:22px;background:#111e;border:2px solid white;border-radius:14px;text-align:center;box-shadow:0 8px 30px #000}.hide{display:none}button{margin:5px;padding:13px 18px;border:2px solid white;border-radius:10px;background:#292933;color:white;font-weight:800;font-size:17px;min-width:145px}.diff{font-size:21px}.easy{background:#2e9b4b}.medium{background:#c6a51b}.hard{background:#d66b18}.extreme{background:#c93636}.card{background:#202027;border:1px solid #555;border-radius:9px;padding:10px;margin:6px;text-align:left}.price{float:right}.stat{position:absolute;top:10px;background:#000a;padding:7px 10px;border-radius:8px;font-weight:800}.leftstat{left:10px}.rightstat{right:10px}.status{position:absolute;top:52px;left:50%;transform:translateX(-50%);font-weight:900}.controls{position:absolute;bottom:14px;left:0;right:0;display:flex;justify-content:space-between;padding:0 14px}.ctrl{width:74px;height:65px;padding:0;margin:0;font-size:25px;background:#222c;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}.pedal{width:78px;height:75px;font-size:15px}.brake{background:#a32f2fcc}.gas{background:#309346cc}
 </style></head><body><canvas id="c"></canvas><div id="ui">
 <div id="menu" class="p"><h1>ROAD SURVIVOR</h1><p>Dodge traffic. Survive as long as you can.</p><p>Cash: <b id="cash"></b></p><button id="play">PLAY</button><br><button id="up">UPGRADES</button><button id="lb">LEADERBOARD</button><br><button id="set">SETTINGS</button><p>Difficulty</p><button id="dif" class="diff">EASY</button></div>
 <div id="upgrades" class="p hide"><h2>UPGRADES</h2><div id="ul"></div><button id="ub">BACK</button></div>
@@ -47,7 +47,18 @@ function settingsUI(){modeBtn();controlLayout();els.music.value=musicVol;els.sfx
 function saveSettings(){localStorage.setItem('mode',mode);localStorage.setItem('music',musicVol);localStorage.setItem('sfx',sfxVol);localStorage.setItem('song',song)}
 function scores(){let a=JSON.parse(localStorage.getItem('scores_'+diff)||'[]');els.scores.innerHTML=a.length?a.map((x,i)=>'<div class="card">#'+(i+1)+' — '+x.s.toLocaleString()+' pts<br><small>'+x.t.toFixed(1)+'s • '+Math.round(x.d)+'m</small></div>').join(''):'<p>No runs yet.</p>'}
 function start(){panels(null);els.hud.classList.remove('hide');controlLayout();t=dist=score=spawn=0;traffic=[];player={x:W/2,y:H*.68,w:30,h:52,s:0};run=true;last=performance.now();requestAnimationFrame(loop)}
-function bind(id,k){let b=document.getElementById(id);b.onpointerdown=e=>{e.preventDefault();keys[k]=1};b.onpointerup=b.onpointercancel=b.onpointerleave=e=>{e.preventDefault();keys[k]=0}}['left','right','gas','brake'].forEach(k=>bind(k,k));
+function bind(id,k){
+  let b=document.getElementById(id);
+  const down=e=>{e.preventDefault();keys[k]=1};
+  const up=e=>{e.preventDefault();keys[k]=0};
+  b.onpointerdown=down;
+  b.onpointerup=b.onpointercancel=b.onpointerleave=up;
+  b.addEventListener('touchstart',down,{passive:false});
+  b.addEventListener('touchend',up,{passive:false});
+  b.addEventListener('touchcancel',up,{passive:false});
+  b.addEventListener('contextmenu',e=>e.preventDefault());
+  b.addEventListener('selectstart',e=>e.preventDefault());
+}['left','right','gas','brake'].forEach(k=>bind(k,k));
 addEventListener('keydown',e=>{if(e.key==='ArrowLeft')keys.left=1;if(e.key==='ArrowRight')keys.right=1;if(e.key==='ArrowUp')keys.gas=1;if(e.key==='ArrowDown')keys.brake=1});
 addEventListener('keyup',e=>{if(e.key==='ArrowLeft')keys.left=0;if(e.key==='ArrowRight')keys.right=0;if(e.key==='ArrowUp')keys.gas=0;if(e.key==='ArrowDown')keys.brake=0});
 let tilt=0,gyroPermission='unknown';
