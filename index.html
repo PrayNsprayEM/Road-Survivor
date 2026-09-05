@@ -1026,12 +1026,16 @@ async function scores(){
 }
 
 function start(){panels(null);els.hud.classList.remove('hide');controlLayout();t=dist=score=nearMissBonus=spawn=0;traffic=[];powerUps=[];invisibleUntil=0;nosUntil=0;nearMissUntil=0;els.nearMissToast.style.opacity='0';player={x:W/2,y:H*.68,w:30,h:52,s:0};weather='Clear';weatherFade=1;stormStrikeAt=0;stormStrikeRolled=false;lightningHitUntil=0;lightningDamaged=false;lightningFlashUntil=0;skidUntil=0;weatherNext=performance.now()+30000+Math.random()*20000;rainDrops=[];run=true;last=performance.now();requestAnimationFrame(loop)}
+const activeControlPointers=new Map();
+
 function bind(id,k){
   const b=document.getElementById(id);
   if(!b)return;
 
   const down=e=>{
     if(e.cancelable)e.preventDefault();
+    const pid=e.pointerId ?? ('touch-'+k);
+    activeControlPointers.set(pid,k);
     keys[k]=1;
     b.classList.add('pressed');
     try{if(e.pointerId!=null)b.setPointerCapture(e.pointerId)}catch(_){}
@@ -1039,17 +1043,32 @@ function bind(id,k){
 
   const up=e=>{
     if(e&&e.cancelable)e.preventDefault();
-    keys[k]=0;
-    b.classList.remove('pressed');
-    try{if(e&&e.pointerId!=null&&b.hasPointerCapture?.(e.pointerId))b.releasePointerCapture(e.pointerId)}catch(_){}
+    const pid=e?.pointerId ?? ('touch-'+k);
+
+    // Only release the control owned by THIS finger.
+    // Releasing steering no longer cancels GAS held by another finger.
+    if(activeControlPointers.get(pid)===k || e?.pointerId==null){
+      activeControlPointers.delete(pid);
+      keys[k]=0;
+      b.classList.remove('pressed');
+    }
+
+    try{
+      if(e&&e.pointerId!=null&&b.hasPointerCapture?.(e.pointerId)){
+        b.releasePointerCapture(e.pointerId);
+      }
+    }catch(_){}
   };
 
   b.addEventListener('pointerdown',down,{passive:false});
   b.addEventListener('pointerup',up,{passive:false});
   b.addEventListener('pointercancel',up,{passive:false});
-  b.addEventListener('lostpointercapture',up,{passive:false});
+  b.addEventListener('lostpointercapture',e=>{
+    // Ignore capture loss while this pointer is still physically active.
+    // pointerup/pointercancel handles the real release.
+    if(!activeControlPointers.has(e.pointerId)) up(e);
+  },{passive:false});
 
-  // Older iOS fallback only; avoids double-firing on modern iPhones.
   if(!window.PointerEvent){
     b.addEventListener('touchstart',down,{passive:false});
     b.addEventListener('touchend',up,{passive:false});
@@ -1059,11 +1078,6 @@ function bind(id,k){
   b.addEventListener('contextmenu',e=>e.preventDefault());
   b.addEventListener('selectstart',e=>e.preventDefault());
 }['left','right','gas','brake'].forEach(k=>bind(k,k));
-
-addEventListener('pointerup',()=>{
-  keys.left=keys.right=keys.gas=keys.brake=0;
-  document.querySelectorAll('.ctrl.pressed').forEach(b=>b.classList.remove('pressed'));
-},{passive:true});
 addEventListener('keydown',e=>{if(e.key==='ArrowLeft')keys.left=1;if(e.key==='ArrowRight')keys.right=1;if(e.key==='ArrowUp')keys.gas=1;if(e.key==='ArrowDown')keys.brake=1});
 addEventListener('keyup',e=>{if(e.key==='ArrowLeft')keys.left=0;if(e.key==='ArrowRight')keys.right=0;if(e.key==='ArrowUp')keys.gas=0;if(e.key==='ArrowDown')keys.brake=0});
 let joystickSteer=0;
