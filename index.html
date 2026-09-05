@@ -200,8 +200,19 @@ const cars=[
   {id:'mx5',name:'Mazda MX-5',price:14000,hp:181,top:135,weight:2341,drive:'RWD',zero:'5.7s',desc:'Lightweight roadster'},
   {id:'gti',name:'Volkswagen GTI',price:21000,hp:241,top:155,weight:3137,drive:'FWD',zero:'5.4s',desc:'Quick turbo hot hatch'},
   {id:'wrx',name:'Subaru WRX',price:31000,hp:271,top:155,weight:3329,drive:'AWD',zero:'5.5s',desc:'AWD turbo sport sedan'},
-  {id:'mustang',name:'Ford Mustang GT',price:38000,hp:480,top:155,weight:3827,drive:'RWD',zero:'4.2s',desc:'V8 rear-wheel-drive muscle car'}].sort((a,b)=>a.price-b.price);
+  {id:'mustang',name:'Ford Mustang GT',price:38000,hp:480,top:155,weight:3827,drive:'RWD',zero:'4.2s',desc:'V8 rear-wheel-drive muscle car'},
+  {id:'a3',name:'Audi A3',price:41000,hp:201,top:130,weight:3329,drive:'AWD',zero:'6.4s',desc:'Compact AWD luxury sport sedan'}].sort((a,b)=>a.price-b.price);
+
 if(!ownedCars.includes('civic'))ownedCars.unshift('civic');
+
+function collectionMultiplier(){
+  let highestPosition=0;
+  cars.forEach((car,index)=>{
+    if(ownedCars.includes(car.id)) highestPosition=Math.max(highestPosition,index+1);
+  });
+  return 1 + highestPosition/10;
+}
+
 
 const D=['Easy','Medium','Hard','Extreme'],cfg={
 Easy:{trafficSpeed:50,spawn:1.45,max:4,truck:.02,trailer:0,power:.0025},
@@ -462,7 +473,7 @@ if(nosUntil>nowMs)effects.push('NOS '+((nosUntil-nowMs)/1000).toFixed(1)+'s');
 els.status.textContent=(active?'':'TIMER PAUSED — SPEED TOO LOW')+(effects.length?((active?'':' • ')+effects.join(' • ')):'');
 
 if(active){
-t+=dt;dist+=player.s*.44704*dt;score=Math.floor((Math.floor(t*10+dist)+nearMissBonus)*scoreMult[diff]);spawn-=dt;
+t+=dt;dist+=player.s*.44704*dt;score=Math.floor((Math.floor(t*10+dist)+nearMissBonus)*scoreMult[diff]*collectionMultiplier());spawn-=dt;
 let c=cfg[diff];
 if(spawn<=0&&traffic.length<c.max){
 let lane=Math.floor(Math.random()*3),r=Math.random(),type='car',w=29,h=50;
@@ -524,7 +535,7 @@ let nearGap=(player.w+v.w)*.78;
 if(xGap>=hitGap&&xGap<nearGap){
 v.nearMissAwarded=true;
 nearMissBonus+=100;
-score=Math.floor((Math.floor(t*10+dist)+nearMissBonus)*scoreMult[diff]);
+score=Math.floor((Math.floor(t*10+dist)+nearMissBonus)*scoreMult[diff]*collectionMultiplier());
 nearMissUntil=performance.now()+1000;
 els.nearMissToast.textContent='NEAR MISS +100';
 els.nearMissToast.style.opacity='1';
