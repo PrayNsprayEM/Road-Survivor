@@ -327,173 +327,238 @@ function drawDealerBody(ctx,car){
   if(car.id==='fordgt'){
     ctx.save();
 
+    // Scale slightly larger so the GT fills the showroom better.
+    ctx.scale(1.08,1.08);
+
     // Ground shadow
-    ctx.fillStyle='rgba(0,0,0,.35)';
+    ctx.fillStyle='rgba(0,0,0,.42)';
     ctx.beginPath();
-    ctx.ellipse(0,54,158,22,0,0,Math.PI*2);
+    ctx.ellipse(0,57,165,18,0,0,Math.PI*2);
     ctx.fill();
 
-    // Carbon lower sill / splitter
-    ctx.fillStyle='#090b0e';
-    ctx.beginPath();
-    ctx.moveTo(-166,30); ctx.lineTo(-151,44); ctx.lineTo(142,44);
-    ctx.lineTo(163,28); ctx.lineTo(148,50); ctx.lineTo(-151,50);
-    ctx.closePath(); ctx.fill();
+    // Wheels first so the body naturally overlaps them.
+    function gtWheel(x,y,r){
+      ctx.fillStyle='#050608';
+      ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
 
-    // Main body
-    let bodyGrad=ctx.createLinearGradient(-160,-55,150,45);
-    bodyGrad.addColorStop(0,'#5a95ff');
-    bodyGrad.addColorStop(.38,'#2d70db');
-    bodyGrad.addColorStop(.72,'#1d55b5');
-    bodyGrad.addColorStop(1,'#123875');
-    ctx.fillStyle=bodyGrad;
-    ctx.beginPath();
-    ctx.moveTo(-165,24);
-    ctx.quadraticCurveTo(-157,-12,-132,-31);
-    ctx.quadraticCurveTo(-103,-54,-59,-61);
-    ctx.quadraticCurveTo(-30,-66,10,-64);
-    ctx.quadraticCurveTo(54,-62,91,-46);
-    ctx.quadraticCurveTo(132,-28,158,2);
-    ctx.quadraticCurveTo(166,12,164,24);
-    ctx.quadraticCurveTo(146,38,112,43);
-    ctx.quadraticCurveTo(55,49,-4,49);
-    ctx.lineTo(-94,48);
-    ctx.quadraticCurveTo(-143,45,-165,24);
-    ctx.closePath();
-    ctx.shadowColor='rgba(0,0,0,.75)';
-    ctx.shadowBlur=18;
-    ctx.shadowOffsetY=9;
-    ctx.fill();
-    ctx.shadowBlur=0; ctx.shadowOffsetY=0;
+      ctx.fillStyle='#171a20';
+      ctx.beginPath(); ctx.arc(x,y,r*.69,0,Math.PI*2); ctx.fill();
 
-    // Front nose / lower grille
-    ctx.fillStyle='#0a0d12';
-    ctx.beginPath();
-    ctx.moveTo(-163,18); ctx.lineTo(-135,8); ctx.lineTo(-104,10);
-    ctx.lineTo(-115,29); ctx.lineTo(-151,32); ctx.closePath(); ctx.fill();
-
-    // Rear diffuser
-    ctx.fillStyle='#080a0d';
-    ctx.beginPath();
-    ctx.moveTo(128,19); ctx.lineTo(159,15); ctx.lineTo(157,32);
-    ctx.lineTo(127,36); ctx.closePath(); ctx.fill();
-
-    // Greenhouse
-    ctx.fillStyle='#0c1118';
-    ctx.beginPath();
-    ctx.moveTo(-72,-34);
-    ctx.quadraticCurveTo(-48,-58,-18,-61);
-    ctx.lineTo(21,-60);
-    ctx.quadraticCurveTo(54,-56,74,-31);
-    ctx.lineTo(50,-13);
-    ctx.lineTo(-58,-14);
-    ctx.closePath(); ctx.fill();
-
-    // Glass highlights
-    ctx.fillStyle='rgba(104,177,230,.17)';
-    ctx.beginPath();
-    ctx.moveTo(-58,-36); ctx.lineTo(-37,-54); ctx.lineTo(-9,-57);
-    ctx.lineTo(-14,-17); ctx.lineTo(-52,-18); ctx.closePath(); ctx.fill();
-    ctx.beginPath();
-    ctx.moveTo(-6,-57); ctx.lineTo(19,-56); ctx.lineTo(59,-32);
-    ctx.lineTo(45,-17); ctx.lineTo(-1,-17); ctx.closePath(); ctx.fill();
-
-    // Flying-buttress channels
-    ctx.fillStyle='#0b0f14';
-    ctx.beginPath();
-    ctx.moveTo(48,-24); ctx.lineTo(80,-34); ctx.lineTo(119,-13);
-    ctx.lineTo(96,7); ctx.lineTo(67,-6); ctx.closePath(); ctx.fill();
-    ctx.beginPath();
-    ctx.moveTo(-79,-28); ctx.lineTo(-113,-12); ctx.lineTo(-130,6);
-    ctx.lineTo(-98,1); ctx.lineTo(-62,-13); ctx.closePath(); ctx.fill();
-
-    // Large side intake
-    ctx.fillStyle='#05070a';
-    ctx.beginPath();
-    ctx.moveTo(49,-6); ctx.quadraticCurveTo(89,-4,112,17);
-    ctx.quadraticCurveTo(93,29,72,31);
-    ctx.quadraticCurveTo(58,19,49,-6); ctx.closePath(); ctx.fill();
-
-    // Door contour
-    ctx.strokeStyle='rgba(2,10,25,.48)';
-    ctx.lineWidth=2;
-    ctx.beginPath();
-    ctx.moveTo(-49,-12); ctx.lineTo(-54,31);
-    ctx.quadraticCurveTo(-19,38,41,32);
-    ctx.lineTo(46,-10); ctx.stroke();
-
-    // Dual white stripes
-    ctx.fillStyle='rgba(250,250,250,.97)';
-    ctx.fillRect(-7,-62,6,108);
-    ctx.fillRect(4,-62,6,108);
-    ctx.fillStyle='#17418e';
-    ctx.fillRect(1,-62,2,108);
-
-    // Hood extractor vents
-    ctx.fillStyle='#090d12';
-    ctx.beginPath();
-    ctx.moveTo(-129,-17); ctx.lineTo(-97,-29); ctx.lineTo(-82,-17);
-    ctx.lineTo(-115,-6); ctx.closePath(); ctx.fill();
-    ctx.beginPath();
-    ctx.moveTo(109,-15); ctx.lineTo(82,-25); ctx.lineTo(70,-13);
-    ctx.lineTo(99,-4); ctx.closePath(); ctx.fill();
-
-    // LED headlights
-    ctx.strokeStyle='#e5f7ff';
-    ctx.lineWidth=5;
-    ctx.shadowColor='#b9ebff';
-    ctx.shadowBlur=9;
-    ctx.beginPath(); ctx.moveTo(-149,-4); ctx.quadraticCurveTo(-128,-17,-106,-15); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(145,-2); ctx.quadraticCurveTo(126,-15,107,-14); ctx.stroke();
-    ctx.shadowBlur=0;
-
-    // Rear lamp strip
-    ctx.fillStyle='#f12a35';
-    ctx.shadowColor='#ff2d3d';
-    ctx.shadowBlur=7;
-    ctx.fillRect(127,22,25,5);
-    ctx.shadowBlur=0;
-
-    // Active rear wing
-    ctx.fillStyle='#11151b';
-    ctx.fillRect(108,-21,48,5);
-    ctx.fillRect(117,-21,4,15);
-    ctx.fillRect(146,-21,4,15);
-
-    // Wheels with brake discs + blue calipers
-    for(const wx of [-111,111]){
-      ctx.fillStyle='#030405';
-      ctx.beginPath(); ctx.arc(wx,47,31,0,Math.PI*2); ctx.fill();
-
-      ctx.fillStyle='#1a1e24';
-      ctx.beginPath(); ctx.arc(wx,47,20,0,Math.PI*2); ctx.fill();
-
-      ctx.strokeStyle='#9da7b1';
-      ctx.lineWidth=2;
-      for(let a=0;a<Math.PI*2;a+=Math.PI/5){
+      ctx.strokeStyle='#8f979f';
+      ctx.lineWidth=2.3;
+      for(let k=0;k<10;k++){
+        const a=k*Math.PI/5;
         ctx.beginPath();
-        ctx.moveTo(wx,47);
-        ctx.lineTo(wx+Math.cos(a)*17,47+Math.sin(a)*17);
+        ctx.moveTo(x+Math.cos(a)*4,y+Math.sin(a)*4);
+        ctx.lineTo(x+Math.cos(a)*r*.61,y+Math.sin(a)*r*.61);
         ctx.stroke();
       }
 
-      ctx.fillStyle='#c7ccd2';
-      ctx.beginPath(); ctx.arc(wx,47,8,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle='#b8bec5';
+      ctx.beginPath(); ctx.arc(x,y,r*.20,0,Math.PI*2); ctx.fill();
 
-      ctx.fillStyle='#2877e0';
-      ctx.fillRect(wx-5,33,8,14);
+      // Blue brake caliper
+      ctx.fillStyle='#246bd2';
+      ctx.fillRect(x-r*.18,y-r*.45,r*.18,r*.38);
     }
+    gtWheel(-112,43,31);
+    gtWheel(110,43,31);
 
-    // Small details
-    ctx.fillStyle='#d8e5f6';
-    ctx.font='bold 8px system-ui';
-    ctx.fillText('GT',84,19);
-
-    ctx.strokeStyle='rgba(255,255,255,.19)';
-    ctx.lineWidth=1.2;
+    // Carbon splitter / sill / diffuser
+    ctx.fillStyle='#0a0c10';
     ctx.beginPath();
-    ctx.moveTo(-145,34); ctx.quadraticCurveTo(-24,43,126,34);
+    ctx.moveTo(-171,29);
+    ctx.lineTo(-155,40);
+    ctx.lineTo(-57,43);
+    ctx.lineTo(66,43);
+    ctx.lineTo(146,40);
+    ctx.lineTo(166,27);
+    ctx.lineTo(160,45);
+    ctx.lineTo(-160,47);
+    ctx.closePath();
+    ctx.fill();
+
+    // Main Ford GT body: very low nose, long canopy, huge rear haunch.
+    let g=ctx.createLinearGradient(-160,-60,160,48);
+    g.addColorStop(0,'#66a8ff');
+    g.addColorStop(.28,'#2877e6');
+    g.addColorStop(.60,'#1755bb');
+    g.addColorStop(1,'#0b3478');
+    ctx.fillStyle=g;
+    ctx.beginPath();
+    ctx.moveTo(-170,18);                         // nose
+    ctx.quadraticCurveTo(-157,-7,-132,-19);
+    ctx.quadraticCurveTo(-103,-31,-76,-37);
+    ctx.quadraticCurveTo(-52,-56,-20,-64);      // windshield/canopy rise
+    ctx.quadraticCurveTo(12,-68,43,-56);
+    ctx.quadraticCurveTo(66,-47,82,-30);        // roof drops fast
+    ctx.quadraticCurveTo(107,-26,132,-13);      // rear haunch
+    ctx.quadraticCurveTo(157,-1,166,16);
+    ctx.quadraticCurveTo(166,29,151,34);
+    ctx.quadraticCurveTo(136,39,132,42);
+    ctx.lineTo(88,42);
+    ctx.quadraticCurveTo(74,17,57,7);            // rear wheel arch inner shape
+    ctx.quadraticCurveTo(38,1,20,12);
+    ctx.quadraticCurveTo(7,22,4,42);
+    ctx.lineTo(-75,42);
+    ctx.quadraticCurveTo(-79,17,-94,8);          // front wheel arch
+    ctx.quadraticCurveTo(-111,-2,-127,8);
+    ctx.quadraticCurveTo(-143,18,-146,38);
+    ctx.quadraticCurveTo(-161,34,-170,18);
+    ctx.closePath();
+    ctx.shadowColor='rgba(0,0,0,.75)';
+    ctx.shadowBlur=17;
+    ctx.shadowOffsetY=8;
+    ctx.fill();
+    ctx.shadowBlur=0; ctx.shadowOffsetY=0;
+
+    // Deep black side intake — the most recognizable Ford GT feature.
+    ctx.fillStyle='#07090c';
+    ctx.beginPath();
+    ctx.moveTo(28,-23);
+    ctx.quadraticCurveTo(56,-27,80,-18);
+    ctx.lineTo(62,20);
+    ctx.quadraticCurveTo(45,15,28,7);
+    ctx.quadraticCurveTo(20,-5,28,-23);
+    ctx.closePath();
+    ctx.fill();
+
+    // Flying buttress / body bridge over the side intake.
+    let butt=ctx.createLinearGradient(22,-31,79,12);
+    butt.addColorStop(0,'#4d95f2');
+    butt.addColorStop(1,'#174a9d');
+    ctx.fillStyle=butt;
+    ctx.beginPath();
+    ctx.moveTo(23,-31);
+    ctx.lineTo(51,-33);
+    ctx.quadraticCurveTo(72,-28,88,-14);
+    ctx.lineTo(70,-4);
+    ctx.quadraticCurveTo(51,-14,32,-13);
+    ctx.closePath();
+    ctx.fill();
+
+    // Teardrop glass canopy.
+    ctx.fillStyle='#0b1119';
+    ctx.beginPath();
+    ctx.moveTo(-58,-35);
+    ctx.quadraticCurveTo(-42,-57,-17,-61);
+    ctx.quadraticCurveTo(10,-65,34,-56);
+    ctx.quadraticCurveTo(52,-49,66,-33);
+    ctx.lineTo(40,-17);
+    ctx.lineTo(-47,-18);
+    ctx.closePath();
+    ctx.fill();
+
+    // Window split + subtle blue reflection.
+    ctx.strokeStyle='rgba(155,205,245,.30)';
+    ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(-4,-60); ctx.lineTo(-2,-18); ctx.stroke();
+    ctx.fillStyle='rgba(75,151,220,.16)';
+    ctx.beginPath();
+    ctx.moveTo(-48,-35); ctx.lineTo(-31,-52); ctx.lineTo(-9,-58);
+    ctx.lineTo(-11,-20); ctx.lineTo(-42,-21); ctx.closePath(); ctx.fill();
+
+    // Door sculpting and lower side channel.
+    ctx.strokeStyle='rgba(3,15,40,.55)';
+    ctx.lineWidth=2;
+    ctx.beginPath();
+    ctx.moveTo(-44,-17);
+    ctx.quadraticCurveTo(-47,10,-39,31);
+    ctx.quadraticCurveTo(-14,37,19,31);
+    ctx.lineTo(25,7);
     ctx.stroke();
+
+    ctx.fillStyle='rgba(5,15,30,.50)';
+    ctx.beginPath();
+    ctx.moveTo(-44,24);
+    ctx.quadraticCurveTo(-5,33,34,25);
+    ctx.lineTo(26,38);
+    ctx.lineTo(-47,39);
+    ctx.closePath();
+    ctx.fill();
+
+    // White dual center stripes like the reference photo.
+    ctx.fillStyle='rgba(245,247,250,.96)';
+    ctx.fillRect(-8,-65,6,103);
+    ctx.fillRect(4,-65,6,103);
+    ctx.fillStyle='#1a4b9e';
+    ctx.fillRect(0,-65,2,103);
+
+    // Front hood heat extractors.
+    ctx.fillStyle='#0b1016';
+    ctx.beginPath();
+    ctx.moveTo(-118,-18); ctx.lineTo(-92,-27); ctx.lineTo(-76,-20);
+    ctx.lineTo(-101,-10); ctx.closePath(); ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(-69,-25); ctx.lineTo(-47,-30); ctx.lineTo(-39,-23);
+    ctx.lineTo(-59,-16); ctx.closePath(); ctx.fill();
+
+    // Ford GT signature swept headlights.
+    ctx.fillStyle='#eaf9ff';
+    ctx.shadowColor='#c7f0ff';
+    ctx.shadowBlur=8;
+    ctx.beginPath();
+    ctx.moveTo(-151,-4);
+    ctx.quadraticCurveTo(-132,-18,-108,-18);
+    ctx.quadraticCurveTo(-116,-10,-137,-2);
+    ctx.closePath(); ctx.fill();
+    ctx.shadowBlur=0;
+
+    // Front mesh grille.
+    ctx.fillStyle='#090b0e';
+    ctx.beginPath();
+    ctx.moveTo(-169,12);
+    ctx.lineTo(-146,4);
+    ctx.lineTo(-122,6);
+    ctx.lineTo(-127,24);
+    ctx.lineTo(-160,27);
+    ctx.closePath();
+    ctx.fill();
+
+    // Rear circular lamp impression + lower exhaust/diffuser.
+    ctx.fillStyle='#ec2632';
+    ctx.shadowColor='#ff3344';
+    ctx.shadowBlur=7;
+    ctx.beginPath(); ctx.arc(151,13,7,0,Math.PI*2); ctx.fill();
+    ctx.shadowBlur=0;
+
+    ctx.fillStyle='#06080b';
+    ctx.fillRect(132,25,28,8);
+
+    // Big track-style rear wing from the reference.
+    ctx.fillStyle='#11161d';
+    ctx.fillRect(103,-44,58,6);
+    ctx.fillRect(111,-43,5,25);
+    ctx.fillRect(146,-43,5,25);
+
+    // Wing blue upper skin.
+    let wg=ctx.createLinearGradient(103,-44,161,-38);
+    wg.addColorStop(0,'#4f91e9');
+    wg.addColorStop(1,'#17478e');
+    ctx.fillStyle=wg;
+    ctx.fillRect(101,-48,62,5);
+
+    // Mirror.
+    ctx.fillStyle='#1f5db8';
+    ctx.beginPath();
+    ctx.ellipse(-36,-28,10,5,-.18,0,Math.PI*2);
+    ctx.fill();
+
+    // Door handle and panel highlights.
+    ctx.fillStyle='#8fc1ff';
+    ctx.fillRect(-10,-16,14,2);
+
+    ctx.strokeStyle='rgba(255,255,255,.16)';
+    ctx.lineWidth=1.3;
+    ctx.beginPath();
+    ctx.moveTo(-145,28);
+    ctx.quadraticCurveTo(-35,38,91,29);
+    ctx.stroke();
+
+    // Tiny GT badge.
+    ctx.fillStyle='#e4edf9';
+    ctx.font='bold 8px system-ui';
+    ctx.fillText('GT',119,7);
 
     ctx.restore();
     return;
