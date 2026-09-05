@@ -148,13 +148,13 @@ body.upgradesOpen #upgrades{
 
 /* Put YOU directly inside the leaderboard */
 .lbRow.me{
-  background:rgba(45,189,245,.20) !important;
-  outline:2px solid #2dbdf5;
-  outline-offset:-2px;
+  background:#17364a !important;
+  box-shadow:inset 0 0 0 3px #2dbdf5;
   color:#fff;
   font-weight:1000;
 }
-.lbRow.me .score{color:#fff}
+.lbRow.me span{color:#fff !important}
+.lbRow.me .score{color:#fff !important}
 
 </style>
 <style>
@@ -253,7 +253,7 @@ canvas{
   </div>
   <div id="yourRankBar" class="yourRankBar">
     <span id="yourRankPlace">#—</span>
-    <span>YOU</span>
+    <span>YOUR PLACE</span>
     <span id="yourRankScore">0</span>
   </div>
   <button id="lbback">BACK</button>
@@ -789,77 +789,38 @@ function bestRunFor(d){
   a.sort((x,y)=>(y.s||0)-(x.s||0));
   return a[0]||null
 }
-const LB_NAMES=['RoadKing','TurboAce','NightRider','Slipstream','ApexHunter','BlueFlame','NitroKid','LaneGhost','V8Bandit','SpeedDemon','TrackWolf','RapidGT','SkylineX','DriftFox','BoostBoy','FastLane','RoadRunner','PixelRacer','GTStorm','HyperDrive','AeroKid','GearHead','Redline','TurboWolf','QuickShift','RacerX','StreetAce','NoBrake','FullSend','TopGear','NitroFox','RoadBoss','FastGT','CornerKing','SpeedWolf','RaceMode','Boosted','LaneKing','GripKing','LaunchMode'];
+const SUPABASE_URL='https://kiapyobnrwmxcjfqmfcg.supabase.co',SUPABASE_KEY='sb_publishable_duBgqSgBJghHi6YO_406yw_AodUHOzu';
 let lbSelected='Easy';
-
-function seededLeaderboard(diff){
-  const seedMap={Easy:11,Medium:29,Hard:47,Extreme:83};
-  let seed=seedMap[diff]||11;
-  const rnd=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296};
-  const maxMap={Easy:48000,Medium:72000,Hard:105000,Extreme:150000};
-  const minMap={Easy:3500,Medium:5500,Hard:8000,Extreme:12000};
-  const rows=[];
-  for(let i=0;i<100;i++){
-    const curve=Math.pow(1-i/100,1.55);
-    const score=Math.max(minMap[diff],Math.floor(minMap[diff]+(maxMap[diff]-minMap[diff])*curve+(rnd()*2200-1100)));
-    rows.push({name:LB_NAMES[i%LB_NAMES.length]+(i>=LB_NAMES.length?Math.floor(i/LB_NAMES.length)+1:''),score:score});
-  }
-  rows.sort((a,b)=>b.score-a.score);
-  return rows;
+function getPlayerId(){
+  let id=localStorage.getItem('rs_player_id');
+  if(!id){id='p_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,12);localStorage.setItem('rs_player_id',id)}
+  return id;
 }
-
-function scores(){
-  const list=document.getElementById('top100List');
-  const placeEl=document.getElementById('yourRankPlace');
-  const scoreEl=document.getElementById('yourRankScore');
-  if(!list||!placeEl||!scoreEl)return;
-
-  const cpuRows=seededLeaderboard(lbSelected);
-  const b=bestRunFor(lbSelected);
-  const userScore=b?Number(b.s)||0:0;
-
-  // Build one ranked list that includes YOU as a real row.
-  const ranked=cpuRows.map(r=>({name:r.name,score:r.score,isYou:false}));
-  ranked.push({name:'YOU',score:userScore,isYou:true});
-  ranked.sort((a,b)=>{
-    if(b.score!==a.score) return b.score-a.score;
-    if(a.isYou) return -1;
-    if(b.isYou) return 1;
-    return 0;
-  });
-
-  const yourIndex=ranked.findIndex(r=>r.isYou);
-  const yourPlace=yourIndex+1;
-
-  // Show the actual top 100. If YOU are outside the top 100,
-  // keep the bottom rank bar showing the real place and score.
-  const top100=ranked.slice(0,100);
-
-  let html='';
-  for(let i=0;i<top100.length;i++){
-    const r=top100[i];
-    html+='<div class="lbRow'+(r.isYou?' me':'')+'" data-you="'+(r.isYou?'1':'0')+'">'+
-      '<span>#'+(i+1)+'</span>'+
-      '<span>'+(r.isYou?'YOU':r.name)+'</span>'+
-      '<span class="score">'+r.score.toLocaleString()+'</span>'+
-      '</div>';
-  }
-  list.innerHTML=html;
-
-  placeEl.textContent='#'+yourPlace;
-  scoreEl.textContent=userScore.toLocaleString();
-
-  document.querySelectorAll('.lbDiff').forEach(btn=>{
-    btn.classList.toggle('active',btn.dataset.lbdiff===lbSelected);
-  });
-
-  // If YOU are in the top 100, scroll the leaderboard so your highlighted row is visible.
-  requestAnimationFrame(()=>{
-    const youRow=list.querySelector('.lbRow.me');
-    if(youRow){
-      youRow.scrollIntoView({block:'center',behavior:'smooth'});
-    }
-  });
+function getPlayerName(){return (localStorage.getItem('rs_player_name')||'PLAYER').slice(0,20)}
+async function lbRequest(path,opts={}){
+  const headers=Object.assign({'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json'},opts.headers||{});
+  const r=await fetch(SUPABASE_URL+'/rest/v1/'+path,Object.assign({},opts,{headers}));
+  if(!r.ok)throw Error('Leaderboard '+r.status);
+  return r.status===204?null:r.json();
+}
+async function submitRealScore(d,s){
+  s=Math.max(0,Math.floor(Number(s)||0)); if(!s)return;
+  try{await lbRequest('leaderboard_scores',{method:'POST',headers:{Prefer:'return=minimal'},body:JSON.stringify({player_id:getPlayerId(),player_name:getPlayerName(),difficulty:d,score:s})})}catch(e){console.warn(e)}
+}
+async function scores(){
+  const list=document.getElementById('top100List'),bar=document.getElementById('yourRankBar'),pe=document.getElementById('yourRankPlace'),se=document.getElementById('yourRankScore');
+  if(!list)return;
+  list.innerHTML='<div class="lbRow"><span>—</span><span>LOADING PLAYERS…</span><span class="score">—</span></div>';
+  document.querySelectorAll('.lbDiff').forEach(b=>b.classList.toggle('active',b.dataset.lbdiff===lbSelected));
+  try{
+    const rows=await lbRequest('leaderboard_scores?difficulty=eq.'+encodeURIComponent(lbSelected)+'&select=player_id,player_name,score&order=score.desc&limit=100');
+    const me=getPlayerId();
+    if(!rows.length)list.innerHTML='<div class="lbRow"><span>—</span><span>NO SCORES YET</span><span class="score">—</span></div>';
+    else list.innerHTML=rows.map((r,i)=>'<div class="lbRow'+(r.player_id===me?' me':'')+'"><span>#'+(i+1)+'</span><span>'+(r.player_id===me?'YOU':String(r.player_name||'PLAYER').replace(/[<>&]/g,''))+'</span><span class="score">'+Number(r.score).toLocaleString()+'</span></div>').join('');
+    const idx=rows.findIndex(r=>r.player_id===me),b=bestRunFor(lbSelected),my=b?Number(b.s)||0:0;
+    if(idx>=0){if(bar)bar.style.display='none';requestAnimationFrame(()=>{const x=list.querySelector('.me');if(x)x.scrollIntoView({block:'center'})})}
+    else{if(bar)bar.style.display='grid';if(pe)pe.textContent='—';if(se)se.textContent=my.toLocaleString()}
+  }catch(e){list.innerHTML='<div class="lbRow"><span>!</span><span>LEADERBOARD OFFLINE</span><span class="score">—</span></div>'}
 }
 function start(){panels(null);els.hud.classList.remove('hide');controlLayout();t=dist=score=nearMissBonus=spawn=0;traffic=[];powerUps=[];invisibleUntil=0;nosUntil=0;nearMissUntil=0;els.nearMissToast.style.opacity='0';player={x:W/2,y:H*.68,w:30,h:52,s:0};run=true;last=performance.now();requestAnimationFrame(loop)}
 function bind(id,k){
@@ -1561,6 +1522,7 @@ function crashGame(){
   let oldBest=a.sort((x,y)=>(y.s||0)-(x.s||0))[0]||null;
   let best=(!oldBest||score>oldBest.s)?{s:score,t,d:dist}:oldBest;
   localStorage.setItem(k,JSON.stringify([best]));
+  submitRealScore(diff,score);
 
   els.ft.textContent=t.toFixed(1)+'s';
   els.fd.textContent=Math.round(dist)+' m';
