@@ -273,7 +273,7 @@ const els={
   ft:document.getElementById('ft'),fd:document.getElementById('fd'),fs:document.getElementById('fs'),earnings:document.getElementById('earnings'),fb:document.getElementById('fb'),retry:document.getElementById('retry'),cm:document.getElementById('cm'),cl:document.getElementById('cl'),
   hud:document.getElementById('hud'),speed:document.getElementById('speed'),score:document.getElementById('score'),status:document.getElementById('status'),nearMissToast:document.getElementById('nearMissToast'),controls:document.getElementById('controls'),steerControls:document.getElementById('steerControls'),pedalControls:document.getElementById('pedalControls')
 };
-let W,H,roadX,roadW,run=false,last=0,t=0,dist=0,score=0,nearMissBonus=0,spawn=0,traffic=[],player,cash=+localStorage.getItem('cash')||10000,diff=localStorage.getItem('diff')||'Easy',mode=localStorage.getItem('mode')||'buttons',musicVol=+(localStorage.getItem('music')||70),sfxVol=+(localStorage.getItem('sfx')||70),song=+(localStorage.getItem('song')||1),powerUps=[],invisibleUntil=0,nosUntil=0,nearMissUntil=0,roadOffset=0,shake=0,steerVel=0,selectedCar=localStorage.getItem('selectedCar')||'civic',dealerIndex=0,ownedCars=JSON.parse(localStorage.getItem('ownedCars')||'["civic"]');
+let W,H,roadX,roadW,run=false,last=0,t=0,dist=0,score=0,nearMissBonus=0,spawn=0,traffic=[],player,weather='Clear',weatherNext=0,weatherFade=0,rainDrops=[],cash=+localStorage.getItem('cash')||10000,diff=localStorage.getItem('diff')||'Easy',mode=localStorage.getItem('mode')||'buttons',musicVol=+(localStorage.getItem('music')||70),sfxVol=+(localStorage.getItem('sfx')||70),song=+(localStorage.getItem('song')||1),powerUps=[],invisibleUntil=0,nosUntil=0,nearMissUntil=0,roadOffset=0,shake=0,steerVel=0,selectedCar=localStorage.getItem('selectedCar')||'civic',dealerIndex=0,ownedCars=JSON.parse(localStorage.getItem('ownedCars')||'["civic"]');
 
 const cars=[
   {id:'civic',name:'Honda Civic',price:0,hp:158,top:126,weight:2935,drive:'FWD',zero:'7.8s',desc:'Reliable starter car'},
@@ -893,7 +893,7 @@ async function scores(){
   }
 }
 
-function start(){panels(null);els.hud.classList.remove('hide');controlLayout();t=dist=score=nearMissBonus=spawn=0;traffic=[];powerUps=[];invisibleUntil=0;nosUntil=0;nearMissUntil=0;els.nearMissToast.style.opacity='0';player={x:W/2,y:H*.68,w:30,h:52,s:0};run=true;last=performance.now();requestAnimationFrame(loop)}
+function start(){panels(null);els.hud.classList.remove('hide');controlLayout();t=dist=score=nearMissBonus=spawn=0;traffic=[];powerUps=[];invisibleUntil=0;nosUntil=0;nearMissUntil=0;els.nearMissToast.style.opacity='0';player={x:W/2,y:H*.68,w:30,h:52,s:0};weather='Clear';weatherFade=0;weatherNext=performance.now()+randomWeatherDelay();rainDrops=[];run=true;last=performance.now();requestAnimationFrame(loop)}
 function bind(id,k){
   let b=document.getElementById(id);
   const down=e=>{e.preventDefault();keys[k]=1};
@@ -945,6 +945,7 @@ async function requestGyroPermission(){
 }
 function loop(now){if(!run)return;let dt=Math.min(.035,(now-last)/1000);last=now;update(dt);draw();requestAnimationFrame(loop)}
 function update(dt){
+updateWeather(dt);
 const carData=cars.find(c=>c.id===selectedCar)||cars[0];
 let throttle=keys.gas?1:0,braking=keys.brake?1:0;
 let target=throttle?Math.min(carData.top,108):68;
@@ -1423,9 +1424,59 @@ X.fillText(p.type==='invis'?'INVIS':p.type==='nos'?'NOS':'+'+p.value,p.x,p.y);X.
 X.save();car(player.x,player.y,player.w,player.h,true);X.restore();
 
 if(player.s>85){let g=X.createRadialGradient(W/2,H/2,Math.min(W,H)*.25,W/2,H/2,Math.max(W,H)*.7);g.addColorStop(0,'#0000');g.addColorStop(1,'#0005');X.fillStyle=g;X.fillRect(0,0,W,H)}
+drawWeather();
 X.restore()
 }
 
+
+
+// --- Random changing weather ---
+const WEATHER_TYPES=['Clear','Rain','Fog','Night','Storm'];
+function randomWeatherDelay(){return 25000+Math.random()*25000}
+function chooseNextWeather(){
+  const choices=WEATHER_TYPES.filter(w=>w!==weather);
+  weather=choices[Math.floor(Math.random()*choices.length)];
+  weatherFade=0;
+  weatherNext=performance.now()+randomWeatherDelay();
+  rainDrops=[];
+}
+function updateWeather(dt){
+  if(!run)return;
+  if(performance.now()>=weatherNext)chooseNextWeather();
+  weatherFade=Math.min(1,weatherFade+dt*.55);
+  if(weather==='Rain'||weather==='Storm'){
+    const target=weather==='Storm'?105:65;
+    while(rainDrops.length<target) rainDrops.push({x:Math.random()*W,y:Math.random()*H,l:10+Math.random()*18,s:500+Math.random()*450});
+    rainDrops.forEach(r=>{r.y+=r.s*dt;r.x-=r.s*.18*dt;if(r.y>H+30||r.x<-30){r.y=-30;r.x=Math.random()*W+30}});
+  }else if(rainDrops.length) rainDrops.length=0;
+}
+function drawWeather(){
+  const a=.18+.82*weatherFade;
+  X.save();
+  if(weather==='Night'||weather==='Storm'){
+    X.globalAlpha=(weather==='Storm'?.34:.48)*a;
+    X.fillStyle='#06101f';X.fillRect(0,0,W,H);
+  }
+  if(weather==='Fog'){
+    X.globalAlpha=.30*a;X.fillStyle='#d9e0e3';X.fillRect(0,0,W,H);
+    const fog=X.createLinearGradient(0,0,W,0);fog.addColorStop(0,'#fff4');fog.addColorStop(.5,'#fff9');fog.addColorStop(1,'#fff3');
+    X.globalAlpha=.35*a;X.fillStyle=fog;
+    for(let i=0;i<4;i++){let yy=((performance.now()*.012+i*137)%(H+180))-90;X.fillRect(0,yy,W,60)}
+  }
+  if(weather==='Rain'||weather==='Storm'){
+    X.globalAlpha=(weather==='Storm'?.72:.55)*a;X.strokeStyle='#c9e8ff';X.lineWidth=1.4;
+    X.beginPath();rainDrops.forEach(r=>{X.moveTo(r.x,r.y);X.lineTo(r.x-5,r.y+r.l)});X.stroke();
+    X.globalAlpha=.12*a;X.fillStyle='#8fc8e8';X.fillRect(0,0,W,H);
+  }
+  if(weather==='Storm'){
+    const flash=Math.sin(performance.now()*.006)>0.992;
+    if(flash){X.globalAlpha=.32;X.fillStyle='#e8f3ff';X.fillRect(0,0,W,H)}
+  }
+  // Small unobtrusive weather indicator.
+  X.globalAlpha=.78;X.fillStyle='#0009';X.fillRect(W/2-46,8,92,25);
+  X.globalAlpha=1;X.fillStyle='#fff';X.font='800 12px system-ui';X.textAlign='center';X.textBaseline='middle';X.fillText(weather.toUpperCase(),W/2,20.5);
+  X.restore();
+}
 
 // --- Racing realism layer ---
 let roadNoiseOffset=0;
