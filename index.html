@@ -1,6 +1,6 @@
 <!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><title>Road Survivor</title>
 <style>
-*{box-sizing:border-box;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#151515;font-family:system-ui;color:white;touch-action:none}canvas{width:100%;height:100%;display:block;image-rendering:pixelated}.p{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(92%,430px);padding:22px;background:#111e;border:2px solid white;border-radius:14px;text-align:center;box-shadow:0 8px 30px #000}.hide{display:none}button{margin:5px;padding:13px 18px;border:2px solid white;border-radius:10px;background:#292933;color:white;font-weight:800;font-size:17px;min-width:145px}.diff{font-size:21px}.easy{background:#2e9b4b}.medium{background:#c6a51b}.hard{background:#d66b18}.extreme{background:#c93636}.card{background:#202027;border:1px solid #555;border-radius:9px;padding:10px;margin:6px;text-align:left}.price{float:right}.stat{position:absolute;top:10px;background:#000b;padding:8px 12px;border-radius:8px;font-weight:900;border:1px solid #ffffff22;backdrop-filter:blur(4px)}.leftstat{left:10px}.rightstat{right:10px}.status{position:absolute;top:52px;left:50%;transform:translateX(-50%);font-weight:900}#nearMissToast{position:absolute;top:78px;left:50%;transform:translateX(-50%);font-weight:900;font-size:14px;color:#ffd60a;text-shadow:0 2px 5px #000;white-space:nowrap;pointer-events:none;opacity:0}.controls{position:absolute;bottom:14px;left:0;right:0;display:flex;justify-content:space-between;padding:0 14px}.ctrl{width:74px;height:65px;padding:0;margin:0;font-size:25px;background:#222c;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}.pedal{width:78px;height:75px;font-size:15px}.brake{background:#a32f2fcc}.gas{background:#309346cc}
+*{box-sizing:border-box;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#151515;font-family:system-ui;color:white;touch-action:none}canvas{width:100%;height:100%;display:block;image-rendering:pixelated}.p{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(92%,430px);padding:22px;background:#111e;border:2px solid white;border-radius:14px;text-align:center;box-shadow:0 8px 30px #000}.hide{display:none}button{margin:5px;padding:13px 18px;border:2px solid white;border-radius:10px;background:#292933;color:white;font-weight:800;font-size:17px;min-width:145px}.diff{font-size:21px}.easy{background:#2e9b4b}.medium{background:#c6a51b}.hard{background:#d66b18}.extreme{background:#c93636}.card{background:#202027;border:1px solid #555;border-radius:9px;padding:10px;margin:6px;text-align:left}.price{float:right}.stat{position:absolute;top:10px;background:#000b;padding:8px 12px;border-radius:8px;font-weight:900;border:1px solid #ffffff22;backdrop-filter:blur(4px)}.leftstat{left:10px}.rightstat{right:10px}.status{position:absolute;top:52px;left:50%;transform:translateX(-50%);font-weight:900}#nearMissToast{position:absolute;top:78px;left:50%;transform:translateX(-50%);font-weight:900;font-size:14px;color:#ffd60a;text-shadow:0 2px 5px #000;white-space:nowrap;pointer-events:none;opacity:0}.controls{position:absolute;bottom:14px;left:0;right:0;display:flex;justify-content:space-between;padding:0 14px}.ctrl{width:74px;height:65px;padding:0;margin:0;font-size:25px;background:#222c;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}.ctrl.pressed{transform:scale(.94);filter:brightness(1.28)}.pedal{width:78px;height:75px;font-size:15px}.brake{background:#a32f2fcc}.gas{background:#309346cc}
 
 .dealer{width:min(96%,920px);height:min(90%,560px);padding:0;overflow:hidden;background:#0d0d10;border:2px solid #38bdf8}
 .dealerTop{height:64px;background:#342842;display:flex;align-items:center;justify-content:space-between;padding:8px 14px;border-bottom:5px solid #22b7f0}
@@ -163,6 +163,20 @@ body.upgradesOpen #upgrades{
 #pedalControls{position:absolute!important;right:18px!important;left:auto!important;bottom:18px!important;display:flex;flex-direction:column;align-items:center;gap:8px}
 #pedalControls #brake{order:1}
 #pedalControls #gas{order:2}
+
+/* iPhone control reliability fix */
+#controls{z-index:50!important;pointer-events:none}
+#steerControls,#pedalControls,#joystick{pointer-events:auto}
+#pedalControls{z-index:60!important}
+#pedalControls button,#steerControls button{
+  position:relative;
+  z-index:61;
+  touch-action:none!important;
+  -webkit-touch-callout:none!important;
+  -webkit-user-select:none!important;
+  user-select:none!important;
+}
+#brake,#gas{pointer-events:auto!important}
 </style>
 <style>
 /* Racing realism polish */
@@ -953,17 +967,43 @@ async function scores(){
 
 function start(){panels(null);els.hud.classList.remove('hide');controlLayout();t=dist=score=nearMissBonus=spawn=0;traffic=[];powerUps=[];invisibleUntil=0;nosUntil=0;nearMissUntil=0;els.nearMissToast.style.opacity='0';player={x:W/2,y:H*.68,w:30,h:52,s:0};weather='Clear';weatherFade=1;stormStrikeAt=0;stormStrikeRolled=false;lightningHitUntil=0;lightningDamaged=false;lightningFlashUntil=0;skidUntil=0;weatherNext=performance.now()+30000+Math.random()*20000;rainDrops=[];run=true;last=performance.now();requestAnimationFrame(loop)}
 function bind(id,k){
-  let b=document.getElementById(id);
-  const down=e=>{e.preventDefault();keys[k]=1};
-  const up=e=>{e.preventDefault();keys[k]=0};
-  b.onpointerdown=down;
-  b.onpointerup=b.onpointercancel=b.onpointerleave=up;
-  b.addEventListener('touchstart',down,{passive:false});
-  b.addEventListener('touchend',up,{passive:false});
-  b.addEventListener('touchcancel',up,{passive:false});
+  const b=document.getElementById(id);
+  if(!b)return;
+
+  const down=e=>{
+    if(e.cancelable)e.preventDefault();
+    keys[k]=1;
+    b.classList.add('pressed');
+    try{if(e.pointerId!=null)b.setPointerCapture(e.pointerId)}catch(_){}
+  };
+
+  const up=e=>{
+    if(e&&e.cancelable)e.preventDefault();
+    keys[k]=0;
+    b.classList.remove('pressed');
+    try{if(e&&e.pointerId!=null&&b.hasPointerCapture?.(e.pointerId))b.releasePointerCapture(e.pointerId)}catch(_){}
+  };
+
+  b.addEventListener('pointerdown',down,{passive:false});
+  b.addEventListener('pointerup',up,{passive:false});
+  b.addEventListener('pointercancel',up,{passive:false});
+  b.addEventListener('lostpointercapture',up,{passive:false});
+
+  // Older iOS fallback only; avoids double-firing on modern iPhones.
+  if(!window.PointerEvent){
+    b.addEventListener('touchstart',down,{passive:false});
+    b.addEventListener('touchend',up,{passive:false});
+    b.addEventListener('touchcancel',up,{passive:false});
+  }
+
   b.addEventListener('contextmenu',e=>e.preventDefault());
   b.addEventListener('selectstart',e=>e.preventDefault());
 }['left','right','gas','brake'].forEach(k=>bind(k,k));
+
+addEventListener('pointerup',()=>{
+  keys.left=keys.right=keys.gas=keys.brake=0;
+  document.querySelectorAll('.ctrl.pressed').forEach(b=>b.classList.remove('pressed'));
+},{passive:true});
 addEventListener('keydown',e=>{if(e.key==='ArrowLeft')keys.left=1;if(e.key==='ArrowRight')keys.right=1;if(e.key==='ArrowUp')keys.gas=1;if(e.key==='ArrowDown')keys.brake=1});
 addEventListener('keyup',e=>{if(e.key==='ArrowLeft')keys.left=0;if(e.key==='ArrowRight')keys.right=0;if(e.key==='ArrowUp')keys.gas=0;if(e.key==='ArrowDown')keys.brake=0});
 let joystickSteer=0;
