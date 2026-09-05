@@ -4,7 +4,7 @@
 </style></head><body><canvas id="c"></canvas><div id="ui">
 <div id="menu" class="p"><h1>ROAD SURVIVOR</h1><p>Dodge traffic. Survive as long as you can.</p><p>Cash: <b id="cash"></b></p><button id="play">PLAY</button><br><button id="up">UPGRADES</button><button id="lb">LEADERBOARD</button><br><button id="set">SETTINGS</button><p>Difficulty</p><button id="dif" class="diff">EASY</button></div>
 <div id="upgrades" class="p hide"><h2>UPGRADES</h2><div id="ul"></div><button id="ub">BACK</button></div>
-<div id="leader" class="p hide"><h2>LEADERBOARD</h2><button id="ld" class="diff">EASY</button><div id="scores"></div><button id="lbback">BACK</button></div>
+<div id="leader" class="p hide"><h2>LEADERBOARD</h2><p>Your best score on each difficulty</p><div id="scores"></div><button id="lbback">BACK</button></div>
 <div id="settings" class="p hide"><h2>SETTINGS</h2><div class="card">Driving controls<br><button id="mode">BUTTONS</button></div><div class="card">Music <input id="music" type="range" min="0" max="100"></div><div class="card">SFX <input id="sfx" type="range" min="0" max="100"></div><div class="card">Song<br><button id="song">TRACK 1</button></div><button id="sb">BACK</button></div>
 <div id="crash" class="p hide"><h2>CRASH!</h2><p>Time: <b id="ft"></b></p><p>Distance: <b id="fd"></b></p><p>Score: <b id="fs"></b></p><p>Best: <b id="fb"></b></p><button id="retry">RETRY</button><button id="cm">MENU</button><button id="cl">LEADERBOARD</button></div>
 <div id="hud" class="hide"><div id="speed" class="stat leftstat">0 MPH</div><div id="score" class="stat rightstat">0</div><div id="status" class="status"></div><div class="controls" id="controls"><div id="steerControls"><button class="ctrl" id="left">◀</button><button class="ctrl" id="right">▶</button></div><div id="pedalControls"><button class="ctrl pedal brake" id="brake">BRAKE</button><button class="ctrl pedal gas" id="gas">GAS</button></div></div></div></div>
@@ -13,7 +13,7 @@ const C=document.getElementById('c'),X=C.getContext('2d');
 const els={
   menu:document.getElementById('menu'),upgrades:document.getElementById('upgrades'),leader:document.getElementById('leader'),settings:document.getElementById('settings'),crash:document.getElementById('crash'),
   cash:document.getElementById('cash'),play:document.getElementById('play'),up:document.getElementById('up'),lb:document.getElementById('lb'),set:document.getElementById('set'),dif:document.getElementById('dif'),
-  ul:document.getElementById('ul'),ub:document.getElementById('ub'),ld:document.getElementById('ld'),scores:document.getElementById('scores'),lbback:document.getElementById('lbback'),
+  ul:document.getElementById('ul'),ub:document.getElementById('ub'),scores:document.getElementById('scores'),lbback:document.getElementById('lbback'),
   mode:document.getElementById('mode'),music:document.getElementById('music'),sfx:document.getElementById('sfx'),song:document.getElementById('song'),sb:document.getElementById('sb'),
   ft:document.getElementById('ft'),fd:document.getElementById('fd'),fs:document.getElementById('fs'),fb:document.getElementById('fb'),retry:document.getElementById('retry'),cm:document.getElementById('cm'),cl:document.getElementById('cl'),
   hud:document.getElementById('hud'),speed:document.getElementById('speed'),score:document.getElementById('score'),status:document.getElementById('status'),controls:document.getElementById('controls'),steerControls:document.getElementById('steerControls'),pedalControls:document.getElementById('pedalControls')
@@ -46,7 +46,20 @@ function controlLayout(){
 function songBtn(){els.song.textContent='TRACK '+song}
 function settingsUI(){modeBtn();controlLayout();els.music.value=musicVol;els.sfx.value=sfxVol;songBtn()}
 function saveSettings(){localStorage.setItem('mode',mode);localStorage.setItem('music',musicVol);localStorage.setItem('sfx',sfxVol);localStorage.setItem('song',song)}
-function scores(){let a=JSON.parse(localStorage.getItem('scores_'+diff)||'[]');els.scores.innerHTML=a.length?a.map((x,i)=>'<div class="card">#'+(i+1)+' — '+x.s.toLocaleString()+' pts<br><small>'+x.t.toFixed(1)+'s • '+Math.round(x.d)+'m</small></div>').join(''):'<p>No runs yet.</p>'}
+function bestRunFor(d){
+  let a=JSON.parse(localStorage.getItem('scores_'+d)||'[]');
+  if(!Array.isArray(a))a=[];
+  a.sort((x,y)=>(y.s||0)-(x.s||0));
+  return a[0]||null
+}
+function scores(){
+  els.scores.innerHTML=D.map(d=>{
+    let b=bestRunFor(d);
+    return '<div class="card"><b>'+d.toUpperCase()+'</b><br>'+
+      (b?'<span style="font-size:22px;font-weight:900">'+b.s.toLocaleString()+' pts</span><br><small>'+b.t.toFixed(1)+'s • '+Math.round(b.d)+'m</small>':'<small>No run yet.</small>')+
+      '</div>'
+  }).join('')
+}
 function start(){panels(null);els.hud.classList.remove('hide');controlLayout();t=dist=score=spawn=0;traffic=[];powerUps=[];invisibleUntil=0;nosUntil=0;player={x:W/2,y:H*.68,w:30,h:52,s:0};run=true;last=performance.now();requestAnimationFrame(loop)}
 function bind(id,k){
   let b=document.getElementById(id);
@@ -171,9 +184,21 @@ X.fillText(p.type==='invis'?'INVIS':'NOS',p.x,p.y);X.restore()
 });
 X.save();if(performance.now()<invisibleUntil)X.globalAlpha=.35;car(player.x,player.y,player.w,player.h,true);X.restore()
 }
-function crashGame(){run=false;let k='scores_'+diff,a=JSON.parse(localStorage.getItem(k)||'[]');a.push({s:score,t,d:dist});a.sort((a,b)=>b.s-a.s);a=a.slice(0,10);localStorage.setItem(k,JSON.stringify(a));els.ft.textContent=t.toFixed(1)+'s';els.fd.textContent=Math.round(dist)+' m';els.fs.textContent=score.toLocaleString();els.fb.textContent=a[0].s.toLocaleString();els.hud.classList.add('hide');panels('crash')}
+function crashGame(){
+  run=false;
+  let k='scores_'+diff,a=JSON.parse(localStorage.getItem(k)||'[]');
+  if(!Array.isArray(a))a=[];
+  let oldBest=a.sort((x,y)=>(y.s||0)-(x.s||0))[0]||null;
+  let best=(!oldBest||score>oldBest.s)?{s:score,t,d:dist}:oldBest;
+  localStorage.setItem(k,JSON.stringify([best]));
+  els.ft.textContent=t.toFixed(1)+'s';
+  els.fd.textContent=Math.round(dist)+' m';
+  els.fs.textContent=score.toLocaleString();
+  els.fb.textContent=best.s.toLocaleString();
+  els.hud.classList.add('hide');
+  panels('crash')
+}
 els.dif.onclick=()=>{diff=cyc(diff);localStorage.setItem('diff',diff);dc(els.dif,diff)};
-els.ld.onclick=()=>{diff=cyc(diff);dc(els.ld,diff);scores()};
 els.play.onclick=start;els.retry.onclick=start;els.up.onclick=()=>{upgradesUI();panels('upgrades')};els.ub.onclick=()=>controlLayout();panels('menu');els.lb.onclick=()=>{scores();panels('leader')};els.lbback.onclick=()=>panels('menu');els.set.onclick=()=>{settingsUI();panels('settings')};els.sb.onclick=()=>{saveSettings();panels('menu')};els.cm.onclick=()=>panels('menu');els.cl.onclick=()=>{scores();panels('leader')};
 els.mode.onclick=async()=>{
   if(mode==='buttons'){
@@ -188,5 +213,5 @@ els.mode.onclick=async()=>{
   controlLayout();
   saveSettings();
 };els.song.onclick=()=>{song=song%3+1;songBtn()};els.music.oninput=()=>musicVol=+els.music.value;els.sfx.oninput=()=>sfxVol=+els.sfx.value;
-dc(els.dif,diff);dc(els.ld,diff);cashUI();panels('menu');
+dc(els.dif,diff);cashUI();panels('menu');
 </script></body></html>
