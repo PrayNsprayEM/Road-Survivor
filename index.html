@@ -576,10 +576,28 @@ let lane=Math.floor(Math.random()*3),r=Math.random(),type='car',w=29,h=50;
 if(r<c.trailer){type='trailer';w=38;h=105}
 else if(r<c.trailer+c.truck){type='truck';w=35;h=66}
 else{
-let shapes=['car','sedan','hatch','sports'];type=shapes[Math.floor(Math.random()*shapes.length)];
-if(type==='sedan'){w=31;h=56}
-if(type==='hatch'){w=30;h=45}
-if(type==='sports'){w=32;h=46}
+// Most normal traffic now uses visibly different real car body styles.
+let trafficModels=[
+  {type:'civic',w:30,h:53},
+  {type:'gti',w:31,h:47},
+  {type:'wrx',w:31,h:56},
+  {type:'a3',w:30,h:54},
+  {type:'mx5',w:29,h:45},
+  {type:'supra',w:32,h:48},
+  {type:'m3',w:32,h:57},
+  {type:'mustang',w:33,h:55},
+  {type:'corvette',w:34,h:47},
+  {type:'gtr',w:34,h:52},
+  {type:'911turbo',w:32,h:49},
+  {type:'huracan',w:35,h:45},
+  {type:'720s',w:35,h:44},
+  {type:'f458',w:34,h:46},
+  {type:'sedan',w:31,h:56},
+  {type:'hatch',w:30,h:45},
+  {type:'sports',w:32,h:46}
+];
+let pick=trafficModels[Math.floor(Math.random()*trafficModels.length)];
+type=pick.type;w=pick.w;h=pick.h;
 }
 let laneCenter=roadX+roadW*(lane+.5)/3;
 traffic.push({
@@ -669,13 +687,20 @@ function car(x,y,w,h,hero=false,type='car'){
 X.save();X.translate(x,y);
 
 let model=hero?selectedCar:type;
+let trafficPaint=null;
+if(!hero && !['truck','trailer'].includes(type)){
+  // Stable paint choice based on position/size so each spawned traffic car can look different.
+  const trafficPalette=['#d8dde3','#343a40','#b6252a','#2f67b1','#e0aa24','#f4f4f1','#547b49','#8d4a97','#6a7782','#c66c2d'];
+  let paintIndex=Math.abs(Math.floor((x*7+y*3+w*11+h*13)))%trafficPalette.length;
+  trafficPaint=trafficPalette[paintIndex];
+}
 let bodyColors={
   civic:'#d9dde2',mx5:'#e12835',gti:'#3569ce',wrx:'#2d75b9',mustang:'#c83b30',a3:'#c3c8ce',
   supra:'#ededed',m3:'#4273ba',corvette:'#e7b326',gtr:'#aab2bb','911turbo':'#d0d0d0',
   huracan:'#e4b719','720s':'#e36c24',f458:'#d3262d',
   car:'#eceff2',sedan:'#cfd5dc',hatch:'#4da85c',sports:'#2c68d8',truck:'#d18a2e',trailer:'#dedede'
 };
-let body=bodyColors[model]||bodyColors[type]||'#ececec';
+let body=trafficPaint||(bodyColors[model]||bodyColors[type]||'#ececec');
 
 const sportModels=['mx5','supra','corvette','gtr','911turbo','huracan','720s','f458','mustang'];
 const sedanModels=['civic','wrx','m3','a3'];
