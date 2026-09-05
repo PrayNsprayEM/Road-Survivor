@@ -110,6 +110,26 @@ body.upgradesOpen #upgrades{
   min-width:110px;
 }
 
+
+.leaderboardPanel{position:relative;padding-bottom:78px}
+.leaderboardControls{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:10px 0 12px}
+.lbDiff{min-height:42px;border:2px solid #48505e;border-radius:10px;background:#151821;color:#fff;font-weight:900}
+.lbDiff.active{border-color:#2dbdf5;background:#203548}
+.leaderboardWrap{border:2px solid #343b47;border-radius:12px;overflow:hidden;background:#101218}
+.leaderboardHeader,.lbRow{display:grid;grid-template-columns:52px minmax(0,1fr) 110px;gap:8px;align-items:center}
+.leaderboardHeader{padding:10px 12px;background:#262c36;color:#cdd5df;font-size:12px;font-weight:900}
+.top100List{max-height:300px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.lbRow{padding:8px 12px;min-height:38px;border-top:1px solid rgba(255,255,255,.06);font-weight:800}
+.lbRow:nth-child(even){background:rgba(255,255,255,.025)}
+.lbRow .score{text-align:right;font-variant-numeric:tabular-nums}
+.yourRankBar{position:absolute;left:0;right:0;bottom:42px;display:grid;grid-template-columns:60px minmax(0,1fr) 110px;gap:8px;align-items:center;padding:10px 12px;border:2px solid #2dbdf5;border-radius:12px;background:#18202a;font-weight:1000}
+.yourRankBar span:last-child{text-align:right;font-variant-numeric:tabular-nums}
+@media(max-width:700px){
+  .leaderboardControls{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .leaderboardHeader,.lbRow{grid-template-columns:44px minmax(0,1fr) 88px}
+  .yourRankBar{grid-template-columns:50px minmax(0,1fr) 90px}
+}
+
 </style>
 <style>
 /* Racing realism polish */
@@ -193,7 +213,25 @@ canvas{
     <div id="ul"></div>
   </div>
 </div>
-<div id="leader" class="p hide"><h2>LEADERBOARD</h2><p>Your best score on each difficulty</p><div id="scores"></div><button id="lbback">BACK</button></div>
+<div id="leader" class="p hide leaderboardPanel">
+  <h2>LEADERBOARD</h2>
+  <div class="leaderboardControls">
+    <button class="lbDiff active" data-lbdiff="Easy">EASY</button>
+    <button class="lbDiff" data-lbdiff="Medium">MEDIUM</button>
+    <button class="lbDiff" data-lbdiff="Hard">HARD</button>
+    <button class="lbDiff" data-lbdiff="Extreme">EXTREME</button>
+  </div>
+  <div class="leaderboardWrap">
+    <div class="leaderboardHeader"><span>#</span><span>PLAYER</span><span>SCORE</span></div>
+    <div id="top100List" class="top100List"></div>
+  </div>
+  <div id="yourRankBar" class="yourRankBar">
+    <span id="yourRankPlace">#—</span>
+    <span>YOU</span>
+    <span id="yourRankScore">0</span>
+  </div>
+  <button id="lbback">BACK</button>
+</div>
 <div id="settings" class="p hide"><h2>SETTINGS</h2><div class="card">Driving controls<br><button id="mode">BUTTONS</button></div><div class="card">Music <input id="music" type="range" min="0" max="100"></div><div class="card">SFX <input id="sfx" type="range" min="0" max="100"></div><div class="card">Song<br><button id="song">TRACK 1</button></div><button id="sb">BACK</button></div>
 <div id="crash" class="p hide"><h2>CRASH!</h2><p>Time: <b id="ft"></b></p><p>Distance: <b id="fd"></b></p><p>Score: <b id="fs"></b></p><p>Run earnings: <b id="earnings">$0</b></p><p>Best: <b id="fb"></b></p><button id="retry">RETRY</button><button id="cm">MENU</button><button id="cl">LEADERBOARD</button></div>
 <div id="hud" class="hide"><div id="speed" class="stat leftstat">0 MPH</div><div id="score" class="stat rightstat">0</div><div id="status" class="status"></div><div id="nearMissToast">NEAR MISS +100</div><div class="controls" id="controls"><div id="steerControls"><button class="ctrl" id="left">◀</button><button class="ctrl" id="right">▶</button></div><div id="pedalControls"><button class="ctrl pedal brake" id="brake">BRAKE</button><button class="ctrl pedal gas" id="gas">GAS</button></div></div></div></div>
@@ -725,13 +763,51 @@ function bestRunFor(d){
   a.sort((x,y)=>(y.s||0)-(x.s||0));
   return a[0]||null
 }
+const LB_NAMES=['RoadKing','TurboAce','NightRider','Slipstream','ApexHunter','BlueFlame','NitroKid','LaneGhost','V8Bandit','SpeedDemon','TrackWolf','RapidGT','SkylineX','DriftFox','BoostBoy','FastLane','RoadRunner','PixelRacer','GTStorm','HyperDrive','AeroKid','GearHead','Redline','TurboWolf','QuickShift','RacerX','StreetAce','NoBrake','FullSend','TopGear','NitroFox','RoadBoss','FastGT','CornerKing','SpeedWolf','RaceMode','Boosted','LaneKing','GripKing','LaunchMode'];
+let lbSelected='Easy';
+
+function seededLeaderboard(diff){
+  const seedMap={Easy:11,Medium:29,Hard:47,Extreme:83};
+  let seed=seedMap[diff]||11;
+  const rnd=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296};
+  const maxMap={Easy:48000,Medium:72000,Hard:105000,Extreme:150000};
+  const minMap={Easy:3500,Medium:5500,Hard:8000,Extreme:12000};
+  const rows=[];
+  for(let i=0;i<100;i++){
+    const curve=Math.pow(1-i/100,1.55);
+    const score=Math.max(minMap[diff],Math.floor(minMap[diff]+(maxMap[diff]-minMap[diff])*curve+(rnd()*2200-1100)));
+    rows.push({name:LB_NAMES[i%LB_NAMES.length]+(i>=LB_NAMES.length?Math.floor(i/LB_NAMES.length)+1:''),score:score});
+  }
+  rows.sort((a,b)=>b.score-a.score);
+  return rows;
+}
+
 function scores(){
-  els.scores.innerHTML=D.map(d=>{
-    let b=bestRunFor(d);
-    return '<div class="card"><b>'+d.toUpperCase()+'</b><br>'+
-      (b?'<span style="font-size:22px;font-weight:900">'+b.s.toLocaleString()+' pts</span><br><small>'+b.t.toFixed(1)+'s • '+Math.round(b.d)+'m</small>':'<small>No run yet.</small>')+
-      '</div>'
-  }).join('')
+  const list=document.getElementById('top100List');
+  const placeEl=document.getElementById('yourRankPlace');
+  const scoreEl=document.getElementById('yourRankScore');
+  if(!list||!placeEl||!scoreEl)return;
+
+  const rows=seededLeaderboard(lbSelected);
+  const b=bestRunFor(lbSelected);
+  const userScore=b?b.s:0;
+
+  let ahead=0;
+  for(const r of rows){ if(r.score>userScore) ahead++; }
+  const yourPlace=ahead+1;
+
+  let html='';
+  for(let i=0;i<rows.length;i++){
+    html+='<div class="lbRow"><span>#'+(i+1)+'</span><span>'+rows[i].name+'</span><span class="score">'+rows[i].score.toLocaleString()+'</span></div>';
+  }
+  list.innerHTML=html;
+
+  placeEl.textContent='#'+yourPlace;
+  scoreEl.textContent=userScore.toLocaleString();
+
+  document.querySelectorAll('.lbDiff').forEach(btn=>{
+    btn.classList.toggle('active',btn.dataset.lbdiff===lbSelected);
+  });
 }
 function start(){panels(null);els.hud.classList.remove('hide');controlLayout();t=dist=score=nearMissBonus=spawn=0;traffic=[];powerUps=[];invisibleUntil=0;nosUntil=0;nearMissUntil=0;els.nearMissToast.style.opacity='0';player={x:W/2,y:H*.68,w:30,h:52,s:0};run=true;last=performance.now();requestAnimationFrame(loop)}
 function bind(id,k){
@@ -1456,6 +1532,9 @@ els.dealerBack.onclick=()=>{cashUI();panels('menu')};
 els.dealerPrev.onclick=()=>{dealerIndex=(dealerIndex-1+cars.length)%cars.length;dealerUI()};
 els.dealerNext.onclick=()=>{dealerIndex=(dealerIndex+1)%cars.length;dealerUI()};
 els.dealerBuy.onclick=dealerPurchaseOrSelect;
+document.querySelectorAll('.lbDiff').forEach(btn=>{
+  btn.onclick=()=>{lbSelected=btn.dataset.lbdiff;scores();};
+});
 els.lb.onclick=()=>{scores();panels('leader')};els.lbback.onclick=()=>panels('menu');els.set.onclick=()=>{settingsUI();panels('settings')};els.sb.onclick=()=>{saveSettings();panels('menu')};els.cm.onclick=()=>panels('menu');els.cl.onclick=()=>{scores();panels('leader')};
 els.mode.onclick=async()=>{
   if(mode==='buttons'){
