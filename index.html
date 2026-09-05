@@ -893,7 +893,7 @@ async function scores(){
   }
 }
 
-function start(){panels(null);els.hud.classList.remove('hide');controlLayout();t=dist=score=nearMissBonus=spawn=0;traffic=[];powerUps=[];invisibleUntil=0;nosUntil=0;nearMissUntil=0;els.nearMissToast.style.opacity='0';player={x:W/2,y:H*.68,w:30,h:52,s:0};weather='Clear';weatherFade=0;weatherNext=performance.now()+randomWeatherDelay();rainDrops=[];run=true;last=performance.now();requestAnimationFrame(loop)}
+function start(){panels(null);els.hud.classList.remove('hide');controlLayout();t=dist=score=nearMissBonus=spawn=0;traffic=[];powerUps=[];invisibleUntil=0;nosUntil=0;nearMissUntil=0;els.nearMissToast.style.opacity='0';player={x:W/2,y:H*.68,w:30,h:52,s:0};weather='Clear';weatherFade=1;weatherNext=performance.now()+30000+Math.random()*20000;rainDrops=[];run=true;last=performance.now();requestAnimationFrame(loop)}
 function bind(id,k){
   let b=document.getElementById(id);
   const down=e=>{e.preventDefault();keys[k]=1};
@@ -1432,12 +1432,14 @@ X.restore()
 
 // --- Random changing weather ---
 const WEATHER_TYPES=['Clear','Rain','Fog','Night','Storm'];
-function randomWeatherDelay(){return 25000+Math.random()*25000}
+let weatherBannerUntil=0;
+function randomWeatherDelay(){return 30000+Math.random()*20000}
 function chooseNextWeather(){
   const choices=WEATHER_TYPES.filter(w=>w!==weather);
   weather=choices[Math.floor(Math.random()*choices.length)];
   weatherFade=0;
   weatherNext=performance.now()+randomWeatherDelay();
+  weatherBannerUntil=performance.now()+2200;
   rainDrops=[];
 }
 function updateWeather(dt){
@@ -1454,17 +1456,17 @@ function drawWeather(){
   const a=.18+.82*weatherFade;
   X.save();
   if(weather==='Night'||weather==='Storm'){
-    X.globalAlpha=(weather==='Storm'?.34:.48)*a;
+    X.globalAlpha=(weather==='Storm'?.46:.58)*a;
     X.fillStyle='#06101f';X.fillRect(0,0,W,H);
   }
   if(weather==='Fog'){
-    X.globalAlpha=.30*a;X.fillStyle='#d9e0e3';X.fillRect(0,0,W,H);
+    X.globalAlpha=.42*a;X.fillStyle='#d9e0e3';X.fillRect(0,0,W,H);
     const fog=X.createLinearGradient(0,0,W,0);fog.addColorStop(0,'#fff4');fog.addColorStop(.5,'#fff9');fog.addColorStop(1,'#fff3');
     X.globalAlpha=.35*a;X.fillStyle=fog;
     for(let i=0;i<4;i++){let yy=((performance.now()*.012+i*137)%(H+180))-90;X.fillRect(0,yy,W,60)}
   }
   if(weather==='Rain'||weather==='Storm'){
-    X.globalAlpha=(weather==='Storm'?.72:.55)*a;X.strokeStyle='#c9e8ff';X.lineWidth=1.4;
+    X.globalAlpha=(weather==='Storm'?.90:.72)*a;X.strokeStyle='#c9e8ff';X.lineWidth=1.4;
     X.beginPath();rainDrops.forEach(r=>{X.moveTo(r.x,r.y);X.lineTo(r.x-5,r.y+r.l)});X.stroke();
     X.globalAlpha=.12*a;X.fillStyle='#8fc8e8';X.fillRect(0,0,W,H);
   }
@@ -1472,9 +1474,14 @@ function drawWeather(){
     const flash=Math.sin(performance.now()*.006)>0.992;
     if(flash){X.globalAlpha=.32;X.fillStyle='#e8f3ff';X.fillRect(0,0,W,H)}
   }
-  // Small unobtrusive weather indicator.
-  X.globalAlpha=.78;X.fillStyle='#0009';X.fillRect(W/2-46,8,92,25);
-  X.globalAlpha=1;X.fillStyle='#fff';X.font='800 12px system-ui';X.textAlign='center';X.textBaseline='middle';X.fillText(weather.toUpperCase(),W/2,20.5);
+  // Always-visible weather indicator plus a clear change banner.
+  X.globalAlpha=.88;X.fillStyle='#000b';X.fillRect(W/2-52,8,104,27);
+  X.globalAlpha=1;X.fillStyle='#fff';X.font='900 12px system-ui';X.textAlign='center';X.textBaseline='middle';X.fillText(weather.toUpperCase(),W/2,21.5);
+  if(performance.now()<weatherBannerUntil){
+    const left=Math.max(0,weatherBannerUntil-performance.now());
+    X.globalAlpha=Math.min(1,left/350);X.fillStyle='#000c';X.fillRect(W/2-108,H*.18-22,216,44);
+    X.globalAlpha=1;X.fillStyle='#fff';X.font='900 18px system-ui';X.fillText('WEATHER: '+weather.toUpperCase(),W/2,H*.18);
+  }
   X.restore();
 }
 
