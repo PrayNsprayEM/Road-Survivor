@@ -1,8 +1,46 @@
 <!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><title>Road Survivor</title>
 <style>
 *{box-sizing:border-box;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#151515;font-family:system-ui;color:white;touch-action:none}canvas{width:100%;height:100%;display:block;image-rendering:pixelated}.p{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(92%,430px);padding:22px;background:#111e;border:2px solid white;border-radius:14px;text-align:center;box-shadow:0 8px 30px #000}.hide{display:none}button{margin:5px;padding:13px 18px;border:2px solid white;border-radius:10px;background:#292933;color:white;font-weight:800;font-size:17px;min-width:145px}.diff{font-size:21px}.easy{background:#2e9b4b}.medium{background:#c6a51b}.hard{background:#d66b18}.extreme{background:#c93636}.card{background:#202027;border:1px solid #555;border-radius:9px;padding:10px;margin:6px;text-align:left}.price{float:right}.stat{position:absolute;top:10px;background:#000a;padding:7px 10px;border-radius:8px;font-weight:800}.leftstat{left:10px}.rightstat{right:10px}.status{position:absolute;top:52px;left:50%;transform:translateX(-50%);font-weight:900}.controls{position:absolute;bottom:14px;left:0;right:0;display:flex;justify-content:space-between;padding:0 14px}.ctrl{width:74px;height:65px;padding:0;margin:0;font-size:25px;background:#222c;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}.pedal{width:78px;height:75px;font-size:15px}.brake{background:#a32f2fcc}.gas{background:#309346cc}
+
+.dealer{width:min(96%,920px);height:min(90%,560px);padding:0;overflow:hidden;background:#0d0d10;border:2px solid #38bdf8}
+.dealerTop{height:64px;background:#342842;display:flex;align-items:center;justify-content:space-between;padding:8px 14px;border-bottom:5px solid #22b7f0}
+.dealerCash{font-size:28px;font-weight:950}.dealerBack{min-width:120px;margin:0}
+.showroom{height:calc(100% - 64px);display:grid;grid-template-columns:80px 1fr minmax(180px,28%) 80px;align-items:center;background:linear-gradient(#181818 0 58%,#080808 58% 100%)}
+.arrowBtn{min-width:0;width:62px;height:90px;font-size:46px;padding:0;border:0;background:transparent}
+.carStage{text-align:center;align-self:stretch;display:flex;flex-direction:column;justify-content:center;min-width:0}
+#dealerCanvas{width:100%;height:240px;max-height:42vh}
+.carName{font-size:28px;font-weight:950;margin-top:-8px}
+.buyCar{background:#27a9e8;min-width:210px;font-size:22px}
+.carSpecs{text-align:left;align-self:start;padding-top:28px;font-weight:800;line-height:1.55}
+.carSpecs h3{font-size:24px;margin:0 0 10px}
+@media(max-width:700px){
+  .dealerTop{height:52px}.dealerCash{font-size:21px}.dealerBack{min-width:95px;padding:8px}
+  .showroom{height:calc(100% - 52px);grid-template-columns:54px 1fr 145px 54px}
+  .arrowBtn{width:48px;font-size:36px}.carSpecs{font-size:12px;padding-top:16px}
+  .carSpecs h3{font-size:17px}.carName{font-size:21px}.buyCar{min-width:160px;font-size:17px;padding:9px}
+  #dealerCanvas{height:170px}
+}
+
 </style></head><body><canvas id="c"></canvas><div id="ui">
-<div id="menu" class="p"><h1>ROAD SURVIVOR</h1><p>Dodge traffic. Survive as long as you can.</p><p>Cash: <b id="cash"></b></p><button id="play">PLAY</button><br><button id="up">UPGRADES</button><button id="lb">LEADERBOARD</button><br><button id="set">SETTINGS</button><p>Difficulty</p><button id="dif" class="diff">EASY</button></div>
+<div id="menu" class="p"><h1>ROAD SURVIVOR</h1><p>Dodge traffic. Survive as long as you can.</p><p>Cash: <b id="cash"></b></p><button id="play">PLAY</button><br><button id="up">UPGRADES</button><button id="dealerBtn">DEALERSHIP</button><br><button id="lb">LEADERBOARD</button><button id="set">SETTINGS</button><p>Difficulty</p><button id="dif" class="diff">EASY</button></div>
+
+<div id="dealership" class="p dealer hide">
+  <div class="dealerTop">
+    <div class="dealerCash">Cash: <span id="dealerCash">$0</span></div>
+    <button id="dealerBack" class="dealerBack">◀ BACK</button>
+  </div>
+  <div class="showroom">
+    <button id="dealerPrev" class="arrowBtn">❮</button>
+    <div class="carStage">
+      <canvas id="dealerCanvas" width="520" height="240"></canvas>
+      <div id="dealerName" class="carName">Honda Civic</div>
+      <button id="dealerBuy" class="buyCar">SELECTED</button>
+    </div>
+    <div id="dealerSpecs" class="carSpecs"></div>
+    <button id="dealerNext" class="arrowBtn">❯</button>
+  </div>
+</div>
+
 <div id="upgrades" class="p hide"><h2>UPGRADES</h2><div id="ul"></div><button id="ub">BACK</button></div>
 <div id="leader" class="p hide"><h2>LEADERBOARD</h2><p>Your best score on each difficulty</p><div id="scores"></div><button id="lbback">BACK</button></div>
 <div id="settings" class="p hide"><h2>SETTINGS</h2><div class="card">Driving controls<br><button id="mode">BUTTONS</button></div><div class="card">Music <input id="music" type="range" min="0" max="100"></div><div class="card">SFX <input id="sfx" type="range" min="0" max="100"></div><div class="card">Song<br><button id="song">TRACK 1</button></div><button id="sb">BACK</button></div>
@@ -12,13 +50,21 @@
 const C=document.getElementById('c'),X=C.getContext('2d');
 const els={
   menu:document.getElementById('menu'),upgrades:document.getElementById('upgrades'),leader:document.getElementById('leader'),settings:document.getElementById('settings'),crash:document.getElementById('crash'),
-  cash:document.getElementById('cash'),play:document.getElementById('play'),up:document.getElementById('up'),lb:document.getElementById('lb'),set:document.getElementById('set'),dif:document.getElementById('dif'),
+  cash:document.getElementById('cash'),play:document.getElementById('play'),up:document.getElementById('up'),dealerBtn:document.getElementById('dealerBtn'),lb:document.getElementById('lb'),set:document.getElementById('set'),dif:document.getElementById('dif'),
+  dealership:document.getElementById('dealership'),dealerCash:document.getElementById('dealerCash'),dealerBack:document.getElementById('dealerBack'),dealerPrev:document.getElementById('dealerPrev'),dealerNext:document.getElementById('dealerNext'),dealerCanvas:document.getElementById('dealerCanvas'),dealerName:document.getElementById('dealerName'),dealerBuy:document.getElementById('dealerBuy'),dealerSpecs:document.getElementById('dealerSpecs'),
   ul:document.getElementById('ul'),ub:document.getElementById('ub'),scores:document.getElementById('scores'),lbback:document.getElementById('lbback'),
   mode:document.getElementById('mode'),music:document.getElementById('music'),sfx:document.getElementById('sfx'),song:document.getElementById('song'),sb:document.getElementById('sb'),
   ft:document.getElementById('ft'),fd:document.getElementById('fd'),fs:document.getElementById('fs'),fb:document.getElementById('fb'),retry:document.getElementById('retry'),cm:document.getElementById('cm'),cl:document.getElementById('cl'),
   hud:document.getElementById('hud'),speed:document.getElementById('speed'),score:document.getElementById('score'),status:document.getElementById('status'),controls:document.getElementById('controls'),steerControls:document.getElementById('steerControls'),pedalControls:document.getElementById('pedalControls')
 };
-let W,H,roadX,roadW,run=false,last=0,t=0,dist=0,score=0,spawn=0,traffic=[],player,cash=+localStorage.getItem('cash')||10000,diff=localStorage.getItem('diff')||'Easy',mode=localStorage.getItem('mode')||'buttons',musicVol=+(localStorage.getItem('music')||70),sfxVol=+(localStorage.getItem('sfx')||70),song=+(localStorage.getItem('song')||1),powerUps=[],invisibleUntil=0,nosUntil=0;
+let W,H,roadX,roadW,run=false,last=0,t=0,dist=0,score=0,spawn=0,traffic=[],player,cash=+localStorage.getItem('cash')||10000,diff=localStorage.getItem('diff')||'Easy',mode=localStorage.getItem('mode')||'buttons',musicVol=+(localStorage.getItem('music')||70),sfxVol=+(localStorage.getItem('sfx')||70),song=+(localStorage.getItem('song')||1),powerUps=[],invisibleUntil=0,nosUntil=0,selectedCar=localStorage.getItem('selectedCar')||'civic',dealerIndex=0,ownedCars=JSON.parse(localStorage.getItem('ownedCars')||'["civic"]');
+
+const cars=[
+  {id:'civic',name:'Honda Civic',price:0,hp:158,top:126,weight:2935,drive:'FWD',desc:'Starter car'},
+  {id:'mx5',name:'Mazda MX-5',price:14000,hp:181,top:135,weight:2341,drive:'RWD',desc:'Lightweight roadster'}
+];
+if(!ownedCars.includes('civic'))ownedCars.unshift('civic');
+
 const D=['Easy','Medium','Hard','Extreme'],cfg={
 Easy:{trafficSpeed:50,spawn:1.45,max:4,truck:.02,trailer:0,power:.0025},
 Medium:{trafficSpeed:63,spawn:1.08,max:7,truck:.06,trailer:.01,power:.0023},
@@ -26,11 +72,72 @@ Hard:{trafficSpeed:78,spawn:.82,max:10,truck:.12,trailer:.04,power:.0021},
 Extreme:{trafficSpeed:96,spawn:.58,max:15,truck:.24,trailer:.12,power:.002}
 },upgradeItems=[['Twin Turbo',5400],['Supercharger',3600],['Large Turbo',4700],['Sport Brakes',1300],['Race Brakes',2100],['Race Spoiler',1100],['Front Bumper',1200],['Rear Bumper',1200],['Grip Tires',1500]],owned=JSON.parse(localStorage.getItem('owned')||'[]'),keys={left:0,right:0,gas:0,brake:0};
 function resize(){W=innerWidth;H=innerHeight;C.width=W*devicePixelRatio;C.height=H*devicePixelRatio;X.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);roadW=Math.min(W*.72,520);roadX=(W-roadW)/2}addEventListener('resize',resize);resize();
-function panels(id){['menu','upgrades','leader','settings','crash'].forEach(k=>els[k].classList.toggle('hide',k!==id));}
+function panels(id){['menu','dealership','upgrades','leader','settings','crash'].forEach(k=>els[k].classList.toggle('hide',k!==id));}
 function dc(el,v){el.textContent=v.toUpperCase();el.className='diff '+v.toLowerCase()}
 function cyc(v){return D[(D.indexOf(v)+1)%4]}
 function cashUI(){els.cash.textContent='$'+cash.toLocaleString()}
 function upgradesUI(){els.ul.innerHTML='';upgradeItems.forEach((u,i)=>{let d=document.createElement('div');d.className='card';d.innerHTML='<b>'+u[0]+'</b><span class="price">'+(owned.includes(i)?'OWNED':'$'+u[1].toLocaleString())+'</span>';if(!owned.includes(i))d.onclick=()=>{if(cash>=u[1]){cash-=u[1];owned.push(i);localStorage.setItem('cash',cash);localStorage.setItem('owned',JSON.stringify(owned));cashUI();upgradesUI()}};els.ul.appendChild(d)})}
+
+function dealerDrawCar(car){
+  const c=els.dealerCanvas,ctx=c.getContext('2d'),w=c.width,h=c.height;
+  ctx.clearRect(0,0,w,h);
+  ctx.save();
+  ctx.translate(w/2,h/2+22);
+  ctx.shadowColor='rgba(0,0,0,.7)';ctx.shadowBlur=18;
+  ctx.fillStyle=car.id==='mx5'?'#e12d39':'#f0f0f0';
+  if(car.id==='mx5'){
+    ctx.beginPath();
+    ctx.moveTo(-155,25);ctx.lineTo(-125,-12);ctx.lineTo(-55,-38);ctx.lineTo(58,-38);
+    ctx.lineTo(115,-14);ctx.lineTo(155,7);ctx.lineTo(145,38);ctx.lineTo(-145,38);ctx.closePath();ctx.fill();
+    ctx.fillStyle='#232323';ctx.fillRect(-58,-31,106,25);
+  }else{
+    ctx.beginPath();
+    ctx.moveTo(-160,25);ctx.lineTo(-135,-12);ctx.lineTo(-62,-52);ctx.lineTo(48,-52);
+    ctx.lineTo(118,-16);ctx.lineTo(160,5);ctx.lineTo(148,39);ctx.lineTo(-148,39);ctx.closePath();ctx.fill();
+    ctx.fillStyle='#252525';ctx.fillRect(-58,-44,103,29);
+  }
+  ctx.shadowBlur=0;
+  ctx.fillStyle='#111';
+  ctx.beginPath();ctx.arc(-105,38,29,0,Math.PI*2);ctx.arc(105,38,29,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#aaa';
+  ctx.beginPath();ctx.arc(-105,38,16,0,Math.PI*2);ctx.arc(105,38,16,0,Math.PI*2);ctx.fill();
+  ctx.restore();
+}
+function dealerUI(){
+  const car=cars[dealerIndex],isOwned=ownedCars.includes(car.id),isSelected=selectedCar===car.id;
+  els.dealerCash.textContent='$'+cash.toLocaleString();
+  els.dealerName.textContent=car.name;
+  els.dealerSpecs.innerHTML='<h3>'+car.name+'</h3>'+
+    'Horsepower: '+car.hp+' HP<br>'+
+    'Top speed: '+car.top+' MPH<br>'+
+    'Weight: '+car.weight.toLocaleString()+' lb<br>'+
+    'Drive: '+car.drive+'<br>'+
+    car.desc;
+  els.dealerBuy.textContent=isSelected?'SELECTED':(isOwned?'SELECT':'BUY $'+car.price.toLocaleString());
+  els.dealerBuy.style.background=isSelected?'#2f9b52':'#27a9e8';
+  dealerDrawCar(car);
+}
+function dealerPurchaseOrSelect(){
+  const car=cars[dealerIndex];
+  if(ownedCars.includes(car.id)){
+    selectedCar=car.id;
+    localStorage.setItem('selectedCar',selectedCar);
+  }else if(cash>=car.price){
+    cash-=car.price;
+    ownedCars.push(car.id);
+    selectedCar=car.id;
+    localStorage.setItem('cash',cash);
+    localStorage.setItem('ownedCars',JSON.stringify(ownedCars));
+    localStorage.setItem('selectedCar',selectedCar);
+    cashUI();
+  }else{
+    els.dealerBuy.textContent='NOT ENOUGH CASH';
+    setTimeout(dealerUI,900);
+    return;
+  }
+  dealerUI();
+}
+
 function modeBtn(){els.mode.textContent=mode.toUpperCase()}
 function controlLayout(){
   const gyro=mode==='gyro';
@@ -158,7 +265,7 @@ if(Math.abs(player.x-v.x)<(player.w+v.w)*.5&&Math.abs(player.y-v.y)<(player.h+v.
 els.speed.textContent=Math.round(player.s)+' MPH';els.score.textContent=score.toLocaleString()}
 function car(x,y,w,h,hero=false,type='car'){
 X.save();X.translate(x,y);
-if(hero)X.fillStyle='#d72e32';
+if(hero)X.fillStyle=selectedCar==='mx5'?'#e12d39':'#d72e32';
 else if(type==='truck')X.fillStyle='#e58a25';
 else if(type==='trailer')X.fillStyle='#d8d8d8';
 else if(type==='sports')X.fillStyle='#ff375f';
@@ -199,7 +306,15 @@ function crashGame(){
   panels('crash')
 }
 els.dif.onclick=()=>{diff=cyc(diff);localStorage.setItem('diff',diff);dc(els.dif,diff)};
-els.play.onclick=start;els.retry.onclick=start;els.up.onclick=()=>{upgradesUI();panels('upgrades')};els.ub.onclick=()=>controlLayout();panels('menu');els.lb.onclick=()=>{scores();panels('leader')};els.lbback.onclick=()=>panels('menu');els.set.onclick=()=>{settingsUI();panels('settings')};els.sb.onclick=()=>{saveSettings();panels('menu')};els.cm.onclick=()=>panels('menu');els.cl.onclick=()=>{scores();panels('leader')};
+els.play.onclick=start;els.retry.onclick=start;
+els.up.onclick=()=>{upgradesUI();panels('upgrades')};
+els.ub.onclick=()=>{controlLayout();panels('menu')};
+els.dealerBtn.onclick=()=>{dealerIndex=Math.max(0,cars.findIndex(c=>c.id===selectedCar));dealerUI();panels('dealership')};
+els.dealerBack.onclick=()=>{cashUI();panels('menu')};
+els.dealerPrev.onclick=()=>{dealerIndex=(dealerIndex-1+cars.length)%cars.length;dealerUI()};
+els.dealerNext.onclick=()=>{dealerIndex=(dealerIndex+1)%cars.length;dealerUI()};
+els.dealerBuy.onclick=dealerPurchaseOrSelect;
+els.lb.onclick=()=>{scores();panels('leader')};els.lbback.onclick=()=>panels('menu');els.set.onclick=()=>{settingsUI();panels('settings')};els.sb.onclick=()=>{saveSettings();panels('menu')};els.cm.onclick=()=>panels('menu');els.cl.onclick=()=>{scores();panels('leader')};
 els.mode.onclick=async()=>{
   if(mode==='buttons'){
     const ok=await requestGyroPermission();
@@ -213,5 +328,5 @@ els.mode.onclick=async()=>{
   controlLayout();
   saveSettings();
 };els.song.onclick=()=>{song=song%3+1;songBtn()};els.music.oninput=()=>musicVol=+els.music.value;els.sfx.oninput=()=>sfxVol=+els.sfx.value;
-dc(els.dif,diff);cashUI();panels('menu');
+dc(els.dif,diff);cashUI();dealerUI();panels('menu');
 </script></body></html>
