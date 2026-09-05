@@ -782,7 +782,12 @@ function controlLayout(){
 }
 
 // Background music — iPhone/Safari-safe playback.
-const bgMusic=new Audio('./music1.mp3?v=3');
+const songs=[
+  {name:'PLAY TIME',src:'./music1.mp3?v=6'},
+  {name:'ARCADE SESSION',src:'./music2.mp3?v=6'}
+];
+if(song<1 || song>songs.length) song=1;
+const bgMusic=new Audio(songs[song-1].src);
 bgMusic.loop=true;
 bgMusic.preload='auto';
 bgMusic.playsInline=true;
@@ -794,34 +799,39 @@ function applyMusicVolume(){
   bgMusic.muted=false;
   bgMusic.volume=Math.max(0,Math.min(1,musicVol/100));
 }
-
+function loadSelectedSong(autoplay=false){
+  const wanted=songs[song-1];
+  bgMusic.pause();
+  bgMusic.src=wanted.src;
+  bgMusic.currentTime=0;
+  bgMusic.load();
+  applyMusicVolume();
+  songBtn();
+  if(autoplay){
+    try{
+      const p=bgMusic.play();
+      if(p && typeof p.then==='function') p.then(()=>{musicStarted=true;}).catch(()=>{musicStarted=false;});
+      else musicStarted=true;
+    }catch(e){musicStarted=false;}
+  }
+}
 function startMusic(){
   applyMusicVolume();
-  // Calling play() directly inside a real user gesture is required by iPhone Safari.
   try{
     const p=bgMusic.play();
     if(p && typeof p.then==='function'){
-      p.then(()=>{ musicStarted=true; }).catch(()=>{ musicStarted=false; });
-    }else{
-      musicStarted=true;
-    }
-  }catch(e){
-    musicStarted=false;
-  }
+      p.then(()=>{musicStarted=true;}).catch(()=>{musicStarted=false;});
+    }else musicStarted=true;
+  }catch(e){musicStarted=false;}
 }
-
-// Use several real interaction events so Safari/in-app browsers can unlock audio.
 ['click','touchstart','pointerup'].forEach(ev=>{
   document.addEventListener(ev,startMusic,{capture:true,passive:true});
 });
-
-// Resume music after returning to the tab/app.
 document.addEventListener('visibilitychange',()=>{
   if(!document.hidden && musicVol>0) startMusic();
 });
-
-function songBtn(){els.song.textContent='PLAY TIME'}
-function settingsUI(){modeBtn();controlLayout();els.music.value=musicVol;els.sfx.value=sfxVol;songBtn()}
+function songBtn(){els.song.textContent='CHANGE SONG — '+songs[song-1].name}
+function settingsUI(){modeBtn();controlLayout();els.music.value=musicVol;els.sfx.value=sfxVol;songBtn();loadSelectedSong(false)}
 function saveSettings(){localStorage.setItem('mode',mode);localStorage.setItem('music',musicVol);localStorage.setItem('sfx',sfxVol);localStorage.setItem('song',song)}
 function bestRunFor(d){
   let a=JSON.parse(localStorage.getItem('scores_'+d)||'[]');
@@ -1756,7 +1766,7 @@ els.mode.onclick=async()=>{
   modeBtn();
   controlLayout();
   saveSettings();
-};els.song.onclick=()=>{song=1;songBtn();bgMusic.currentTime=0;applyMusicVolume();startMusic()};els.music.oninput=()=>{musicVol=+els.music.value;applyMusicVolume();saveSettings();if(musicVol>0)startMusic();else bgMusic.pause()};els.sfx.oninput=()=>sfxVol=+els.sfx.value;
+};els.song.onclick=(e)=>{e.preventDefault();e.stopPropagation();song=(song%songs.length)+1;saveSettings();loadSelectedSong(true)};els.music.oninput=()=>{musicVol=+els.music.value;applyMusicVolume();saveSettings();if(musicVol>0)startMusic();else bgMusic.pause()};els.sfx.oninput=()=>sfxVol=+els.sfx.value;
 dc(els.dif,diff);cashUI();dealerUI();panels('menu');
 </script></body></html>
 <style>
