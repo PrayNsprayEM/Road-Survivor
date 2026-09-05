@@ -52,6 +52,52 @@
 #upgradeDetail #ul{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;max-width:760px;margin:0 auto}
 @media(max-width:700px){.upgradeCats,#upgradeDetail #ul{grid-template-columns:1fr}.upgradeCat{min-height:145px}}
 
+
+
+/* Reliable iPhone Safari upgrades scrolling */
+body.upgradesOpen{
+  touch-action:auto !important;
+  overflow:hidden;
+}
+body.upgradesOpen #upgrades{
+  touch-action:pan-y !important;
+}
+
+#upgrades.p{
+  position:absolute;
+  top:0;
+  bottom:0;
+  left:50%;
+  transform:translateX(-50%);
+  width:min(96%,760px);
+  height:auto;
+  max-height:none;
+  margin:0;
+  overflow-x:hidden;
+  overflow-y:scroll !important;
+  -webkit-overflow-scrolling:touch;
+  overscroll-behavior-y:contain;
+  touch-action:pan-y !important;
+  padding:22px 22px 180px;
+  border-radius:0;
+}
+
+#upgrades .upgradeCats,
+#upgrades #upgradeDetail,
+#upgrades #ul{
+  touch-action:pan-y !important;
+}
+
+#upgrades .upgradeCat,
+#upgrades .card,
+#upgrades button{
+  touch-action:manipulation !important;
+}
+
+#upgradeDetail{
+  padding-bottom:120px;
+}
+
 </style></head><body><canvas id="c"></canvas><div id="ui">
 <div id="menu" class="p"><h1>ROAD SURVIVOR</h1><p>Dodge traffic. Survive as long as you can.</p><p>Cash: <b id="cash"></b></p><button id="play">PLAY</button><br><button id="up">UPGRADES</button><button id="dealerBtn">DEALERSHIP</button><br><button id="lb">LEADERBOARD</button><button id="set">SETTINGS</button><p>Difficulty</p><button id="dif" class="diff">EASY</button></div>
 
@@ -167,7 +213,7 @@ function ownedForCar(){if(!carUpgradeOwned[selectedCar])carUpgradeOwned[selected
 function saveCarUpgrades(){localStorage.setItem('carUpgradeOwned',JSON.stringify(carUpgradeOwned))}
 let activeUpgradeCategory=null;
 function resize(){W=innerWidth;H=innerHeight;C.width=W*devicePixelRatio;C.height=H*devicePixelRatio;X.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);roadW=Math.min(W*.72,520);roadX=(W-roadW)/2}addEventListener('resize',resize);resize();
-function panels(id){['menu','dealership','upgrades','leader','settings','crash'].forEach(k=>els[k].classList.toggle('hide',k!==id));}
+function panels(id){document.body.classList.toggle('upgradesOpen',id==='upgrades');['menu','dealership','upgrades','leader','settings','crash'].forEach(k=>els[k].classList.toggle('hide',k!==id));}
 function dc(el,v){el.textContent=v.toUpperCase();el.className='diff '+v.toLowerCase()}
 function cyc(v){return D[(D.indexOf(v)+1)%4]}
 function cashUI(){els.cash.textContent='$'+cash.toLocaleString()}
