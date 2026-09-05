@@ -323,9 +323,185 @@ function dealerDrawCar(car){
   ctx.restore();
 }
 function drawDealerBody(ctx,car){
+
+  if(car.id==='fordgt'){
+    ctx.save();
+
+    // Ground shadow
+    ctx.fillStyle='rgba(0,0,0,.35)';
+    ctx.beginPath();
+    ctx.ellipse(0,54,158,22,0,0,Math.PI*2);
+    ctx.fill();
+
+    // Carbon lower sill / splitter
+    ctx.fillStyle='#090b0e';
+    ctx.beginPath();
+    ctx.moveTo(-166,30); ctx.lineTo(-151,44); ctx.lineTo(142,44);
+    ctx.lineTo(163,28); ctx.lineTo(148,50); ctx.lineTo(-151,50);
+    ctx.closePath(); ctx.fill();
+
+    // Main body
+    let bodyGrad=ctx.createLinearGradient(-160,-55,150,45);
+    bodyGrad.addColorStop(0,'#5a95ff');
+    bodyGrad.addColorStop(.38,'#2d70db');
+    bodyGrad.addColorStop(.72,'#1d55b5');
+    bodyGrad.addColorStop(1,'#123875');
+    ctx.fillStyle=bodyGrad;
+    ctx.beginPath();
+    ctx.moveTo(-165,24);
+    ctx.quadraticCurveTo(-157,-12,-132,-31);
+    ctx.quadraticCurveTo(-103,-54,-59,-61);
+    ctx.quadraticCurveTo(-30,-66,10,-64);
+    ctx.quadraticCurveTo(54,-62,91,-46);
+    ctx.quadraticCurveTo(132,-28,158,2);
+    ctx.quadraticCurveTo(166,12,164,24);
+    ctx.quadraticCurveTo(146,38,112,43);
+    ctx.quadraticCurveTo(55,49,-4,49);
+    ctx.lineTo(-94,48);
+    ctx.quadraticCurveTo(-143,45,-165,24);
+    ctx.closePath();
+    ctx.shadowColor='rgba(0,0,0,.75)';
+    ctx.shadowBlur=18;
+    ctx.shadowOffsetY=9;
+    ctx.fill();
+    ctx.shadowBlur=0; ctx.shadowOffsetY=0;
+
+    // Front nose / lower grille
+    ctx.fillStyle='#0a0d12';
+    ctx.beginPath();
+    ctx.moveTo(-163,18); ctx.lineTo(-135,8); ctx.lineTo(-104,10);
+    ctx.lineTo(-115,29); ctx.lineTo(-151,32); ctx.closePath(); ctx.fill();
+
+    // Rear diffuser
+    ctx.fillStyle='#080a0d';
+    ctx.beginPath();
+    ctx.moveTo(128,19); ctx.lineTo(159,15); ctx.lineTo(157,32);
+    ctx.lineTo(127,36); ctx.closePath(); ctx.fill();
+
+    // Greenhouse
+    ctx.fillStyle='#0c1118';
+    ctx.beginPath();
+    ctx.moveTo(-72,-34);
+    ctx.quadraticCurveTo(-48,-58,-18,-61);
+    ctx.lineTo(21,-60);
+    ctx.quadraticCurveTo(54,-56,74,-31);
+    ctx.lineTo(50,-13);
+    ctx.lineTo(-58,-14);
+    ctx.closePath(); ctx.fill();
+
+    // Glass highlights
+    ctx.fillStyle='rgba(104,177,230,.17)';
+    ctx.beginPath();
+    ctx.moveTo(-58,-36); ctx.lineTo(-37,-54); ctx.lineTo(-9,-57);
+    ctx.lineTo(-14,-17); ctx.lineTo(-52,-18); ctx.closePath(); ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(-6,-57); ctx.lineTo(19,-56); ctx.lineTo(59,-32);
+    ctx.lineTo(45,-17); ctx.lineTo(-1,-17); ctx.closePath(); ctx.fill();
+
+    // Flying-buttress channels
+    ctx.fillStyle='#0b0f14';
+    ctx.beginPath();
+    ctx.moveTo(48,-24); ctx.lineTo(80,-34); ctx.lineTo(119,-13);
+    ctx.lineTo(96,7); ctx.lineTo(67,-6); ctx.closePath(); ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(-79,-28); ctx.lineTo(-113,-12); ctx.lineTo(-130,6);
+    ctx.lineTo(-98,1); ctx.lineTo(-62,-13); ctx.closePath(); ctx.fill();
+
+    // Large side intake
+    ctx.fillStyle='#05070a';
+    ctx.beginPath();
+    ctx.moveTo(49,-6); ctx.quadraticCurveTo(89,-4,112,17);
+    ctx.quadraticCurveTo(93,29,72,31);
+    ctx.quadraticCurveTo(58,19,49,-6); ctx.closePath(); ctx.fill();
+
+    // Door contour
+    ctx.strokeStyle='rgba(2,10,25,.48)';
+    ctx.lineWidth=2;
+    ctx.beginPath();
+    ctx.moveTo(-49,-12); ctx.lineTo(-54,31);
+    ctx.quadraticCurveTo(-19,38,41,32);
+    ctx.lineTo(46,-10); ctx.stroke();
+
+    // Dual white stripes
+    ctx.fillStyle='rgba(250,250,250,.97)';
+    ctx.fillRect(-7,-62,6,108);
+    ctx.fillRect(4,-62,6,108);
+    ctx.fillStyle='#17418e';
+    ctx.fillRect(1,-62,2,108);
+
+    // Hood extractor vents
+    ctx.fillStyle='#090d12';
+    ctx.beginPath();
+    ctx.moveTo(-129,-17); ctx.lineTo(-97,-29); ctx.lineTo(-82,-17);
+    ctx.lineTo(-115,-6); ctx.closePath(); ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(109,-15); ctx.lineTo(82,-25); ctx.lineTo(70,-13);
+    ctx.lineTo(99,-4); ctx.closePath(); ctx.fill();
+
+    // LED headlights
+    ctx.strokeStyle='#e5f7ff';
+    ctx.lineWidth=5;
+    ctx.shadowColor='#b9ebff';
+    ctx.shadowBlur=9;
+    ctx.beginPath(); ctx.moveTo(-149,-4); ctx.quadraticCurveTo(-128,-17,-106,-15); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(145,-2); ctx.quadraticCurveTo(126,-15,107,-14); ctx.stroke();
+    ctx.shadowBlur=0;
+
+    // Rear lamp strip
+    ctx.fillStyle='#f12a35';
+    ctx.shadowColor='#ff2d3d';
+    ctx.shadowBlur=7;
+    ctx.fillRect(127,22,25,5);
+    ctx.shadowBlur=0;
+
+    // Active rear wing
+    ctx.fillStyle='#11151b';
+    ctx.fillRect(108,-21,48,5);
+    ctx.fillRect(117,-21,4,15);
+    ctx.fillRect(146,-21,4,15);
+
+    // Wheels with brake discs + blue calipers
+    for(const wx of [-111,111]){
+      ctx.fillStyle='#030405';
+      ctx.beginPath(); ctx.arc(wx,47,31,0,Math.PI*2); ctx.fill();
+
+      ctx.fillStyle='#1a1e24';
+      ctx.beginPath(); ctx.arc(wx,47,20,0,Math.PI*2); ctx.fill();
+
+      ctx.strokeStyle='#9da7b1';
+      ctx.lineWidth=2;
+      for(let a=0;a<Math.PI*2;a+=Math.PI/5){
+        ctx.beginPath();
+        ctx.moveTo(wx,47);
+        ctx.lineTo(wx+Math.cos(a)*17,47+Math.sin(a)*17);
+        ctx.stroke();
+      }
+
+      ctx.fillStyle='#c7ccd2';
+      ctx.beginPath(); ctx.arc(wx,47,8,0,Math.PI*2); ctx.fill();
+
+      ctx.fillStyle='#2877e0';
+      ctx.fillRect(wx-5,33,8,14);
+    }
+
+    // Small details
+    ctx.fillStyle='#d8e5f6';
+    ctx.font='bold 8px system-ui';
+    ctx.fillText('GT',84,19);
+
+    ctx.strokeStyle='rgba(255,255,255,.19)';
+    ctx.lineWidth=1.2;
+    ctx.beginPath();
+    ctx.moveTo(-145,34); ctx.quadraticCurveTo(-24,43,126,34);
+    ctx.stroke();
+
+    ctx.restore();
+    return;
+  }
+
   const colors={
     civic:'#e8e8e8',mx5:'#d82834',gti:'#2c64d8',wrx:'#2878b8',mustang:'#d43a2f',a3:'#c8cbd0',
-    supra:'#f4f4f4',m3:'#3e6fba',corvette:'#e6b51f',gtr:'#aeb5bc','911turbo':'#c9c9c9',
+    supra:'#f4f4f4',m3:'#3e6fba',corvette:'#e6b51f',gtr:'#aeb5bc',fordgt:'#2d70db','911turbo':'#c9c9c9',
     huracan:'#e7b916','720s':'#e96b20',f458:'#d5232a'
   };
   const body=colors[car.id]||'#f0f0f0';
@@ -391,78 +567,6 @@ function drawDealerBody(ctx,car){
     ctx.fillStyle='#222';ctx.fillRect(112,-24,52,5);ctx.fillRect(119,-24,4,19);ctx.fillRect(153,-24,4,19);
   }
   
-if(car.id==='fordgt'){
-  // Ford GT — detailed low/wide side profile
-  // lower carbon splitter / undertray
-  ctx.fillStyle='#0b0d10';
-  ctx.beginPath();ctx.moveTo(-158,27);ctx.lineTo(-143,43);ctx.lineTo(114,45);ctx.lineTo(153,28);ctx.lineTo(145,40);ctx.lineTo(-150,40);ctx.closePath();ctx.fill();
-
-  // sculpted blue body
-  let fg=ctx.createLinearGradient(-130,-55,120,45);
-  fg.addColorStop(0,'#4f89ef');fg.addColorStop(.48,'#245fc2');fg.addColorStop(1,'#153f8e');
-  ctx.fillStyle=fg;ctx.beginPath();
-  ctx.moveTo(-156,21);ctx.quadraticCurveTo(-145,-18,-113,-34);
-  ctx.quadraticCurveTo(-82,-55,-43,-59);ctx.lineTo(27,-59);
-  ctx.quadraticCurveTo(75,-54,107,-33);ctx.quadraticCurveTo(139,-14,154,10);
-  ctx.lineTo(143,30);ctx.quadraticCurveTo(113,43,73,47);
-  ctx.lineTo(-87,47);ctx.quadraticCurveTo(-135,43,-156,21);ctx.closePath();ctx.fill();
-
-  // greenhouse / windshield
-  ctx.fillStyle='#101820';ctx.beginPath();
-  ctx.moveTo(-74,-37);ctx.lineTo(-42,-55);ctx.lineTo(22,-55);ctx.lineTo(62,-33);
-  ctx.lineTo(43,-15);ctx.lineTo(-60,-16);ctx.closePath();ctx.fill();
-  ctx.strokeStyle='rgba(170,220,255,.42)';ctx.lineWidth=2;ctx.stroke();
-  ctx.fillStyle='rgba(105,180,230,.16)';ctx.beginPath();ctx.moveTo(-57,-35);ctx.lineTo(-36,-50);ctx.lineTo(-7,-50);ctx.lineTo(-11,-18);ctx.lineTo(-52,-19);ctx.closePath();ctx.fill();
-
-  // white dual racing stripe
-  ctx.fillStyle='rgba(248,248,248,.96)';ctx.fillRect(-9,-58,7,101);ctx.fillRect(3,-58,7,101);
-  ctx.fillStyle='#173f88';ctx.fillRect(0,-58,2,101);
-
-  // flying-buttress / side channel silhouettes
-  ctx.fillStyle='#0d1218';
-  ctx.beginPath();ctx.moveTo(53,-32);ctx.lineTo(91,-25);ctx.lineTo(119,7);ctx.lineTo(86,3);ctx.lineTo(58,-13);ctx.closePath();ctx.fill();
-  ctx.beginPath();ctx.moveTo(-75,-27);ctx.lineTo(-105,-13);ctx.lineTo(-124,8);ctx.lineTo(-91,1);ctx.lineTo(-62,-15);ctx.closePath();ctx.fill();
-
-  // big side intake / door scallop
-  ctx.fillStyle='#0a0d11';ctx.beginPath();
-  ctx.moveTo(61,-7);ctx.quadraticCurveTo(94,-2,108,17);ctx.lineTo(82,29);ctx.quadraticCurveTo(61,20,54,7);ctx.closePath();ctx.fill();
-  ctx.strokeStyle='rgba(255,255,255,.18)';ctx.lineWidth=1.5;ctx.stroke();
-
-  // hood extraction vents
-  ctx.fillStyle='rgba(4,8,12,.74)';
-  ctx.beginPath();ctx.moveTo(-129,-17);ctx.lineTo(-89,-29);ctx.lineTo(-76,-14);ctx.lineTo(-116,-3);ctx.closePath();ctx.fill();
-  ctx.beginPath();ctx.moveTo(111,-14);ctx.lineTo(79,-27);ctx.lineTo(68,-12);ctx.lineTo(101,-1);ctx.closePath();ctx.fill();
-  ctx.strokeStyle='rgba(120,160,210,.35)';ctx.lineWidth=1;
-  for(let k=0;k<3;k++){ctx.beginPath();ctx.moveTo(-117+k*8,-15-k*2);ctx.lineTo(-90+k*5,-22+k);ctx.stroke();}
-
-  // headlights with LED signature
-  ctx.fillStyle='#dff3ff';ctx.shadowColor='#bde8ff';ctx.shadowBlur=8;
-  ctx.beginPath();ctx.moveTo(-145,-5);ctx.lineTo(-116,-16);ctx.lineTo(-101,-10);ctx.lineTo(-127,0);ctx.closePath();ctx.fill();
-  ctx.beginPath();ctx.moveTo(138,-3);ctx.lineTo(112,-15);ctx.lineTo(99,-9);ctx.lineTo(124,1);ctx.closePath();ctx.fill();ctx.shadowBlur=0;
-
-  // rear lamps
-  ctx.fillStyle='#e12732';ctx.shadowColor='#ff2d3d';ctx.shadowBlur=6;
-  ctx.fillRect(119,22,22,5);ctx.fillRect(-139,23,20,5);ctx.shadowBlur=0;
-
-  // active rear wing / rear deck edge
-  ctx.fillStyle='#111419';ctx.fillRect(104,-19,48,5);ctx.fillRect(112,-19,4,15);ctx.fillRect(142,-19,4,15);
-
-  // wheels, black multi-spoke rims, blue calipers
-  for(const wx of [-111,111]){
-    ctx.fillStyle='#050607';ctx.beginPath();ctx.arc(wx,46,32,0,Math.PI*2);ctx.fill();
-    ctx.fillStyle='#15191e';ctx.beginPath();ctx.arc(wx,46,20,0,Math.PI*2);ctx.fill();
-    ctx.strokeStyle='#89939d';ctx.lineWidth=2;
-    for(let a=0;a<Math.PI*2;a+=Math.PI/5){ctx.beginPath();ctx.moveTo(wx,46);ctx.lineTo(wx+Math.cos(a)*17,46+Math.sin(a)*17);ctx.stroke();}
-    ctx.fillStyle='#2f6ed1';ctx.fillRect(wx-4,33,7,12);
-    ctx.fillStyle='#bfc5ca';ctx.beginPath();ctx.arc(wx,46,6,0,Math.PI*2);ctx.fill();
-  }
-
-  // panel seams + GT badge
-  ctx.strokeStyle='rgba(0,0,0,.34)';ctx.lineWidth=1.5;
-  ctx.beginPath();ctx.moveTo(-55,-14);ctx.lineTo(-58,27);ctx.stroke();
-  ctx.beginPath();ctx.moveTo(51,-14);ctx.lineTo(47,29);ctx.stroke();
-  ctx.fillStyle='#e9eef7';ctx.font='bold 8px system-ui';ctx.fillText('GT',88,19);
-}
 if(car.id==='911turbo'){
     ctx.fillStyle='#fff0b0';ctx.beginPath();ctx.ellipse(-130,9,15,9,0,0,Math.PI*2);ctx.fill();
     ctx.fillStyle='#222';ctx.fillRect(112,-20,55,5);ctx.fillRect(120,-20,4,16);ctx.fillRect(156,-20,4,16);
@@ -503,6 +607,7 @@ function dealerUI(){
   els.dealerCash.textContent='$'+cash.toLocaleString();
   els.dealerName.textContent=car.name;
   els.dealerSpecs.innerHTML='<h3>'+car.name+'</h3>'+
+    '<b>Price: $'+car.price.toLocaleString()+'</b><br>'+
     'Horsepower: '+car.hp+' HP<br>'+
     '0–60 MPH: '+car.zero+'<br>'+
     'Top speed: '+car.top+' MPH<br>'+
