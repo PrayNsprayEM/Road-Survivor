@@ -780,7 +780,26 @@ function controlLayout(){
   els.pedalControls.style.alignItems='flex-end';
   els.controls.style.justifyContent='space-between';
 }
-function songBtn(){els.song.textContent='TRACK '+song}
+
+// Background music (Pixabay track). iPhone/Safari requires playback to begin from a user gesture.
+const bgMusic=new Audio('music1.mp3');
+bgMusic.loop=true;
+bgMusic.preload='auto';
+bgMusic.volume=Math.max(0,Math.min(1,musicVol/100));
+let musicStarted=false;
+function startMusic(){
+  bgMusic.volume=Math.max(0,Math.min(1,musicVol/100));
+  if(!musicStarted || bgMusic.paused){
+    const p=bgMusic.play();
+    if(p&&p.catch) p.catch(()=>{});
+    musicStarted=true;
+  }
+}
+// Any deliberate tap can unlock audio on iOS.
+document.addEventListener('pointerdown',startMusic,{passive:true});
+document.addEventListener('touchend',startMusic,{passive:true});
+
+function songBtn(){els.song.textContent='PLAY TIME'}
 function settingsUI(){modeBtn();controlLayout();els.music.value=musicVol;els.sfx.value=sfxVol;songBtn()}
 function saveSettings(){localStorage.setItem('mode',mode);localStorage.setItem('music',musicVol);localStorage.setItem('sfx',sfxVol);localStorage.setItem('song',song)}
 function bestRunFor(d){
@@ -1716,7 +1735,7 @@ els.mode.onclick=async()=>{
   modeBtn();
   controlLayout();
   saveSettings();
-};els.song.onclick=()=>{song=song%3+1;songBtn()};els.music.oninput=()=>musicVol=+els.music.value;els.sfx.oninput=()=>sfxVol=+els.sfx.value;
+};els.song.onclick=()=>{song=1;songBtn();bgMusic.currentTime=0;startMusic()};els.music.oninput=()=>{musicVol=+els.music.value;bgMusic.volume=Math.max(0,Math.min(1,musicVol/100));saveSettings();startMusic()};els.sfx.oninput=()=>sfxVol=+els.sfx.value;
 dc(els.dif,diff);cashUI();dealerUI();panels('menu');
 </script></body></html>
 <style>
