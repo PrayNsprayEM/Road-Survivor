@@ -600,8 +600,10 @@ let pick=trafficModels[Math.floor(Math.random()*trafficModels.length)];
 type=pick.type;w=pick.w;h=pick.h;
 }
 let laneCenter=roadX+roadW*(lane+.5)/3;
+const trafficPalette=['#d8dde3','#343a40','#b6252a','#2f67b1','#e0aa24','#f4f4f1','#547b49','#8d4a97','#6a7782','#c66c2d'];
+const fixedColor=(type==='truck'||type==='trailer')?null:trafficPalette[Math.floor(Math.random()*trafficPalette.length)];
 traffic.push({
-x:laneCenter,y:-h-18,w,h,type,lane,
+x:laneCenter,y:-h-18,w,h,type,lane,color:fixedColor,
 s:c.trafficSpeed*(.78+Math.random()*.35),
 drift:(Math.random()-.5)*3,
 targetX:laneCenter,
@@ -683,17 +685,11 @@ if(Math.abs(player.x-v.x)<(player.w+v.w)*.46&&Math.abs(player.y-v.y)<(player.h+v
 els.speed.textContent=Math.round(player.s)+' MPH';
 els.score.textContent=score.toLocaleString()
 }
-function car(x,y,w,h,hero=false,type='car'){
+function car(x,y,w,h,hero=false,type='car',fixedColor=null){
 X.save();X.translate(x,y);
 
 let model=hero?selectedCar:type;
-let trafficPaint=null;
-if(!hero && !['truck','trailer'].includes(type)){
-  // Stable paint choice based on position/size so each spawned traffic car can look different.
-  const trafficPalette=['#d8dde3','#343a40','#b6252a','#2f67b1','#e0aa24','#f4f4f1','#547b49','#8d4a97','#6a7782','#c66c2d'];
-  let paintIndex=Math.abs(Math.floor((x*7+y*3+w*11+h*13)))%trafficPalette.length;
-  trafficPaint=trafficPalette[paintIndex];
-}
+let trafficPaint=(!hero && fixedColor)?fixedColor:null;
 let bodyColors={
   civic:'#d9dde2',mx5:'#e12835',gti:'#3569ce',wrx:'#2d75b9',mustang:'#c83b30',a3:'#c3c8ce',
   supra:'#ededed',m3:'#4273ba',corvette:'#e7b326',gtr:'#aab2bb','911turbo':'#d0d0d0',
@@ -963,7 +959,7 @@ for(let y=-40+(roadOffset%48);y<H+40;y+=48){X.fillStyle='#f7ef9a';X.fillRect(roa
 traffic.forEach(v=>{
 X.save();
 if(performance.now()<invisibleUntil)X.globalAlpha=.28;
-car(v.x,v.y,v.w,v.h,false,v.type);
+car(v.x,v.y,v.w,v.h,false,v.type,v.color);
 X.restore();
 });
 powerUps.forEach(p=>{
