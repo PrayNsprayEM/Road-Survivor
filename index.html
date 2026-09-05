@@ -25,6 +25,33 @@
 .showroom:before{content:'';position:absolute;left:0;right:0;bottom:0;height:31%;background:linear-gradient(#1110,#0008),repeating-linear-gradient(100deg,#111 0 44px,#151515 44px 88px);border-top:1px solid #ffffff16;pointer-events:none}
 .carName{position:relative;z-index:2;text-shadow:0 2px 5px #000}
 #dealerCanvas{position:relative;z-index:2;filter:drop-shadow(0 18px 12px #000b)}
+
+.upgradeHeader{display:flex;align-items:center;justify-content:center;gap:18px;margin-bottom:14px}
+.upgradeHeader h2{margin:0}
+.upgradeCarName{font-size:13px;opacity:.75;margin-top:3px}
+.upgradeCats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;max-width:760px;margin:10px auto}
+.upgradeCat{min-height:180px;border-radius:18px;border:2px solid #ffffff28;background:linear-gradient(#252b35,#11151b);color:#fff;padding:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;box-shadow:0 10px 24px #0007}
+.upgradeCat:active{transform:scale(.98)}
+.upgradeCat b{font-size:23px;letter-spacing:1px}
+.upgradeCat span{font-size:12px;opacity:.7}
+.upgradeArt{width:110px;height:78px;position:relative;margin-bottom:4px}
+.engineBody{position:absolute;left:23px;top:29px;width:62px;height:36px;border:4px solid #b8c0cc;background:#687180;border-radius:8px}
+.engineTop{position:absolute;left:35px;top:15px;width:38px;height:19px;border:4px solid #c7ced7;background:#7c8695;border-radius:6px}
+.enginePipe{position:absolute;left:83px;top:36px;width:23px;height:11px;border:5px solid #b8c0cc;border-left:0;border-radius:0 8px 8px 0}
+.brakeDisc{position:absolute;left:24px;top:5px;width:70px;height:70px;border-radius:50%;border:10px solid #aeb6c1;box-sizing:border-box;background:#3c424c}
+.brakeHub{position:absolute;left:49px;top:30px;width:20px;height:20px;border-radius:50%;background:#c9cfd7;border:5px solid #626b78}
+.brakeCaliper{position:absolute;right:11px;top:19px;width:24px;height:42px;border-radius:8px;background:#9aa3af;border:4px solid #c2c9d2}
+.spoilerWing{position:absolute;left:10px;top:18px;width:92px;height:18px;background:#a9b0ba;border:3px solid #d0d5dc;border-radius:7px;transform:skewX(-10deg)}
+.spoilerPost{position:absolute;top:39px;width:8px;height:30px;background:#7c8592}
+.post1{left:35px}.post2{right:32px}
+.liveryRoll{position:absolute;left:17px;top:12px;width:38px;height:38px;border-radius:50%;border:9px solid #aeb6c1;box-sizing:border-box;background:#39404a}
+.liverySheet{position:absolute;left:47px;top:25px;width:53px;height:37px;border-radius:4px;background:linear-gradient(135deg,#c0c6ce 0 25%,#5d6673 25% 50%,#a9b0ba 50% 75%,#454d59 75%)}
+.liveryStripe{position:absolute;left:50px;top:39px;width:48px;height:6px;background:#1c2027;transform:rotate(-8deg)}
+.upgradeDetailHead{display:flex;align-items:center;justify-content:center;gap:16px;margin:8px 0 12px}
+.upgradeDetailHead h3{margin:0;font-size:22px}
+#upgradeDetail #ul{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;max-width:760px;margin:0 auto}
+@media(max-width:700px){.upgradeCats,#upgradeDetail #ul{grid-template-columns:1fr}.upgradeCat{min-height:145px}}
+
 </style></head><body><canvas id="c"></canvas><div id="ui">
 <div id="menu" class="p"><h1>ROAD SURVIVOR</h1><p>Dodge traffic. Survive as long as you can.</p><p>Cash: <b id="cash"></b></p><button id="play">PLAY</button><br><button id="up">UPGRADES</button><button id="dealerBtn">DEALERSHIP</button><br><button id="lb">LEADERBOARD</button><button id="set">SETTINGS</button><p>Difficulty</p><button id="dif" class="diff">EASY</button></div>
 
@@ -45,7 +72,53 @@
   </div>
 </div>
 
-<div id="upgrades" class="p hide"><h2>UPGRADES</h2><div id="ul"></div><button id="ub">BACK</button></div>
+<div id="upgrades" class="p hide">
+  <div class="upgradeHeader">
+    <button id="ub">BACK</button>
+    <div>
+      <h2>UPGRADES</h2>
+      <div id="upgradeCarName" class="upgradeCarName"></div>
+    </div>
+  </div>
+
+  <div id="upgradeCats" class="upgradeCats">
+    <button class="upgradeCat" data-cat="Engine">
+      <div class="upgradeArt engineArt">
+        <div class="engineBody"></div><div class="engineTop"></div><div class="enginePipe"></div>
+      </div>
+      <b>ENGINE</b><span>Power upgrades</span>
+    </button>
+
+    <button class="upgradeCat" data-cat="Brakes">
+      <div class="upgradeArt brakeArt">
+        <div class="brakeDisc"></div><div class="brakeHub"></div><div class="brakeCaliper"></div>
+      </div>
+      <b>BRAKES</b><span>Stopping upgrades</span>
+    </button>
+
+    <button class="upgradeCat" data-cat="Aero">
+      <div class="upgradeArt spoilerArt">
+        <div class="spoilerWing"></div><div class="spoilerPost post1"></div><div class="spoilerPost post2"></div>
+      </div>
+      <b>AERO</b><span>Spoilers & body parts</span>
+    </button>
+
+    <button class="upgradeCat" data-cat="Style">
+      <div class="upgradeArt liveryArt">
+        <div class="liveryRoll"></div><div class="liverySheet"></div><div class="liveryStripe"></div>
+      </div>
+      <b>STYLE</b><span>Liveries & cosmetics</span>
+    </button>
+  </div>
+
+  <div id="upgradeDetail" class="hide">
+    <div class="upgradeDetailHead">
+      <button id="upgradeCatBack">◀ CATEGORIES</button>
+      <h3 id="upgradeCatTitle">ENGINE</h3>
+    </div>
+    <div id="ul"></div>
+  </div>
+</div>
 <div id="leader" class="p hide"><h2>LEADERBOARD</h2><p>Your best score on each difficulty</p><div id="scores"></div><button id="lbback">BACK</button></div>
 <div id="settings" class="p hide"><h2>SETTINGS</h2><div class="card">Driving controls<br><button id="mode">BUTTONS</button></div><div class="card">Music <input id="music" type="range" min="0" max="100"></div><div class="card">SFX <input id="sfx" type="range" min="0" max="100"></div><div class="card">Song<br><button id="song">TRACK 1</button></div><button id="sb">BACK</button></div>
 <div id="crash" class="p hide"><h2>CRASH!</h2><p>Time: <b id="ft"></b></p><p>Distance: <b id="fd"></b></p><p>Score: <b id="fs"></b></p><p>Run earnings: <b id="earnings">$0</b></p><p>Best: <b id="fb"></b></p><button id="retry">RETRY</button><button id="cm">MENU</button><button id="cl">LEADERBOARD</button></div>
@@ -57,7 +130,7 @@ const els={
   menu:document.getElementById('menu'),upgrades:document.getElementById('upgrades'),leader:document.getElementById('leader'),settings:document.getElementById('settings'),crash:document.getElementById('crash'),
   cash:document.getElementById('cash'),play:document.getElementById('play'),up:document.getElementById('up'),dealerBtn:document.getElementById('dealerBtn'),lb:document.getElementById('lb'),set:document.getElementById('set'),dif:document.getElementById('dif'),
   dealership:document.getElementById('dealership'),dealerCash:document.getElementById('dealerCash'),dealerBack:document.getElementById('dealerBack'),dealerPrev:document.getElementById('dealerPrev'),dealerNext:document.getElementById('dealerNext'),dealerCanvas:document.getElementById('dealerCanvas'),dealerName:document.getElementById('dealerName'),dealerBuy:document.getElementById('dealerBuy'),dealerSpecs:document.getElementById('dealerSpecs'),
-  ul:document.getElementById('ul'),ub:document.getElementById('ub'),scores:document.getElementById('scores'),lbback:document.getElementById('lbback'),
+  ul:document.getElementById('ul'),ub:document.getElementById('ub'),upgradeCats:document.getElementById('upgradeCats'),upgradeDetail:document.getElementById('upgradeDetail'),upgradeCatBack:document.getElementById('upgradeCatBack'),upgradeCatTitle:document.getElementById('upgradeCatTitle'),upgradeCarName:document.getElementById('upgradeCarName'),scores:document.getElementById('scores'),lbback:document.getElementById('lbback'),
   mode:document.getElementById('mode'),music:document.getElementById('music'),sfx:document.getElementById('sfx'),song:document.getElementById('song'),sb:document.getElementById('sb'),
   ft:document.getElementById('ft'),fd:document.getElementById('fd'),fs:document.getElementById('fs'),earnings:document.getElementById('earnings'),fb:document.getElementById('fb'),retry:document.getElementById('retry'),cm:document.getElementById('cm'),cl:document.getElementById('cl'),
   hud:document.getElementById('hud'),speed:document.getElementById('speed'),score:document.getElementById('score'),status:document.getElementById('status'),nearMissToast:document.getElementById('nearMissToast'),controls:document.getElementById('controls'),steerControls:document.getElementById('steerControls'),pedalControls:document.getElementById('pedalControls')
@@ -76,13 +149,60 @@ Easy:{trafficSpeed:50,spawn:1.45,max:4,truck:.02,trailer:0,power:.0025},
 Medium:{trafficSpeed:63,spawn:1.08,max:7,truck:.06,trailer:.01,power:.0023},
 Hard:{trafficSpeed:78,spawn:.82,max:10,truck:.12,trailer:.04,power:.0021},
 Extreme:{trafficSpeed:96,spawn:.58,max:15,truck:.24,trailer:.12,power:.002}
-},scoreMult={Easy:1,Medium:1.5,Hard:2,Extreme:2.5},upgradeItems=[['Twin Turbo',5400],['Supercharger',3600],['Large Turbo',4700],['Sport Brakes',1300],['Race Brakes',2100],['Race Spoiler',1100],['Front Bumper',1200],['Rear Bumper',1200],['Grip Tires',1500]],owned=JSON.parse(localStorage.getItem('owned')||'[]'),keys={left:0,right:0,gas:0,brake:0};
+},scoreMult={Easy:1,Medium:1.5,Hard:2,Extreme:2.5},
+upgradeItems=[
+['Twin Turbo',5400,'Engine'],['Supercharger',3600,'Engine'],['Large Turbo',4700,'Engine'],
+['Sport Brakes',1300,'Brakes'],['Race Brakes',2100,'Brakes'],
+['Race Spoiler',1100,'Aero'],['Front Bumper',1200,'Aero'],['Rear Bumper',1200,'Aero'],['Grip Tires',1500,'Aero'],
+['Street Livery',900,'Style'],['Race Livery',1500,'Style'],['Rim Paint',600,'Style']
+],
+legacyOwned=JSON.parse(localStorage.getItem('owned')||'[]'),
+carUpgradeOwned=JSON.parse(localStorage.getItem('carUpgradeOwned')||'{}'),
+keys={left:0,right:0,gas:0,brake:0};
+if(!carUpgradeOwned[selectedCar] && legacyOwned.length){
+  carUpgradeOwned[selectedCar]=legacyOwned.slice();
+  localStorage.setItem('carUpgradeOwned',JSON.stringify(carUpgradeOwned));
+}
+function ownedForCar(){if(!carUpgradeOwned[selectedCar])carUpgradeOwned[selectedCar]=[];return carUpgradeOwned[selectedCar]}
+function saveCarUpgrades(){localStorage.setItem('carUpgradeOwned',JSON.stringify(carUpgradeOwned))}
+let activeUpgradeCategory=null;
 function resize(){W=innerWidth;H=innerHeight;C.width=W*devicePixelRatio;C.height=H*devicePixelRatio;X.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);roadW=Math.min(W*.72,520);roadX=(W-roadW)/2}addEventListener('resize',resize);resize();
 function panels(id){['menu','dealership','upgrades','leader','settings','crash'].forEach(k=>els[k].classList.toggle('hide',k!==id));}
 function dc(el,v){el.textContent=v.toUpperCase();el.className='diff '+v.toLowerCase()}
 function cyc(v){return D[(D.indexOf(v)+1)%4]}
 function cashUI(){els.cash.textContent='$'+cash.toLocaleString()}
-function upgradesUI(){els.ul.innerHTML='';upgradeItems.forEach((u,i)=>{let d=document.createElement('div');d.className='card';d.innerHTML='<b>'+u[0]+'</b><span class="price">'+(owned.includes(i)?'OWNED':'$'+u[1].toLocaleString())+'</span>';if(!owned.includes(i))d.onclick=()=>{if(cash>=u[1]){cash-=u[1];owned.push(i);localStorage.setItem('cash',cash);localStorage.setItem('owned',JSON.stringify(owned));cashUI();upgradesUI()}};els.ul.appendChild(d)})}
+function upgradesUI(cat=null){
+  activeUpgradeCategory=cat;
+  const car=cars.find(c=>c.id===selectedCar);
+  if(els.upgradeCarName)els.upgradeCarName.textContent=(car?car.name:'Current car')+' upgrades';
+  if(!cat){
+    els.upgradeCats.classList.remove('hide');
+    els.upgradeDetail.classList.add('hide');
+    return;
+  }
+  els.upgradeCats.classList.add('hide');
+  els.upgradeDetail.classList.remove('hide');
+  els.upgradeCatTitle.textContent=cat.toUpperCase();
+  els.ul.innerHTML='';
+  const owned=ownedForCar();
+  upgradeItems.forEach((u,i)=>{
+    if(u[2]!==cat)return;
+    let d=document.createElement('div');
+    d.className='card';
+    d.innerHTML='<b>'+u[0]+'</b><span class="price">'+(owned.includes(i)?'OWNED FOR THIS CAR':'$'+u[1].toLocaleString())+'</span>';
+    if(!owned.includes(i))d.onclick=()=>{
+      if(cash>=u[1]){
+        cash-=u[1];
+        owned.push(i);
+        localStorage.setItem('cash',cash);
+        saveCarUpgrades();
+        cashUI();
+        upgradesUI(cat);
+      }
+    };
+    els.ul.appendChild(d);
+  });
+}
 
 function dealerDrawCar(car){
   const c=els.dealerCanvas,ctx=c.getContext('2d'),w=c.width,h=c.height;
@@ -146,14 +266,14 @@ function dealerPurchaseOrSelect(){
   const car=cars[dealerIndex];
   if(ownedCars.includes(car.id)){
     selectedCar=car.id;
-    localStorage.setItem('selectedCar',selectedCar);
+    localStorage.setItem('selectedCar',selectedCar);if(!carUpgradeOwned[selectedCar]){carUpgradeOwned[selectedCar]=[];saveCarUpgrades()}
   }else if(cash>=car.price){
     cash-=car.price;
     ownedCars.push(car.id);
     selectedCar=car.id;
     localStorage.setItem('cash',cash);
     localStorage.setItem('ownedCars',JSON.stringify(ownedCars));
-    localStorage.setItem('selectedCar',selectedCar);
+    localStorage.setItem('selectedCar',selectedCar);if(!carUpgradeOwned[selectedCar]){carUpgradeOwned[selectedCar]=[];saveCarUpgrades()}
     cashUI();
   }else{
     els.dealerBuy.textContent='NOT ENOUGH CASH';
@@ -436,6 +556,8 @@ function crashGame(){
 els.dif.onclick=()=>{diff=cyc(diff);localStorage.setItem('diff',diff);dc(els.dif,diff)};
 els.play.onclick=start;els.retry.onclick=start;
 els.up.onclick=()=>{upgradesUI();panels('upgrades')};
+document.querySelectorAll('.upgradeCat').forEach(b=>b.onclick=()=>upgradesUI(b.dataset.cat));
+els.upgradeCatBack.onclick=()=>upgradesUI();
 els.ub.onclick=()=>{controlLayout();panels('menu')};
 els.dealerBtn.onclick=()=>{dealerIndex=Math.max(0,cars.findIndex(c=>c.id===selectedCar));dealerUI();panels('dealership')};
 els.dealerBack.onclick=()=>{cashUI();panels('menu')};
