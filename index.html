@@ -302,7 +302,7 @@ function dealerDrawCar(car){
   spot.addColorStop(0,'rgba(255,255,255,.30)');spot.addColorStop(.45,'rgba(255,255,255,.08)');spot.addColorStop(1,'rgba(255,255,255,0)');
   ctx.fillStyle=spot;ctx.fillRect(0,0,w,h);
   ctx.translate(w/2,h/2+24);
-  ctx.save();ctx.scale(1,-.23);ctx.globalAlpha=.12;ctx.translate(0,-400);drawDealerBody(ctx,car);ctx.restore();
+  ctx.save();ctx.scale(1,-.23);ctx.globalAlpha=.12;ctx.translate(0,-400);ctx.save();ctx.scale(1,1.42);drawDealerBody(ctx,car);ctx.restore();ctx.restore();
   drawDealerBody(ctx,car);
   ctx.restore();
 }
@@ -742,3 +742,14 @@ els.mode.onclick=async()=>{
 };els.song.onclick=()=>{song=song%3+1;songBtn()};els.music.oninput=()=>musicVol=+els.music.value;els.sfx.oninput=()=>sfxVol=+els.sfx.value;
 dc(els.dif,diff);cashUI();dealerUI();panels('menu');
 </script></body></html>
+<style>
+@media (orientation:portrait){
+  #dealerCanvas{
+    width:100% !important;
+    height:auto !important;
+    aspect-ratio:1/1 !important;
+    max-height:38vh !important;
+    object-fit:contain !important;
+  }
+}
+</style>
