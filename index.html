@@ -221,7 +221,7 @@ const cars=[
   {id:'supra',name:'Toyota GR Supra',price:48000,hp:382,top:155,weight:3400,drive:'RWD',zero:'3.9s',desc:'Turbocharged rear-wheel-drive sports car'},
   {id:'m3',name:'BMW M3',price:57000,hp:473,top:155,weight:3840,drive:'RWD',zero:'4.1s',desc:'High-performance sport sedan'},
   {id:'corvette',name:'Chevrolet Corvette',price:78000,hp:490,top:194,weight:3535,drive:'RWD',zero:'2.9s',desc:'Mid-engine American sports car'},
-  {id:'gtr',name:'Nissan GT-R',price:105000,hp:565,top:196,weight:3935,drive:'AWD',zero:'2.9s',desc:'Twin-turbo AWD performance car'},{id:'fordgt',name:'Ford GT',price:140000,hp:660,top:216,weight:3054,drive:'RWD',zero:'3.0s'},
+  {id:'gtr',name:'Nissan GT-R',price:105000,hp:565,top:196,weight:3935,drive:'AWD',zero:'2.9s',desc:'Twin-turbo AWD performance car'},{id:'fordgt',name:'Ford GT',price:800000,hp:660,top:216,weight:3054,drive:'RWD',zero:'3.0s',desc:'3.5L twin-turbo V6 • carbon-fiber supercar • active aero'},
   {id:'911turbo',name:'Porsche 911 Turbo S',price:180000,hp:640,top:205,weight:3636,drive:'AWD',zero:'2.6s',desc:'Twin-turbo AWD supercar'},
   {id:'huracan',name:'Lamborghini Huracan',price:278000,hp:631,top:202,weight:3399,drive:'AWD',zero:'2.9s',desc:'V10 Italian supercar'},
   {id:'720s',name:'McLaren 720S',price:320000,hp:710,top:212,weight:3128,drive:'RWD',zero:'2.8s',desc:'Lightweight twin-turbo supercar'},
@@ -392,28 +392,76 @@ function drawDealerBody(ctx,car){
   }
   
 if(car.id==='fordgt'){
-  // Ford GT: low wide supercar, central stripe, flying-buttress look and large side intakes
-  ctx.fillStyle='#2f6ed1';
-  ctx.beginPath();
-  ctx.moveTo(-150,18);ctx.quadraticCurveTo(-135,-40,-78,-58);
-  ctx.lineTo(55,-58);ctx.quadraticCurveTo(125,-50,150,-8);
-  ctx.lineTo(134,32);ctx.quadraticCurveTo(95,52,30,54);
-  ctx.lineTo(-85,50);ctx.quadraticCurveTo(-135,45,-150,18);ctx.fill();
+  // Ford GT — detailed low/wide side profile
+  // lower carbon splitter / undertray
+  ctx.fillStyle='#0b0d10';
+  ctx.beginPath();ctx.moveTo(-158,27);ctx.lineTo(-143,43);ctx.lineTo(114,45);ctx.lineTo(153,28);ctx.lineTo(145,40);ctx.lineTo(-150,40);ctx.closePath();ctx.fill();
 
-  ctx.fillStyle='#101820';
-  ctx.beginPath();ctx.moveTo(-84,-40);ctx.lineTo(30,-43);ctx.lineTo(65,-14);ctx.lineTo(-65,-12);ctx.closePath();ctx.fill();
+  // sculpted blue body
+  let fg=ctx.createLinearGradient(-130,-55,120,45);
+  fg.addColorStop(0,'#4f89ef');fg.addColorStop(.48,'#245fc2');fg.addColorStop(1,'#153f8e');
+  ctx.fillStyle=fg;ctx.beginPath();
+  ctx.moveTo(-156,21);ctx.quadraticCurveTo(-145,-18,-113,-34);
+  ctx.quadraticCurveTo(-82,-55,-43,-59);ctx.lineTo(27,-59);
+  ctx.quadraticCurveTo(75,-54,107,-33);ctx.quadraticCurveTo(139,-14,154,10);
+  ctx.lineTo(143,30);ctx.quadraticCurveTo(113,43,73,47);
+  ctx.lineTo(-87,47);ctx.quadraticCurveTo(-135,43,-156,21);ctx.closePath();ctx.fill();
 
-  ctx.fillStyle='#f2f2f2';
-  ctx.fillRect(-10,-54,12,101);
+  // greenhouse / windshield
+  ctx.fillStyle='#101820';ctx.beginPath();
+  ctx.moveTo(-74,-37);ctx.lineTo(-42,-55);ctx.lineTo(22,-55);ctx.lineTo(62,-33);
+  ctx.lineTo(43,-15);ctx.lineTo(-60,-16);ctx.closePath();ctx.fill();
+  ctx.strokeStyle='rgba(170,220,255,.42)';ctx.lineWidth=2;ctx.stroke();
+  ctx.fillStyle='rgba(105,180,230,.16)';ctx.beginPath();ctx.moveTo(-57,-35);ctx.lineTo(-36,-50);ctx.lineTo(-7,-50);ctx.lineTo(-11,-18);ctx.lineTo(-52,-19);ctx.closePath();ctx.fill();
 
-  ctx.fillStyle='#111';
-  ctx.beginPath();ctx.moveTo(-125,-15);ctx.lineTo(-82,-28);ctx.lineTo(-72,-4);ctx.lineTo(-118,8);ctx.closePath();ctx.fill();
-  ctx.beginPath();ctx.moveTo(115,-15);ctx.lineTo(76,-28);ctx.lineTo(67,-4);ctx.lineTo(111,8);ctx.closePath();ctx.fill();
+  // white dual racing stripe
+  ctx.fillStyle='rgba(248,248,248,.96)';ctx.fillRect(-9,-58,7,101);ctx.fillRect(3,-58,7,101);
+  ctx.fillStyle='#173f88';ctx.fillRect(0,-58,2,101);
 
-  ctx.fillStyle='#fff2b0';
-  ctx.fillRect(-126,-30,26,6);ctx.fillRect(100,-30,26,6);
-  ctx.fillStyle='#bd1f2d';
-  ctx.fillRect(-118,35,26,7);ctx.fillRect(92,35,26,7);
+  // flying-buttress / side channel silhouettes
+  ctx.fillStyle='#0d1218';
+  ctx.beginPath();ctx.moveTo(53,-32);ctx.lineTo(91,-25);ctx.lineTo(119,7);ctx.lineTo(86,3);ctx.lineTo(58,-13);ctx.closePath();ctx.fill();
+  ctx.beginPath();ctx.moveTo(-75,-27);ctx.lineTo(-105,-13);ctx.lineTo(-124,8);ctx.lineTo(-91,1);ctx.lineTo(-62,-15);ctx.closePath();ctx.fill();
+
+  // big side intake / door scallop
+  ctx.fillStyle='#0a0d11';ctx.beginPath();
+  ctx.moveTo(61,-7);ctx.quadraticCurveTo(94,-2,108,17);ctx.lineTo(82,29);ctx.quadraticCurveTo(61,20,54,7);ctx.closePath();ctx.fill();
+  ctx.strokeStyle='rgba(255,255,255,.18)';ctx.lineWidth=1.5;ctx.stroke();
+
+  // hood extraction vents
+  ctx.fillStyle='rgba(4,8,12,.74)';
+  ctx.beginPath();ctx.moveTo(-129,-17);ctx.lineTo(-89,-29);ctx.lineTo(-76,-14);ctx.lineTo(-116,-3);ctx.closePath();ctx.fill();
+  ctx.beginPath();ctx.moveTo(111,-14);ctx.lineTo(79,-27);ctx.lineTo(68,-12);ctx.lineTo(101,-1);ctx.closePath();ctx.fill();
+  ctx.strokeStyle='rgba(120,160,210,.35)';ctx.lineWidth=1;
+  for(let k=0;k<3;k++){ctx.beginPath();ctx.moveTo(-117+k*8,-15-k*2);ctx.lineTo(-90+k*5,-22+k);ctx.stroke();}
+
+  // headlights with LED signature
+  ctx.fillStyle='#dff3ff';ctx.shadowColor='#bde8ff';ctx.shadowBlur=8;
+  ctx.beginPath();ctx.moveTo(-145,-5);ctx.lineTo(-116,-16);ctx.lineTo(-101,-10);ctx.lineTo(-127,0);ctx.closePath();ctx.fill();
+  ctx.beginPath();ctx.moveTo(138,-3);ctx.lineTo(112,-15);ctx.lineTo(99,-9);ctx.lineTo(124,1);ctx.closePath();ctx.fill();ctx.shadowBlur=0;
+
+  // rear lamps
+  ctx.fillStyle='#e12732';ctx.shadowColor='#ff2d3d';ctx.shadowBlur=6;
+  ctx.fillRect(119,22,22,5);ctx.fillRect(-139,23,20,5);ctx.shadowBlur=0;
+
+  // active rear wing / rear deck edge
+  ctx.fillStyle='#111419';ctx.fillRect(104,-19,48,5);ctx.fillRect(112,-19,4,15);ctx.fillRect(142,-19,4,15);
+
+  // wheels, black multi-spoke rims, blue calipers
+  for(const wx of [-111,111]){
+    ctx.fillStyle='#050607';ctx.beginPath();ctx.arc(wx,46,32,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#15191e';ctx.beginPath();ctx.arc(wx,46,20,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle='#89939d';ctx.lineWidth=2;
+    for(let a=0;a<Math.PI*2;a+=Math.PI/5){ctx.beginPath();ctx.moveTo(wx,46);ctx.lineTo(wx+Math.cos(a)*17,46+Math.sin(a)*17);ctx.stroke();}
+    ctx.fillStyle='#2f6ed1';ctx.fillRect(wx-4,33,7,12);
+    ctx.fillStyle='#bfc5ca';ctx.beginPath();ctx.arc(wx,46,6,0,Math.PI*2);ctx.fill();
+  }
+
+  // panel seams + GT badge
+  ctx.strokeStyle='rgba(0,0,0,.34)';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(-55,-14);ctx.lineTo(-58,27);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(51,-14);ctx.lineTo(47,29);ctx.stroke();
+  ctx.fillStyle='#e9eef7';ctx.font='bold 8px system-ui';ctx.fillText('GT',88,19);
 }
 if(car.id==='911turbo'){
     ctx.fillStyle='#fff0b0';ctx.beginPath();ctx.ellipse(-130,9,15,9,0,0,Math.PI*2);ctx.fill();
@@ -762,15 +810,6 @@ if(model==='fordgt'){nose=.15;shoulder=.51;rear=.45;roofTop=-.06;roofBot=.16;cab
 if(model==='911turbo'){nose=.30;shoulder=.46;rear=.48;roofTop=-.14;roofBot=.25;}
 if(model==='huracan'){nose=.18;shoulder=.51;rear=.47;roofTop=-.08;roofBot=.18;}
 if(model==='720s'){nose=.16;shoulder=.50;rear=.43;roofTop=-.07;roofBot=.17;}
-if(model==='fordgt'){
-  // Ford GT signature center stripe and deep hood vents
-  X.fillStyle='rgba(255,255,255,.88)';
-  X.fillRect(-w*.035,-h*.48,w*.07,h*.90);
-  X.fillStyle='rgba(0,0,0,.45)';
-  X.beginPath();X.moveTo(-w*.34,-h*.34);X.lineTo(-w*.13,-h*.27);X.lineTo(-w*.24,-h*.17);X.closePath();X.fill();
-  X.beginPath();X.moveTo(w*.34,-h*.34);X.lineTo(w*.13,-h*.27);X.lineTo(w*.24,-h*.17);X.closePath();X.fill();
-  X.fillRect(-w*.31,h*.33,w*.62,3);
-}
 if(model==='f458'){nose=.18;shoulder=.49;rear=.44;roofTop=-.09;roofBot=.18;}
 if(model==='mustang'){nose=.33;shoulder=.50;rear=.49;roofTop=-.18;roofBot=.25;}
 if(isTruck){nose=.45;shoulder=.48;rear=.48;roofTop=-.18;roofBot=.30;}
@@ -838,6 +877,13 @@ X.save();X.shadowColor='#ff2020';X.shadowBlur=braking?12:3;X.fillStyle=braking?'
 // taillights deliberately different by model
 if(model==='gtr'){
   for(let sx of [-.28,.28]){X.beginPath();X.arc(w*sx,h*.43,3,0,Math.PI*2);X.fill();}
+}else if(model==='fordgt'){
+  // Ford GT circular/halo rear light look
+  for(let sx of [-.27,.27]){
+    X.lineWidth=2;X.strokeStyle=braking?'#ff4747':'#d52d35';
+    X.beginPath();X.arc(w*sx,h*.41,Math.max(2.5,w*.07),0,Math.PI*2);X.stroke();
+    X.fillStyle=braking?'#ff6868':'#8e1f25';X.beginPath();X.arc(w*sx,h*.41,Math.max(1.2,w*.025),0,Math.PI*2);X.fill();
+  }
 }else if(model==='mustang'){
   for(let sx of [-.30,.24]){for(let k=0;k<3;k++)X.fillRect(w*sx+k*3,h*.39,2,7);}
 }else if(model==='911turbo'){
@@ -893,14 +939,51 @@ if(model==='civic'){
 if(model==='a3'){
   X.strokeStyle='rgba(0,0,0,.24)';X.beginPath();X.moveTo(-w*.32,-h*.28);X.lineTo(-w*.27,h*.31);X.moveTo(w*.32,-h*.28);X.lineTo(w*.27,h*.31);X.stroke();
 }
+if(model==='fordgt'){
+  // Ford GT top-down signature details
+  // twin white center stripes with blue separation
+  X.fillStyle='rgba(250,250,250,.94)';
+  X.fillRect(-w*.075,-h*.485,w*.055,h*.90);X.fillRect(w*.020,-h*.485,w*.055,h*.90);
+  X.fillStyle='rgba(20,58,130,.90)';X.fillRect(-w*.012,-h*.485,w*.024,h*.90);
+
+  // pair of deep hood extraction vents
+  X.fillStyle='rgba(4,8,12,.70)';
+  X.beginPath();X.moveTo(-w*.37,-h*.36);X.lineTo(-w*.14,-h*.31);X.lineTo(-w*.22,-h*.20);X.lineTo(-w*.40,-h*.25);X.closePath();X.fill();
+  X.beginPath();X.moveTo(w*.37,-h*.36);X.lineTo(w*.14,-h*.31);X.lineTo(w*.22,-h*.20);X.lineTo(w*.40,-h*.25);X.closePath();X.fill();
+
+  // flying-buttress channels running beside the cockpit
+  X.strokeStyle='rgba(3,7,11,.72)';X.lineWidth=Math.max(2,w*.055);
+  X.beginPath();X.moveTo(-w*.40,-h*.03);X.quadraticCurveTo(-w*.50,h*.10,-w*.37,h*.31);X.stroke();
+  X.beginPath();X.moveTo(w*.40,-h*.03);X.quadraticCurveTo(w*.50,h*.10,w*.37,h*.31);X.stroke();
+
+  // side intake mouths
+  X.fillStyle='rgba(5,9,13,.78)';
+  X.beginPath();X.ellipse(-w*.42,h*.12,w*.08,h*.10,-.15,0,Math.PI*2);X.fill();
+  X.beginPath();X.ellipse(w*.42,h*.12,w*.08,h*.10,.15,0,Math.PI*2);X.fill();
+
+  // rear engine cover vents / mesh
+  X.fillStyle='rgba(7,10,13,.58)';X.fillRect(-w*.25,h*.25,w*.50,h*.055);
+  X.strokeStyle='rgba(170,180,190,.30)';X.lineWidth=1;
+  for(let k=-2;k<=2;k++){X.beginPath();X.moveTo(w*k*.08,h*.25);X.lineTo(w*k*.08,h*.305);X.stroke();}
+
+  // tiny door cuts and fuel cap
+  X.strokeStyle='rgba(0,0,0,.30)';X.lineWidth=1;
+  X.beginPath();X.moveTo(-w*.31,-h*.02);X.lineTo(-w*.32,h*.21);X.stroke();
+  X.beginPath();X.moveTo(w*.31,-h*.02);X.lineTo(w*.32,h*.21);X.stroke();
+  X.beginPath();X.arc(w*.32,h*.23,Math.max(1,w*.025),0,Math.PI*2);X.stroke();
+}
 
 // spoilers / rear aero
 if(['gtr','mustang','supra'].includes(model)){
   X.fillStyle='#1b1b1d';X.fillRect(-w*.34,h*.34,w*.68,4);
   X.fillRect(-w*.26,h*.30,3,6);X.fillRect(w*.23,h*.30,3,6);
 }
-if(['huracan','720s','f458','corvette','fordgt'].includes(model)){
+if(['huracan','720s','f458','corvette'].includes(model)){
   X.fillStyle='rgba(0,0,0,.38)';X.fillRect(-w*.32,h*.34,w*.64,3);
+}
+if(model==='fordgt'){
+  X.fillStyle='rgba(7,9,12,.82)';X.fillRect(-w*.36,h*.345,w*.72,3);
+  X.fillRect(-w*.29,h*.30,2,h*.055);X.fillRect(w*.27,h*.30,2,h*.055);
 }
 
 let roofGrad=X.createLinearGradient(-w*.22,0,w*.22,0);
