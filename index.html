@@ -110,7 +110,23 @@ body.upgradesOpen #upgrades{
   min-width:110px;
 }
 
-</style></head><body><canvas id="c"></canvas><div id="ui">
+</style>
+<style>
+/* Racing realism polish */
+#hud,.hud{
+  text-shadow:0 2px 4px rgba(0,0,0,.75);
+}
+canvas{
+  image-rendering:auto;
+}
+@media (orientation:landscape){
+  #gameCanvas, canvas{
+    filter:saturate(1.03) contrast(1.025);
+  }
+}
+</style>
+
+</head><body><canvas id="c"></canvas><div id="ui">
 <div id="menu" class="p"><h1>ROAD SURVIVOR</h1><p>Dodge traffic. Survive as long as you can.</p><p>Cash: <b id="cash"></b></p><button id="play">PLAY</button><br><button id="up">UPGRADES</button><button id="dealerBtn">DEALERSHIP</button><br><button id="lb">LEADERBOARD</button><button id="set">SETTINGS</button><p>Difficulty</p><button id="dif" class="diff">EASY</button></div>
 
 <div id="dealership" class="p dealer hide">
@@ -705,6 +721,97 @@ X.save();car(player.x,player.y,player.w,player.h,true);X.restore();
 
 if(player.s>85){let g=X.createRadialGradient(W/2,H/2,Math.min(W,H)*.25,W/2,H/2,Math.max(W,H)*.7);g.addColorStop(0,'#0000');g.addColorStop(1,'#0005');X.fillStyle=g;X.fillRect(0,0,W,H)}
 X.restore()
+}
+
+
+// --- Racing realism layer ---
+let roadNoiseOffset=0;
+let cameraLean=0;
+let suspensionBob=0;
+let speedLinePhase=0;
+
+function drawRealisticRoadFX(){
+  if(!X || !C) return;
+  const w=C.width,h=C.height;
+  const roadL=w*.12, roadR=w*.88;
+  const mph=Math.max(0,speed||0);
+  roadNoiseOffset=(roadNoiseOffset + mph*.45)%(h+24);
+  speedLinePhase=(speedLinePhase + mph*.12)%1000;
+
+  X.save();
+
+  // Subtle asphalt grain and moving tar seams.
+  X.globalAlpha=.10;
+  X.fillStyle='#d5d5d5';
+  for(let i=0;i<34;i++){
+    const yy=(i*47 + roadNoiseOffset*1.7)%(h+60)-30;
+    const xx=roadL+12+((i*83)%Math.max(1,(roadR-roadL-24)));
+    X.fillRect(xx,yy,2+(i%3),1);
+  }
+  X.globalAlpha=.08;
+  X.strokeStyle='#101010';
+  X.lineWidth=2;
+  for(let i=0;i<6;i++){
+    const x=roadL+40+i*((roadR-roadL-80)/5);
+    X.beginPath();
+    X.moveTo(x,-20);
+    for(let y=-20;y<h+30;y+=55){
+      X.lineTo(x+Math.sin((y+roadNoiseOffset+i*17)*.025)*4,y);
+    }
+    X.stroke();
+  }
+
+  // Road-edge motion blur at higher speed.
+  if(mph>70){
+    const a=Math.min(.22,(mph-70)/420);
+    X.globalAlpha=a;
+    X.strokeStyle='#ffffff';
+    X.lineWidth=2;
+    for(let i=0;i<12;i++){
+      const y=(i*67 + speedLinePhase*2)%(h+90)-45;
+      X.beginPath();X.moveTo(roadL+8,y);X.lineTo(roadL+8,y+26+mph*.08);X.stroke();
+      X.beginPath();X.moveTo(roadR-8,y);X.lineTo(roadR-8,y+26+mph*.08);X.stroke();
+    }
+  }
+
+  // Subtle camera/suspension motion, strongest at speed.
+  suspensionBob=Math.sin(performance.now()*.012)*(Math.min(mph,150)/150)*1.5;
+  cameraLean += (((keys&&keys.left)?-1:0)+((keys&&keys.right)?1:0)-cameraLean)*.08;
+
+  // Speed vignette.
+  if(mph>90){
+    const a=Math.min(.23,(mph-90)/300);
+    const g=X.createRadialGradient(w/2,h*.55,Math.min(w,h)*.20,w/2,h*.55,Math.max(w,h)*.72);
+    g.addColorStop(.55,'rgba(0,0,0,0)');
+    g.addColorStop(1,'rgba(0,0,0,'+a+')');
+    X.fillStyle=g;X.fillRect(0,0,w,h);
+  }
+
+  X.restore();
+}
+
+function drawVehicleShadow(x,y,w,h){
+  if(!X) return;
+  X.save();
+  X.globalAlpha=.28;
+  X.fillStyle='#000';
+  X.filter='blur(4px)';
+  X.beginPath();
+  X.ellipse(x+4,y+h*.34,w*.42,h*.27,0,0,Math.PI*2);
+  X.fill();
+  X.filter='none';
+  X.restore();
+}
+
+function drawBrakeGlow(x,y,w,h,on){
+  if(!on||!X) return;
+  X.save();
+  X.shadowColor='#ff2020';
+  X.shadowBlur=10;
+  X.fillStyle='#ff3030';
+  X.fillRect(x-w*.26,y+h*.32,w*.12,5);
+  X.fillRect(x+w*.14,y+h*.32,w*.12,5);
+  X.restore();
 }
 
 let crashExplosionRAF=0;
