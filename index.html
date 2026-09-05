@@ -578,8 +578,9 @@ nearMissAwarded:false
 spawn=c.spawn*(.82+Math.random()*.36)
 }
 if(Math.random()<c.power){
-let type=Math.random()<.5?'invis':'nos';
-powerUps.push({x:roadX+30+Math.random()*(roadW-60),y:-35,w:30,h:30,type,s:90+Math.random()*25})
+let roll=Math.random(),type=roll<.30?'invis':roll<.60?'nos':'points';
+let value=type==='points'?[500,750,1000][Math.floor(Math.random()*3)]:0;
+powerUps.push({x:roadX+30+Math.random()*(roadW-60),y:-35,w:type==='points'?38:30,h:type==='points'?38:30,type,value,s:90+Math.random()*25})
 }
 }
 
@@ -631,6 +632,13 @@ let p=powerUps[i];
 if(Math.abs(player.x-p.x)<34&&Math.abs(player.y-p.y)<44){
 if(p.type==='invis')invisibleUntil=performance.now()+5000;
 if(p.type==='nos')nosUntil=performance.now()+3000;
+if(p.type==='points'){
+  nearMissBonus+=p.value;
+  score=Math.floor((Math.floor(t*10+dist)+nearMissBonus)*scoreMult[diff]*collectionMultiplier());
+  nearMissUntil=performance.now()+1100;
+  els.nearMissToast.textContent='POINTS +'+p.value.toLocaleString();
+  els.nearMissToast.style.opacity='1';
+}
 powerUps.splice(i,1)
 }}
 
@@ -685,15 +693,85 @@ car(v.x,v.y,v.w,v.h,false,v.type);
 X.restore();
 });
 powerUps.forEach(p=>{
-X.save();X.shadowColor=p.type==='invis'?'#6ee7ff':'#ffd60a';X.shadowBlur=18;X.beginPath();X.arc(p.x,p.y,15,0,Math.PI*2);
-X.fillStyle=p.type==='invis'?'#8eeaff':'#ffd60a';X.fill();X.shadowBlur=0;X.fillStyle='#111';X.font='bold 10px system-ui';X.textAlign='center';X.textBaseline='middle';
-X.fillText(p.type==='invis'?'INVIS':'NOS',p.x,p.y);X.restore()
+X.save();
+let isPoints=p.type==='points';
+X.shadowColor=p.type==='invis'?'#6ee7ff':p.type==='nos'?'#ffd60a':'#6dff8b';X.shadowBlur=18;X.beginPath();X.arc(p.x,p.y,isPoints?19:15,0,Math.PI*2);
+X.fillStyle=p.type==='invis'?'#8eeaff':p.type==='nos'?'#ffd60a':'#43e06b';X.fill();
+if(isPoints){X.strokeStyle='#eaffef';X.lineWidth=3;X.stroke()}
+X.shadowBlur=0;X.fillStyle='#111';X.font=isPoints?'bold 11px system-ui':'bold 10px system-ui';X.textAlign='center';X.textBaseline='middle';
+X.fillText(p.type==='invis'?'INVIS':p.type==='nos'?'NOS':'+'+p.value,p.x,p.y);X.restore()
 });
 X.save();car(player.x,player.y,player.w,player.h,true);X.restore();
 
 if(player.s>85){let g=X.createRadialGradient(W/2,H/2,Math.min(W,H)*.25,W/2,H/2,Math.max(W,H)*.7);g.addColorStop(0,'#0000');g.addColorStop(1,'#0005');X.fillStyle=g;X.fillRect(0,0,W,H)}
 X.restore()
 }
+
+let crashExplosionRAF=0;
+function playCrashExplosion(done){
+  const startTime=performance.now();
+  const ex=player.x, ey=player.y;
+  cancelAnimationFrame(crashExplosionRAF);
+
+  function frame(now){
+    draw();
+
+    const p=Math.min(1,(now-startTime)/1000);
+    const ease=1-Math.pow(1-p,2);
+
+    X.save();
+    X.globalCompositeOperation='lighter';
+
+    // Bright expanding fireball.
+    const radius=18+105*ease;
+    const glow=X.createRadialGradient(ex,ey,0,ex,ey,radius);
+    glow.addColorStop(0,'rgba(255,255,235,'+(1-p*.7)+')');
+    glow.addColorStop(.18,'rgba(255,220,80,'+(1-p*.45)+')');
+    glow.addColorStop(.5,'rgba(255,105,0,'+(1-p*.65)+')');
+    glow.addColorStop(1,'rgba(190,25,0,0)');
+    X.fillStyle=glow;
+    X.beginPath();X.arc(ex,ey,radius,0,Math.PI*2);X.fill();
+
+    // Shockwave ring.
+    X.globalAlpha=Math.max(0,1-p);
+    X.strokeStyle='#ffd27a';
+    X.lineWidth=Math.max(2,8*(1-p));
+    X.beginPath();X.arc(ex,ey,25+125*ease,0,Math.PI*2);X.stroke();
+
+    // Flying sparks/debris.
+    for(let i=0;i<28;i++){
+      const a=(i/28)*Math.PI*2+(i%4)*.21;
+      const speed=45+(i%7)*13;
+      const rr=10+speed*ease;
+      const px=ex+Math.cos(a)*rr;
+      const py=ey+Math.sin(a)*rr+(38*p*p);
+      const sz=Math.max(1,7*(1-p));
+      X.fillStyle=i%3===0?'#fff2a8':(i%3===1?'#ff9f1c':'#ff3b0a');
+      X.fillRect(px-sz/2,py-sz/2,sz,sz);
+    }
+
+    // Smoke toward the end.
+    X.globalCompositeOperation='source-over';
+    for(let i=0;i<7;i++){
+      const a=(i/7)*Math.PI*2;
+      const rr=18+45*ease;
+      X.globalAlpha=.28*p*(1-p*.5);
+      X.fillStyle='#202020';
+      X.beginPath();
+      X.arc(ex+Math.cos(a)*rr,ey+Math.sin(a)*rr-35*p,15+23*p,0,Math.PI*2);
+      X.fill();
+    }
+    X.restore();
+
+    if(p<1) crashExplosionRAF=requestAnimationFrame(frame);
+    else {
+      crashExplosionRAF=0;
+      if(done) done();
+    }
+  }
+  crashExplosionRAF=requestAnimationFrame(frame);
+}
+
 function crashGame(){
   run=false;
   let reward=Math.floor(score/100)*10;
@@ -712,8 +790,10 @@ function crashGame(){
   els.earnings.textContent='$'+reward.toLocaleString();
   els.fb.textContent=best.s.toLocaleString();
   cashUI();
+
+  // Keep the game visible for the explosion, then show the crash mini-menu.
   els.hud.classList.add('hide');
-  panels('crash')
+  playCrashExplosion(()=>panels('crash'));
 }
 els.dif.onclick=()=>{diff=cyc(diff);localStorage.setItem('diff',diff);dc(els.dif,diff)};
 els.play.onclick=start;els.retry.onclick=start;
