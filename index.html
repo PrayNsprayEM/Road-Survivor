@@ -31,16 +31,12 @@ function controlLayout(){
   const gyro=mode==='gyro';
   els.steerControls.style.display=gyro?'none':'block';
   els.pedalControls.style.display='flex';
-  els.pedalControls.style.gap='10px';
-  if(gyro){
-    els.controls.style.justifyContent='space-between';
-    els.pedalControls.style.width='100%';
-    els.pedalControls.style.justifyContent='space-between';
-  }else{
-    els.controls.style.justifyContent='space-between';
-    els.pedalControls.style.width='auto';
-    els.pedalControls.style.justifyContent='flex-start';
-  }
+  els.pedalControls.style.flexDirection='column';
+  els.pedalControls.style.gap='8px';
+  els.pedalControls.style.width='auto';
+  els.pedalControls.style.justifyContent='flex-start';
+  els.pedalControls.style.alignItems='flex-end';
+  els.controls.style.justifyContent='space-between';
 }
 function songBtn(){els.song.textContent='TRACK '+song}
 function settingsUI(){modeBtn();controlLayout();els.music.value=musicVol;els.sfx.value=sfxVol;songBtn()}
