@@ -98,6 +98,18 @@ body.upgradesOpen #upgrades{
   padding-bottom:120px;
 }
 
+
+#upgradeDetail .upgradeDetailHead{
+  position:sticky;
+  top:0;
+  z-index:5;
+  background:#111;
+  padding:10px 0 12px;
+}
+#upgradeCatBack{
+  min-width:110px;
+}
+
 </style></head><body><canvas id="c"></canvas><div id="ui">
 <div id="menu" class="p"><h1>ROAD SURVIVOR</h1><p>Dodge traffic. Survive as long as you can.</p><p>Cash: <b id="cash"></b></p><button id="play">PLAY</button><br><button id="up">UPGRADES</button><button id="dealerBtn">DEALERSHIP</button><br><button id="lb">LEADERBOARD</button><button id="set">SETTINGS</button><p>Difficulty</p><button id="dif" class="diff">EASY</button></div>
 
@@ -159,7 +171,7 @@ body.upgradesOpen #upgrades{
 
   <div id="upgradeDetail" class="hide">
     <div class="upgradeDetailHead">
-      <button id="upgradeCatBack">◀ CATEGORIES</button>
+      <button id="upgradeCatBack">BACK</button>
       <h3 id="upgradeCatTitle">ENGINE</h3>
     </div>
     <div id="ul"></div>
@@ -176,7 +188,7 @@ const els={
   menu:document.getElementById('menu'),upgrades:document.getElementById('upgrades'),leader:document.getElementById('leader'),settings:document.getElementById('settings'),crash:document.getElementById('crash'),
   cash:document.getElementById('cash'),play:document.getElementById('play'),up:document.getElementById('up'),dealerBtn:document.getElementById('dealerBtn'),lb:document.getElementById('lb'),set:document.getElementById('set'),dif:document.getElementById('dif'),
   dealership:document.getElementById('dealership'),dealerCash:document.getElementById('dealerCash'),dealerBack:document.getElementById('dealerBack'),dealerPrev:document.getElementById('dealerPrev'),dealerNext:document.getElementById('dealerNext'),dealerCanvas:document.getElementById('dealerCanvas'),dealerName:document.getElementById('dealerName'),dealerBuy:document.getElementById('dealerBuy'),dealerSpecs:document.getElementById('dealerSpecs'),
-  ul:document.getElementById('ul'),ub:document.getElementById('ub'),upgradeCats:document.getElementById('upgradeCats'),upgradeDetail:document.getElementById('upgradeDetail'),upgradeCatBack:document.getElementById('upgradeCatBack'),upgradeCatTitle:document.getElementById('upgradeCatTitle'),upgradeCarName:document.getElementById('upgradeCarName'),scores:document.getElementById('scores'),lbback:document.getElementById('lbback'),
+  ul:document.getElementById('ul'),ub:document.getElementById('ub'),upgrades:document.getElementById('upgrades'),upgradeCats:document.getElementById('upgradeCats'),upgradeDetail:document.getElementById('upgradeDetail'),upgradeCatBack:document.getElementById('upgradeCatBack'),upgradeCatTitle:document.getElementById('upgradeCatTitle'),upgradeCarName:document.getElementById('upgradeCarName'),scores:document.getElementById('scores'),lbback:document.getElementById('lbback'),
   mode:document.getElementById('mode'),music:document.getElementById('music'),sfx:document.getElementById('sfx'),song:document.getElementById('song'),sb:document.getElementById('sb'),
   ft:document.getElementById('ft'),fd:document.getElementById('fd'),fs:document.getElementById('fs'),earnings:document.getElementById('earnings'),fb:document.getElementById('fb'),retry:document.getElementById('retry'),cm:document.getElementById('cm'),cl:document.getElementById('cl'),
   hud:document.getElementById('hud'),speed:document.getElementById('speed'),score:document.getElementById('score'),status:document.getElementById('status'),nearMissToast:document.getElementById('nearMissToast'),controls:document.getElementById('controls'),steerControls:document.getElementById('steerControls'),pedalControls:document.getElementById('pedalControls')
@@ -221,21 +233,25 @@ function upgradesUI(cat=null){
   activeUpgradeCategory=cat;
   const car=cars.find(c=>c.id===selectedCar);
   if(els.upgradeCarName)els.upgradeCarName.textContent=(car?car.name:'Current car')+' upgrades';
+
   if(!cat){
-    els.upgradeCats.classList.remove('hide');
     els.upgradeDetail.classList.add('hide');
+    els.upgradeCats.classList.remove('hide');
     return;
   }
+
   els.upgradeCats.classList.add('hide');
   els.upgradeDetail.classList.remove('hide');
   els.upgradeCatTitle.textContent=cat.toUpperCase();
   els.ul.innerHTML='';
+
   const owned=ownedForCar();
   upgradeItems.forEach((u,i)=>{
     if(u[2]!==cat)return;
     let d=document.createElement('div');
     d.className='card';
     d.innerHTML='<b>'+u[0]+'</b><span class="price">'+(owned.includes(i)?'OWNED FOR THIS CAR':'$'+u[1].toLocaleString())+'</span>';
+
     if(!owned.includes(i))d.onclick=()=>{
       if(cash>=u[1]){
         cash-=u[1];
@@ -244,10 +260,18 @@ function upgradesUI(cat=null){
         saveCarUpgrades();
         cashUI();
         upgradesUI(cat);
+      }else{
+        const p=d.querySelector('.price');
+        p.textContent='NOT ENOUGH CASH';
+        setTimeout(()=>upgradesUI(cat),800);
       }
     };
+
     els.ul.appendChild(d);
   });
+
+  // Start the category screen at the top on iPhone.
+  els.upgrades.scrollTop=0;
 }
 
 function dealerDrawCar(car){
@@ -603,7 +627,7 @@ els.dif.onclick=()=>{diff=cyc(diff);localStorage.setItem('diff',diff);dc(els.dif
 els.play.onclick=start;els.retry.onclick=start;
 els.up.onclick=()=>{upgradesUI();panels('upgrades')};
 document.querySelectorAll('.upgradeCat').forEach(b=>b.onclick=()=>upgradesUI(b.dataset.cat));
-els.upgradeCatBack.onclick=()=>upgradesUI();
+els.upgradeCatBack.onclick=()=>{upgradesUI();els.upgrades.scrollTop=0};
 els.ub.onclick=()=>{controlLayout();panels('menu')};
 els.dealerBtn.onclick=()=>{dealerIndex=Math.max(0,cars.findIndex(c=>c.id===selectedCar));dealerUI();panels('dealership')};
 els.dealerBack.onclick=()=>{cashUI();panels('menu')};
