@@ -246,7 +246,7 @@ function loop(now){if(!run)return;let dt=Math.min(.035,(now-last)/1000);last=now
 function update(dt){
 const carData=cars.find(c=>c.id===selectedCar)||cars[0];
 let throttle=keys.gas?1:0,braking=keys.brake?1:0;
-let target=throttle?Math.min(carData.top,108):48;
+let target=throttle?Math.min(carData.top,108):68;
 if(braking)target=0;
 if(performance.now()<nosUntil)target=Math.min(carData.top+40,148);
 
@@ -284,7 +284,13 @@ if(type==='hatch'){w=30;h=45}
 if(type==='sports'){w=32;h=46}
 }
 let laneCenter=roadX+roadW*(lane+.5)/3;
-traffic.push({x:laneCenter,y:-h-18,w,h,type,lane,s:c.trafficSpeed*(.78+Math.random()*.35),drift:(Math.random()-.5)*3});
+traffic.push({
+x:laneCenter,y:-h-18,w,h,type,lane,
+s:c.trafficSpeed*(.78+Math.random()*.35),
+drift:(Math.random()-.5)*3,
+targetX:laneCenter,
+laneTimer:1.5+Math.random()*4.5
+});
 spawn=c.spawn*(.82+Math.random()*.36)
 }
 if(Math.random()<c.power){
@@ -293,7 +299,26 @@ powerUps.push({x:roadX+30+Math.random()*(roadW-60),y:-35,w:30,h:30,type,s:90+Mat
 }
 }
 
-traffic.forEach(v=>{v.y+=(v.s+player.s*.38)*dt*(.65+player.s/115);v.x+=v.drift*dt});
+traffic.forEach(v=>{
+v.y+=(v.s+player.s*.38)*dt*(.65+player.s/115);
+v.laneTimer=(v.laneTimer??2)-dt;
+
+if(v.laneTimer<=0){
+  // Random chance to change one lane left or right.
+  if(Math.random()<.42){
+    let dir=Math.random()<.5?-1:1;
+    let nextLane=Math.max(0,Math.min(2,(v.lane??1)+dir));
+    if(nextLane!==(v.lane??1)){
+      v.lane=nextLane;
+      v.targetX=roadX+roadW*(nextLane+.5)/3;
+    }
+  }
+  v.laneTimer=2.2+Math.random()*5.5;
+}
+
+if(v.targetX==null)v.targetX=v.x;
+v.x+=(v.targetX-v.x)*Math.min(1,dt*1.8);
+});
 traffic=traffic.filter(v=>v.y<H+150);
 powerUps.forEach(p=>p.y+=(p.s+player.s*.18)*dt);powerUps=powerUps.filter(p=>p.y<H+50);
 
@@ -349,13 +374,18 @@ X.setLineDash([]);
 
 for(let y=-40+(roadOffset%48);y<H+40;y+=48){X.fillStyle='#f7ef9a';X.fillRect(roadX-13,y,5,10);X.fillRect(roadX+roadW+8,y,5,10)}
 
-traffic.forEach(v=>car(v.x,v.y,v.w,v.h,false,v.type));
+traffic.forEach(v=>{
+X.save();
+if(performance.now()<invisibleUntil)X.globalAlpha=.28;
+car(v.x,v.y,v.w,v.h,false,v.type);
+X.restore();
+});
 powerUps.forEach(p=>{
 X.save();X.shadowColor=p.type==='invis'?'#6ee7ff':'#ffd60a';X.shadowBlur=18;X.beginPath();X.arc(p.x,p.y,15,0,Math.PI*2);
 X.fillStyle=p.type==='invis'?'#8eeaff':'#ffd60a';X.fill();X.shadowBlur=0;X.fillStyle='#111';X.font='bold 10px system-ui';X.textAlign='center';X.textBaseline='middle';
 X.fillText(p.type==='invis'?'INVIS':'NOS',p.x,p.y);X.restore()
 });
-X.save();if(performance.now()<invisibleUntil)X.globalAlpha=.35;car(player.x,player.y,player.w,player.h,true);X.restore();
+X.save();car(player.x,player.y,player.w,player.h,true);X.restore();
 
 if(player.s>85){let g=X.createRadialGradient(W/2,H/2,Math.min(W,H)*.25,W/2,H/2,Math.max(W,H)*.7);g.addColorStop(0,'#0000');g.addColorStop(1,'#0005');X.fillStyle=g;X.fillRect(0,0,W,H)}
 X.restore()
