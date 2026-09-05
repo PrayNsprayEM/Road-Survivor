@@ -62,7 +62,7 @@ const els={
   ft:document.getElementById('ft'),fd:document.getElementById('fd'),fs:document.getElementById('fs'),earnings:document.getElementById('earnings'),fb:document.getElementById('fb'),retry:document.getElementById('retry'),cm:document.getElementById('cm'),cl:document.getElementById('cl'),
   hud:document.getElementById('hud'),speed:document.getElementById('speed'),score:document.getElementById('score'),status:document.getElementById('status'),nearMissToast:document.getElementById('nearMissToast'),controls:document.getElementById('controls'),steerControls:document.getElementById('steerControls'),pedalControls:document.getElementById('pedalControls')
 };
-let W,H,roadX,roadW,run=false,last=0,t=0,dist=0,score=0,spawn=0,traffic=[],player,cash=+localStorage.getItem('cash')||10000,diff=localStorage.getItem('diff')||'Easy',mode=localStorage.getItem('mode')||'buttons',musicVol=+(localStorage.getItem('music')||70),sfxVol=+(localStorage.getItem('sfx')||70),song=+(localStorage.getItem('song')||1),powerUps=[],invisibleUntil=0,nosUntil=0,nearMissUntil=0,roadOffset=0,shake=0,steerVel=0,selectedCar=localStorage.getItem('selectedCar')||'civic',dealerIndex=0,ownedCars=JSON.parse(localStorage.getItem('ownedCars')||'["civic"]');
+let W,H,roadX,roadW,run=false,last=0,t=0,dist=0,score=0,nearMissBonus=0,spawn=0,traffic=[],player,cash=+localStorage.getItem('cash')||10000,diff=localStorage.getItem('diff')||'Easy',mode=localStorage.getItem('mode')||'buttons',musicVol=+(localStorage.getItem('music')||70),sfxVol=+(localStorage.getItem('sfx')||70),song=+(localStorage.getItem('song')||1),powerUps=[],invisibleUntil=0,nosUntil=0,nearMissUntil=0,roadOffset=0,shake=0,steerVel=0,selectedCar=localStorage.getItem('selectedCar')||'civic',dealerIndex=0,ownedCars=JSON.parse(localStorage.getItem('ownedCars')||'["civic"]');
 
 const cars=[
   {id:'civic',name:'Honda Civic',price:0,hp:158,top:126,weight:2935,drive:'FWD',zero:'7.8s',desc:'Reliable starter car'},
@@ -192,7 +192,7 @@ function scores(){
       '</div>'
   }).join('')
 }
-function start(){panels(null);els.hud.classList.remove('hide');controlLayout();t=dist=score=spawn=0;traffic=[];powerUps=[];invisibleUntil=0;nosUntil=0;nearMissUntil=0;els.nearMissToast.style.opacity='0';player={x:W/2,y:H*.68,w:30,h:52,s:0};run=true;last=performance.now();requestAnimationFrame(loop)}
+function start(){panels(null);els.hud.classList.remove('hide');controlLayout();t=dist=score=nearMissBonus=spawn=0;traffic=[];powerUps=[];invisibleUntil=0;nosUntil=0;nearMissUntil=0;els.nearMissToast.style.opacity='0';player={x:W/2,y:H*.68,w:30,h:52,s:0};run=true;last=performance.now();requestAnimationFrame(loop)}
 function bind(id,k){
   let b=document.getElementById(id);
   const down=e=>{e.preventDefault();keys[k]=1};
@@ -271,7 +271,7 @@ if(nosUntil>nowMs)effects.push('NOS '+((nosUntil-nowMs)/1000).toFixed(1)+'s');
 els.status.textContent=(active?'':'TIMER PAUSED — SPEED TOO LOW')+(effects.length?((active?'':' • ')+effects.join(' • ')):'');
 
 if(active){
-t+=dt;dist+=player.s*.44704*dt;score=Math.floor(t*10+dist);spawn-=dt;
+t+=dt;dist+=player.s*.44704*dt;score=Math.floor(t*10+dist)+nearMissBonus;spawn-=dt;
 let c=cfg[diff];
 if(spawn<=0&&traffic.length<c.max){
 let lane=Math.floor(Math.random()*3),r=Math.random(),type='car',w=29,h=50;
@@ -332,7 +332,8 @@ let hitGap=(player.w+v.w)*.46;
 let nearGap=(player.w+v.w)*.78;
 if(xGap>=hitGap&&xGap<nearGap){
 v.nearMissAwarded=true;
-score+=50;
+nearMissBonus+=50;
+score=Math.floor(t*10+dist)+nearMissBonus;
 nearMissUntil=performance.now()+1000;
 els.nearMissToast.textContent='NEAR MISS +50';
 els.nearMissToast.style.opacity='1';
