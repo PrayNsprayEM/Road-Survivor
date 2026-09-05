@@ -1717,7 +1717,7 @@ function playCrashExplosion(done){
 
 function crashGame(){
   run=false;
-  let reward=Math.floor(score/100)*10;
+  let reward=Math.floor(score/2);
   cash+=reward;
   localStorage.setItem('cash',cash);
 
