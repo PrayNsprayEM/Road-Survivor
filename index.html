@@ -130,6 +130,18 @@ body.upgradesOpen #upgrades{
   .yourRankBar{grid-template-columns:50px minmax(0,1fr) 90px}
 }
 
+
+/* Keep leaderboard at the top of the screen */
+#leader{
+  align-self:flex-start !important;
+  margin-top:8px !important;
+  top:0 !important;
+  transform:none !important;
+}
+#leader.leaderboardPanel{
+  justify-content:flex-start !important;
+}
+
 </style>
 <style>
 /* Racing realism polish */
