@@ -789,39 +789,110 @@ function bestRunFor(d){
   a.sort((x,y)=>(y.s||0)-(x.s||0));
   return a[0]||null
 }
-const SUPABASE_URL='https://kiapyobnrwmxcjfqmfcg.supabase.co',SUPABASE_KEY='sb_publishable_duBgqSgBJghHi6YO_406yw_AodUHOzu';
+
+const SUPABASE_URL='https://kiapyobnrwmxcjfqmfcg.supabase.co';
+const SUPABASE_KEY='sb_publishable_duBgqSgBJghHi6YO_406yw_AodUHOzu';
 let lbSelected='Easy';
+
 function getPlayerId(){
   let id=localStorage.getItem('rs_player_id');
-  if(!id){id='p_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,12);localStorage.setItem('rs_player_id',id)}
+  if(!id){
+    id='p_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,12);
+    localStorage.setItem('rs_player_id',id);
+  }
   return id;
 }
-function getPlayerName(){return (localStorage.getItem('rs_player_name')||'PLAYER').slice(0,20)}
+
 async function lbRequest(path,opts={}){
-  const headers=Object.assign({'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json'},opts.headers||{});
-  const r=await fetch(SUPABASE_URL+'/rest/v1/'+path,Object.assign({},opts,{headers}));
-  if(!r.ok)throw Error('Leaderboard '+r.status);
-  return r.status===204?null:r.json();
+  const headers=Object.assign({
+    'apikey':SUPABASE_KEY,
+    'Authorization':'Bearer '+SUPABASE_KEY,
+    'Content-Type':'application/json'
+  },opts.headers||{});
+  const res=await fetch(SUPABASE_URL+'/rest/v1/'+path,Object.assign({},opts,{headers}));
+  if(!res.ok) throw new Error('Leaderboard request failed: '+res.status);
+  if(res.status===204) return null;
+  return await res.json();
 }
-async function submitRealScore(d,s){
-  s=Math.max(0,Math.floor(Number(s)||0)); if(!s)return;
-  try{await lbRequest('leaderboard_scores',{method:'POST',headers:{Prefer:'return=minimal'},body:JSON.stringify({player_id:getPlayerId(),player_name:getPlayerName(),difficulty:d,score:s})})}catch(e){console.warn(e)}
-}
-async function scores(){
-  const list=document.getElementById('top100List'),bar=document.getElementById('yourRankBar'),pe=document.getElementById('yourRankPlace'),se=document.getElementById('yourRankScore');
-  if(!list)return;
-  list.innerHTML='<div class="lbRow"><span>—</span><span>LOADING PLAYERS…</span><span class="score">—</span></div>';
-  document.querySelectorAll('.lbDiff').forEach(b=>b.classList.toggle('active',b.dataset.lbdiff===lbSelected));
+
+async function syncMyBest(d){
+  const b=bestRunFor(d);
+  const bestScore=b?Number(b.s)||0:0;
+  if(!bestScore) return;
   try{
-    const rows=await lbRequest('leaderboard_scores?difficulty=eq.'+encodeURIComponent(lbSelected)+'&select=player_id,player_name,score&order=score.desc&limit=100');
-    const me=getPlayerId();
-    if(!rows.length)list.innerHTML='<div class="lbRow"><span>—</span><span>NO SCORES YET</span><span class="score">—</span></div>';
-    else list.innerHTML=rows.map((r,i)=>'<div class="lbRow'+(r.player_id===me?' me':'')+'"><span>#'+(i+1)+'</span><span>'+(r.player_id===me?'YOU':String(r.player_name||'PLAYER').replace(/[<>&]/g,''))+'</span><span class="score">'+Number(r.score).toLocaleString()+'</span></div>').join('');
-    const idx=rows.findIndex(r=>r.player_id===me),b=bestRunFor(lbSelected),my=b?Number(b.s)||0:0;
-    if(idx>=0){if(bar)bar.style.display='none';requestAnimationFrame(()=>{const x=list.querySelector('.me');if(x)x.scrollIntoView({block:'center'})})}
-    else{if(bar)bar.style.display='grid';if(pe)pe.textContent='—';if(se)se.textContent=my.toLocaleString()}
-  }catch(e){list.innerHTML='<div class="lbRow"><span>!</span><span>LEADERBOARD OFFLINE</span><span class="score">—</span></div>'}
+    await lbRequest('leaderboard_scores?on_conflict=player_id,difficulty',{
+      method:'POST',
+      headers:{'Prefer':'resolution=merge-duplicates,return=minimal'},
+      body:JSON.stringify({
+        player_id:getPlayerId(),
+        player_name:'PLAYER',
+        difficulty:d,
+        score:bestScore
+      })
+    });
+  }catch(e){ console.warn(e); }
 }
+
+async function scores(){
+  const list=document.getElementById('top100List');
+  const placeEl=document.getElementById('yourRankPlace');
+  const scoreEl=document.getElementById('yourRankScore');
+  const rankBar=document.getElementById('yourRankBar');
+  if(!list)return;
+
+  document.querySelectorAll('.lbDiff').forEach(btn=>{
+    btn.classList.toggle('active',btn.dataset.lbdiff===lbSelected);
+  });
+
+  list.innerHTML='<div class="lbRow"><span>—</span><span>LOADING…</span><span class="score">—</span></div>';
+
+  await syncMyBest(lbSelected);
+
+  try{
+    const rows=await lbRequest(
+      'leaderboard_scores?difficulty=eq.'+encodeURIComponent(lbSelected)+
+      '&select=player_id,player_name,score&order=score.desc&limit=100'
+    );
+
+    const me=getPlayerId();
+
+    if(!rows.length){
+      list.innerHTML='<div class="lbRow"><span>—</span><span>NO SCORES YET</span><span class="score">—</span></div>';
+      if(rankBar) rankBar.style.display='none';
+      return;
+    }
+
+    list.innerHTML=rows.map((r,i)=>{
+      const isMe=r.player_id===me;
+      return '<div class="lbRow'+(isMe?' me':'')+'">'+
+        '<span>#'+(i+1)+'</span>'+
+        '<span>'+(isMe?'YOU':'PLAYER')+'</span>'+
+        '<span class="score">'+Number(r.score||0).toLocaleString()+'</span>'+
+        '</div>';
+    }).join('');
+
+    const myIndex=rows.findIndex(r=>r.player_id===me);
+    if(myIndex>=0){
+      if(placeEl) placeEl.textContent='#'+(myIndex+1);
+      if(scoreEl) scoreEl.textContent=Number(rows[myIndex].score||0).toLocaleString();
+      if(rankBar) rankBar.style.display='grid';
+      requestAnimationFrame(()=>{
+        const row=list.querySelector('.lbRow.me');
+        if(row) row.scrollIntoView({block:'center',behavior:'auto'});
+      });
+    }else{
+      const b=bestRunFor(lbSelected);
+      const myScore=b?Number(b.s)||0:0;
+      if(placeEl) placeEl.textContent='—';
+      if(scoreEl) scoreEl.textContent=myScore.toLocaleString();
+      if(rankBar) rankBar.style.display='grid';
+    }
+  }catch(e){
+    console.warn(e);
+    list.innerHTML='<div class="lbRow"><span>!</span><span>LEADERBOARD OFFLINE</span><span class="score">—</span></div>';
+  }
+}
+
 function start(){panels(null);els.hud.classList.remove('hide');controlLayout();t=dist=score=nearMissBonus=spawn=0;traffic=[];powerUps=[];invisibleUntil=0;nosUntil=0;nearMissUntil=0;els.nearMissToast.style.opacity='0';player={x:W/2,y:H*.68,w:30,h:52,s:0};run=true;last=performance.now();requestAnimationFrame(loop)}
 function bind(id,k){
   let b=document.getElementById(id);
@@ -1522,7 +1593,7 @@ function crashGame(){
   let oldBest=a.sort((x,y)=>(y.s||0)-(x.s||0))[0]||null;
   let best=(!oldBest||score>oldBest.s)?{s:score,t,d:dist}:oldBest;
   localStorage.setItem(k,JSON.stringify([best]));
-  submitRealScore(diff,score);
+  syncMyBest(diff);
 
   els.ft.textContent=t.toFixed(1)+'s';
   els.fd.textContent=Math.round(dist)+' m';
