@@ -221,7 +221,7 @@ const cars=[
   {id:'supra',name:'Toyota GR Supra',price:48000,hp:382,top:155,weight:3400,drive:'RWD',zero:'3.9s',desc:'Turbocharged rear-wheel-drive sports car'},
   {id:'m3',name:'BMW M3',price:57000,hp:473,top:155,weight:3840,drive:'RWD',zero:'4.1s',desc:'High-performance sport sedan'},
   {id:'corvette',name:'Chevrolet Corvette',price:78000,hp:490,top:194,weight:3535,drive:'RWD',zero:'2.9s',desc:'Mid-engine American sports car'},
-  {id:'gtr',name:'Nissan GT-R',price:105000,hp:565,top:196,weight:3935,drive:'AWD',zero:'2.9s',desc:'Twin-turbo AWD performance car'},
+  {id:'gtr',name:'Nissan GT-R',price:105000,hp:565,top:196,weight:3935,drive:'AWD',zero:'2.9s',desc:'Twin-turbo AWD performance car'},{id:'fordgt',name:'Ford GT',price:800000,hp:660,top:216,weight:3054,drive:'RWD',zero:'3.0s'},
   {id:'911turbo',name:'Porsche 911 Turbo S',price:180000,hp:640,top:205,weight:3636,drive:'AWD',zero:'2.6s',desc:'Twin-turbo AWD supercar'},
   {id:'huracan',name:'Lamborghini Huracan',price:278000,hp:631,top:202,weight:3399,drive:'AWD',zero:'2.9s',desc:'V10 Italian supercar'},
   {id:'720s',name:'McLaren 720S',price:320000,hp:710,top:212,weight:3128,drive:'RWD',zero:'2.8s',desc:'Lightweight twin-turbo supercar'},
@@ -390,7 +390,32 @@ function drawDealerBody(ctx,car){
     ctx.fillStyle='#d11';ctx.beginPath();ctx.arc(137,25,7,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(119,25,7,0,Math.PI*2);ctx.fill();
     ctx.fillStyle='#222';ctx.fillRect(112,-24,52,5);ctx.fillRect(119,-24,4,19);ctx.fillRect(153,-24,4,19);
   }
-  if(car.id==='911turbo'){
+  
+if(car.id==='fordgt'){
+  // Ford GT: low wide supercar, central stripe, flying-buttress look and large side intakes
+  ctx.fillStyle='#2f6ed1';
+  ctx.beginPath();
+  ctx.moveTo(-150,18);ctx.quadraticCurveTo(-135,-40,-78,-58);
+  ctx.lineTo(55,-58);ctx.quadraticCurveTo(125,-50,150,-8);
+  ctx.lineTo(134,32);ctx.quadraticCurveTo(95,52,30,54);
+  ctx.lineTo(-85,50);ctx.quadraticCurveTo(-135,45,-150,18);ctx.fill();
+
+  ctx.fillStyle='#101820';
+  ctx.beginPath();ctx.moveTo(-84,-40);ctx.lineTo(30,-43);ctx.lineTo(65,-14);ctx.lineTo(-65,-12);ctx.closePath();ctx.fill();
+
+  ctx.fillStyle='#f2f2f2';
+  ctx.fillRect(-10,-54,12,101);
+
+  ctx.fillStyle='#111';
+  ctx.beginPath();ctx.moveTo(-125,-15);ctx.lineTo(-82,-28);ctx.lineTo(-72,-4);ctx.lineTo(-118,8);ctx.closePath();ctx.fill();
+  ctx.beginPath();ctx.moveTo(115,-15);ctx.lineTo(76,-28);ctx.lineTo(67,-4);ctx.lineTo(111,8);ctx.closePath();ctx.fill();
+
+  ctx.fillStyle='#fff2b0';
+  ctx.fillRect(-126,-30,26,6);ctx.fillRect(100,-30,26,6);
+  ctx.fillStyle='#bd1f2d';
+  ctx.fillRect(-118,35,26,7);ctx.fillRect(92,35,26,7);
+}
+if(car.id==='911turbo'){
     ctx.fillStyle='#fff0b0';ctx.beginPath();ctx.ellipse(-130,9,15,9,0,0,Math.PI*2);ctx.fill();
     ctx.fillStyle='#222';ctx.fillRect(112,-20,55,5);ctx.fillRect(120,-20,4,16);ctx.fillRect(156,-20,4,16);
   }
@@ -588,6 +613,7 @@ let trafficModels=[
   {type:'mustang',w:33,h:55},
   {type:'corvette',w:34,h:47},
   {type:'gtr',w:34,h:52},
+  {type:'fordgt',w:35,h:44},
   {type:'911turbo',w:32,h:49},
   {type:'huracan',w:35,h:45},
   {type:'720s',w:35,h:44},
@@ -692,13 +718,13 @@ let model=hero?selectedCar:type;
 let trafficPaint=(!hero && fixedColor)?fixedColor:null;
 let bodyColors={
   civic:'#d9dde2',mx5:'#e12835',gti:'#3569ce',wrx:'#2d75b9',mustang:'#c83b30',a3:'#c3c8ce',
-  supra:'#ededed',m3:'#4273ba',corvette:'#e7b326',gtr:'#aab2bb','911turbo':'#d0d0d0',
+  supra:'#ededed',m3:'#4273ba',corvette:'#e7b326',gtr:'#aab2bb',fordgt:'#2f6ed1','911turbo':'#d0d0d0',
   huracan:'#e4b719','720s':'#e36c24',f458:'#d3262d',
   car:'#eceff2',sedan:'#cfd5dc',hatch:'#4da85c',sports:'#2c68d8',truck:'#d18a2e',trailer:'#dedede'
 };
 let body=trafficPaint||(bodyColors[model]||bodyColors[type]||'#ececec');
 
-const sportModels=['mx5','supra','corvette','gtr','911turbo','huracan','720s','f458','mustang'];
+const sportModels=['mx5','supra','corvette','gtr','fordgt','911turbo','huracan','720s','f458','mustang'];
 const sedanModels=['civic','wrx','m3','a3'];
 let isTrailer=type==='trailer',isTruck=type==='truck';
 let isSports=type==='sports'||sportModels.includes(model);
@@ -732,9 +758,19 @@ if(model==='mx5'){nose=.28;shoulder=.45;rear=.40;roofTop=-.10;roofBot=.20;}
 if(model==='supra'){nose=.26;shoulder=.49;rear=.43;roofTop=-.14;roofBot=.23;}
 if(model==='corvette'){nose=.20;shoulder=.50;rear=.46;roofTop=-.10;roofBot=.18;}
 if(model==='gtr'){nose=.32;shoulder=.50;rear=.49;roofTop=-.18;roofBot=.28;}
+if(model==='fordgt'){nose=.15;shoulder=.51;rear=.45;roofTop=-.06;roofBot=.16;cabin=.27;}
 if(model==='911turbo'){nose=.30;shoulder=.46;rear=.48;roofTop=-.14;roofBot=.25;}
 if(model==='huracan'){nose=.18;shoulder=.51;rear=.47;roofTop=-.08;roofBot=.18;}
 if(model==='720s'){nose=.16;shoulder=.50;rear=.43;roofTop=-.07;roofBot=.17;}
+if(model==='fordgt'){
+  // Ford GT signature center stripe and deep hood vents
+  X.fillStyle='rgba(255,255,255,.88)';
+  X.fillRect(-w*.035,-h*.48,w*.07,h*.90);
+  X.fillStyle='rgba(0,0,0,.45)';
+  X.beginPath();X.moveTo(-w*.34,-h*.34);X.lineTo(-w*.13,-h*.27);X.lineTo(-w*.24,-h*.17);X.closePath();X.fill();
+  X.beginPath();X.moveTo(w*.34,-h*.34);X.lineTo(w*.13,-h*.27);X.lineTo(w*.24,-h*.17);X.closePath();X.fill();
+  X.fillRect(-w*.31,h*.33,w*.62,3);
+}
 if(model==='f458'){nose=.18;shoulder=.49;rear=.44;roofTop=-.09;roofBot=.18;}
 if(model==='mustang'){nose=.33;shoulder=.50;rear=.49;roofTop=-.18;roofBot=.25;}
 if(isTruck){nose=.45;shoulder=.48;rear=.48;roofTop=-.18;roofBot=.30;}
@@ -784,7 +820,7 @@ X.save();X.shadowColor='#fff4a8';X.shadowBlur=hero&&keys.gas?8:3;
 X.fillStyle='#fff3b0';
 
 // headlights deliberately different by model
-if(['huracan','720s','corvette'].includes(model)){
+if(['huracan','720s','corvette','fordgt'].includes(model)){
   X.beginPath();X.moveTo(-w*.38,-h*.47);X.lineTo(-w*.17,-h*.44);X.lineTo(-w*.23,-h*.40);X.closePath();X.fill();
   X.beginPath();X.moveTo(w*.38,-h*.47);X.lineTo(w*.17,-h*.44);X.lineTo(w*.23,-h*.40);X.closePath();X.fill();
 }else if(model==='911turbo'){
@@ -863,7 +899,7 @@ if(['gtr','mustang','supra'].includes(model)){
   X.fillStyle='#1b1b1d';X.fillRect(-w*.34,h*.34,w*.68,4);
   X.fillRect(-w*.26,h*.30,3,6);X.fillRect(w*.23,h*.30,3,6);
 }
-if(['huracan','720s','f458','corvette'].includes(model)){
+if(['huracan','720s','f458','corvette','fordgt'].includes(model)){
   X.fillStyle='rgba(0,0,0,.38)';X.fillRect(-w*.32,h*.34,w*.64,3);
 }
 
