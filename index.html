@@ -781,23 +781,44 @@ function controlLayout(){
   els.controls.style.justifyContent='space-between';
 }
 
-// Background music (Pixabay track). iPhone/Safari requires playback to begin from a user gesture.
-const bgMusic=new Audio('music1.mp3');
+// Background music — iPhone/Safari-safe playback.
+const bgMusic=new Audio('./music1.mp3?v=3');
 bgMusic.loop=true;
 bgMusic.preload='auto';
-bgMusic.volume=Math.max(0,Math.min(1,musicVol/100));
+bgMusic.playsInline=true;
+bgMusic.setAttribute('playsinline','');
+bgMusic.setAttribute('webkit-playsinline','');
 let musicStarted=false;
-function startMusic(){
+
+function applyMusicVolume(){
+  bgMusic.muted=false;
   bgMusic.volume=Math.max(0,Math.min(1,musicVol/100));
-  if(!musicStarted || bgMusic.paused){
+}
+
+function startMusic(){
+  applyMusicVolume();
+  // Calling play() directly inside a real user gesture is required by iPhone Safari.
+  try{
     const p=bgMusic.play();
-    if(p&&p.catch) p.catch(()=>{});
-    musicStarted=true;
+    if(p && typeof p.then==='function'){
+      p.then(()=>{ musicStarted=true; }).catch(()=>{ musicStarted=false; });
+    }else{
+      musicStarted=true;
+    }
+  }catch(e){
+    musicStarted=false;
   }
 }
-// Any deliberate tap can unlock audio on iOS.
-document.addEventListener('pointerdown',startMusic,{passive:true});
-document.addEventListener('touchend',startMusic,{passive:true});
+
+// Use several real interaction events so Safari/in-app browsers can unlock audio.
+['click','touchstart','pointerup'].forEach(ev=>{
+  document.addEventListener(ev,startMusic,{capture:true,passive:true});
+});
+
+// Resume music after returning to the tab/app.
+document.addEventListener('visibilitychange',()=>{
+  if(!document.hidden && musicVol>0) startMusic();
+});
 
 function songBtn(){els.song.textContent='PLAY TIME'}
 function settingsUI(){modeBtn();controlLayout();els.music.value=musicVol;els.sfx.value=sfxVol;songBtn()}
@@ -1735,7 +1756,7 @@ els.mode.onclick=async()=>{
   modeBtn();
   controlLayout();
   saveSettings();
-};els.song.onclick=()=>{song=1;songBtn();bgMusic.currentTime=0;startMusic()};els.music.oninput=()=>{musicVol=+els.music.value;bgMusic.volume=Math.max(0,Math.min(1,musicVol/100));saveSettings();startMusic()};els.sfx.oninput=()=>sfxVol=+els.sfx.value;
+};els.song.onclick=()=>{song=1;songBtn();bgMusic.currentTime=0;applyMusicVolume();startMusic()};els.music.oninput=()=>{musicVol=+els.music.value;applyMusicVolume();saveSettings();if(musicVol>0)startMusic();else bgMusic.pause()};els.sfx.oninput=()=>sfxVol=+els.sfx.value;
 dc(els.dif,diff);cashUI();dealerUI();panels('menu');
 </script></body></html>
 <style>
