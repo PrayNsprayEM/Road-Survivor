@@ -1,6 +1,6 @@
 <!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><title>Road Survivor</title>
 <style>
-*{box-sizing:border-box;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#151515;font-family:system-ui;color:white;touch-action:none}canvas{width:100%;height:100%;display:block;image-rendering:pixelated}.p{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(92%,430px);padding:22px;background:#111e;border:2px solid white;border-radius:14px;text-align:center;box-shadow:0 8px 30px #000}.hide{display:none}button{margin:5px;padding:13px 18px;border:2px solid white;border-radius:10px;background:#292933;color:white;font-weight:800;font-size:17px;min-width:145px}.diff{font-size:21px}.easy{background:#2e9b4b}.medium{background:#c6a51b}.hard{background:#d66b18}.extreme{background:#c93636}.card{background:#202027;border:1px solid #555;border-radius:9px;padding:10px;margin:6px;text-align:left}.price{float:right}.stat{position:absolute;top:10px;background:#000b;padding:8px 12px;border-radius:8px;font-weight:900;border:1px solid #ffffff22;backdrop-filter:blur(4px)}.leftstat{left:10px}.rightstat{right:10px}.status{position:absolute;top:52px;left:50%;transform:translateX(-50%);font-weight:900}.controls{position:absolute;bottom:14px;left:0;right:0;display:flex;justify-content:space-between;padding:0 14px}.ctrl{width:74px;height:65px;padding:0;margin:0;font-size:25px;background:#222c;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}.pedal{width:78px;height:75px;font-size:15px}.brake{background:#a32f2fcc}.gas{background:#309346cc}
+*{box-sizing:border-box;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#151515;font-family:system-ui;color:white;touch-action:none}canvas{width:100%;height:100%;display:block;image-rendering:pixelated}.p{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(92%,430px);padding:22px;background:#111e;border:2px solid white;border-radius:14px;text-align:center;box-shadow:0 8px 30px #000}.hide{display:none}button{margin:5px;padding:13px 18px;border:2px solid white;border-radius:10px;background:#292933;color:white;font-weight:800;font-size:17px;min-width:145px}.diff{font-size:21px}.easy{background:#2e9b4b}.medium{background:#c6a51b}.hard{background:#d66b18}.extreme{background:#c93636}.card{background:#202027;border:1px solid #555;border-radius:9px;padding:10px;margin:6px;text-align:left}.price{float:right}.stat{position:absolute;top:10px;background:#000b;padding:8px 12px;border-radius:8px;font-weight:900;border:1px solid #ffffff22;backdrop-filter:blur(4px)}.leftstat{left:10px}.rightstat{right:10px}.status{position:absolute;top:52px;left:50%;transform:translateX(-50%);font-weight:900}#nearMissToast{position:absolute;top:78px;left:50%;transform:translateX(-50%);font-weight:900;font-size:14px;color:#ffd60a;text-shadow:0 2px 5px #000;white-space:nowrap;pointer-events:none;opacity:0}.controls{position:absolute;bottom:14px;left:0;right:0;display:flex;justify-content:space-between;padding:0 14px}.ctrl{width:74px;height:65px;padding:0;margin:0;font-size:25px;background:#222c;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}.pedal{width:78px;height:75px;font-size:15px}.brake{background:#a32f2fcc}.gas{background:#309346cc}
 
 .dealer{width:min(96%,920px);height:min(90%,560px);padding:0;overflow:hidden;background:#0d0d10;border:2px solid #38bdf8}
 .dealerTop{height:64px;background:#342842;display:flex;align-items:center;justify-content:space-between;padding:8px 14px;border-bottom:5px solid #22b7f0}
@@ -49,7 +49,7 @@
 <div id="leader" class="p hide"><h2>LEADERBOARD</h2><p>Your best score on each difficulty</p><div id="scores"></div><button id="lbback">BACK</button></div>
 <div id="settings" class="p hide"><h2>SETTINGS</h2><div class="card">Driving controls<br><button id="mode">BUTTONS</button></div><div class="card">Music <input id="music" type="range" min="0" max="100"></div><div class="card">SFX <input id="sfx" type="range" min="0" max="100"></div><div class="card">Song<br><button id="song">TRACK 1</button></div><button id="sb">BACK</button></div>
 <div id="crash" class="p hide"><h2>CRASH!</h2><p>Time: <b id="ft"></b></p><p>Distance: <b id="fd"></b></p><p>Score: <b id="fs"></b></p><p>Run earnings: <b id="earnings">$0</b></p><p>Best: <b id="fb"></b></p><button id="retry">RETRY</button><button id="cm">MENU</button><button id="cl">LEADERBOARD</button></div>
-<div id="hud" class="hide"><div id="speed" class="stat leftstat">0 MPH</div><div id="score" class="stat rightstat">0</div><div id="status" class="status"></div><div class="controls" id="controls"><div id="steerControls"><button class="ctrl" id="left">◀</button><button class="ctrl" id="right">▶</button></div><div id="pedalControls"><button class="ctrl pedal brake" id="brake">BRAKE</button><button class="ctrl pedal gas" id="gas">GAS</button></div></div></div></div>
+<div id="hud" class="hide"><div id="speed" class="stat leftstat">0 MPH</div><div id="score" class="stat rightstat">0</div><div id="status" class="status"></div><div id="nearMissToast">NEAR MISS +50</div><div class="controls" id="controls"><div id="steerControls"><button class="ctrl" id="left">◀</button><button class="ctrl" id="right">▶</button></div><div id="pedalControls"><button class="ctrl pedal brake" id="brake">BRAKE</button><button class="ctrl pedal gas" id="gas">GAS</button></div></div></div></div>
 <script>
 if(!CanvasRenderingContext2D.prototype.roundRect){CanvasRenderingContext2D.prototype.roundRect=function(x,y,w,h,r){this.rect(x,y,w,h);return this}};
 const C=document.getElementById('c'),X=C.getContext('2d');
@@ -60,9 +60,9 @@ const els={
   ul:document.getElementById('ul'),ub:document.getElementById('ub'),scores:document.getElementById('scores'),lbback:document.getElementById('lbback'),
   mode:document.getElementById('mode'),music:document.getElementById('music'),sfx:document.getElementById('sfx'),song:document.getElementById('song'),sb:document.getElementById('sb'),
   ft:document.getElementById('ft'),fd:document.getElementById('fd'),fs:document.getElementById('fs'),earnings:document.getElementById('earnings'),fb:document.getElementById('fb'),retry:document.getElementById('retry'),cm:document.getElementById('cm'),cl:document.getElementById('cl'),
-  hud:document.getElementById('hud'),speed:document.getElementById('speed'),score:document.getElementById('score'),status:document.getElementById('status'),controls:document.getElementById('controls'),steerControls:document.getElementById('steerControls'),pedalControls:document.getElementById('pedalControls')
+  hud:document.getElementById('hud'),speed:document.getElementById('speed'),score:document.getElementById('score'),status:document.getElementById('status'),nearMissToast:document.getElementById('nearMissToast'),controls:document.getElementById('controls'),steerControls:document.getElementById('steerControls'),pedalControls:document.getElementById('pedalControls')
 };
-let W,H,roadX,roadW,run=false,last=0,t=0,dist=0,score=0,spawn=0,traffic=[],player,cash=+localStorage.getItem('cash')||10000,diff=localStorage.getItem('diff')||'Easy',mode=localStorage.getItem('mode')||'buttons',musicVol=+(localStorage.getItem('music')||70),sfxVol=+(localStorage.getItem('sfx')||70),song=+(localStorage.getItem('song')||1),powerUps=[],invisibleUntil=0,nosUntil=0,roadOffset=0,shake=0,steerVel=0,selectedCar=localStorage.getItem('selectedCar')||'civic',dealerIndex=0,ownedCars=JSON.parse(localStorage.getItem('ownedCars')||'["civic"]');
+let W,H,roadX,roadW,run=false,last=0,t=0,dist=0,score=0,spawn=0,traffic=[],player,cash=+localStorage.getItem('cash')||10000,diff=localStorage.getItem('diff')||'Easy',mode=localStorage.getItem('mode')||'buttons',musicVol=+(localStorage.getItem('music')||70),sfxVol=+(localStorage.getItem('sfx')||70),song=+(localStorage.getItem('song')||1),powerUps=[],invisibleUntil=0,nosUntil=0,nearMissUntil=0,roadOffset=0,shake=0,steerVel=0,selectedCar=localStorage.getItem('selectedCar')||'civic',dealerIndex=0,ownedCars=JSON.parse(localStorage.getItem('ownedCars')||'["civic"]');
 
 const cars=[
   {id:'civic',name:'Honda Civic',price:0,hp:158,top:126,weight:2935,drive:'FWD',zero:'7.8s',desc:'Reliable starter car'},
@@ -192,7 +192,7 @@ function scores(){
       '</div>'
   }).join('')
 }
-function start(){panels(null);els.hud.classList.remove('hide');controlLayout();t=dist=score=spawn=0;traffic=[];powerUps=[];invisibleUntil=0;nosUntil=0;player={x:W/2,y:H*.68,w:30,h:52,s:0};run=true;last=performance.now();requestAnimationFrame(loop)}
+function start(){panels(null);els.hud.classList.remove('hide');controlLayout();t=dist=score=spawn=0;traffic=[];powerUps=[];invisibleUntil=0;nosUntil=0;nearMissUntil=0;els.nearMissToast.style.opacity='0';player={x:W/2,y:H*.68,w:30,h:52,s:0};run=true;last=performance.now();requestAnimationFrame(loop)}
 function bind(id,k){
   let b=document.getElementById(id);
   const down=e=>{e.preventDefault();keys[k]=1};
@@ -289,7 +289,9 @@ x:laneCenter,y:-h-18,w,h,type,lane,
 s:c.trafficSpeed*(.78+Math.random()*.35),
 drift:(Math.random()-.5)*3,
 targetX:laneCenter,
-laneTimer:1.5+Math.random()*4.5
+laneTimer:1.5+Math.random()*4.5,
+prevY:-h-18,
+nearMissAwarded:false
 });
 spawn=c.spawn*(.82+Math.random()*.36)
 }
@@ -300,6 +302,7 @@ powerUps.push({x:roadX+30+Math.random()*(roadW-60),y:-35,w:30,h:30,type,s:90+Mat
 }
 
 traffic.forEach(v=>{
+v.prevY=v.y;
 v.y+=(v.s+player.s*.38)*dt*(.65+player.s/115);
 v.laneTimer=(v.laneTimer??2)-dt;
 
@@ -319,6 +322,24 @@ if(v.laneTimer<=0){
 if(v.targetX==null)v.targetX=v.x;
 v.x+=(v.targetX-v.x)*Math.min(1,dt*1.8);
 });
+if(active&&performance.now()>=invisibleUntil){
+for(let v of traffic){
+if(v.nearMissAwarded)continue;
+let crossed=v.prevY<player.y&&v.y>=player.y;
+if(!crossed)continue;
+let xGap=Math.abs(player.x-v.x);
+let hitGap=(player.w+v.w)*.46;
+let nearGap=(player.w+v.w)*.78;
+if(xGap>=hitGap&&xGap<nearGap){
+v.nearMissAwarded=true;
+score+=50;
+nearMissUntil=performance.now()+1000;
+els.nearMissToast.textContent='NEAR MISS +50';
+els.nearMissToast.style.opacity='1';
+}
+}
+}
+if(performance.now()>=nearMissUntil)els.nearMissToast.style.opacity='0';
 traffic=traffic.filter(v=>v.y<H+150);
 powerUps.forEach(p=>p.y+=(p.s+player.s*.18)*dt);powerUps=powerUps.filter(p=>p.y<H+50);
 
