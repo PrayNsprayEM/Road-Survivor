@@ -667,24 +667,173 @@ els.score.textContent=score.toLocaleString()
 }
 function car(x,y,w,h,hero=false,type='car'){
 X.save();X.translate(x,y);
-X.shadowColor='#0009';X.shadowBlur=8;X.shadowOffsetY=6;
-let body=hero?(selectedCar==='mx5'?'#e32636':'#d72e32'):
-(type==='truck'?'#d18a2e':type==='trailer'?'#d9d9d9':type==='sports'?'#2563eb':type==='hatch'?'#42a85a':type==='sedan'?'#dadada':'#ececec');
-X.fillStyle=body;
-X.beginPath();X.roundRect(-w/2,-h/2,w,h,Math.min(5,w*.18));X.fill();
+
+let model=hero?selectedCar:type;
+let bodyColors={
+  civic:'#d9dde2',mx5:'#e12835',gti:'#3569ce',wrx:'#2d75b9',mustang:'#c83b30',a3:'#c3c8ce',
+  supra:'#ededed',m3:'#4273ba',corvette:'#e7b326',gtr:'#aab2bb','911turbo':'#d0d0d0',
+  huracan:'#e4b719','720s':'#e36c24',f458:'#d3262d',
+  car:'#eceff2',sedan:'#cfd5dc',hatch:'#4da85c',sports:'#2c68d8',truck:'#d18a2e',trailer:'#dedede'
+};
+let body=bodyColors[model]||bodyColors[type]||'#ececec';
+let isTrailer=type==='trailer',isTruck=type==='truck',isSports=type==='sports'||['mx5','supra','corvette','gtr','911turbo','huracan','720s','f458','mustang'].includes(model);
+let isHatch=type==='hatch'||model==='gti';
+let isSedan=type==='sedan'||['civic','wrx','m3','a3'].includes(model);
+
+X.save();
+X.globalAlpha=.30;X.fillStyle='#000';X.filter='blur(4px)';
+X.beginPath();X.ellipse(4,5,w*.48,h*.48,0,0,Math.PI*2);X.fill();
+X.filter='none';X.restore();
+
+// Wheels
+X.fillStyle='#111';
+let wheelW=Math.max(4,w*.16),wheelH=Math.max(10,h*.22);
+X.fillRect(-w*.56,-h*.31,wheelW,wheelH);
+X.fillRect(w*.40,-h*.31,wheelW,wheelH);
+X.fillRect(-w*.56,h*.10,wheelW,wheelH);
+X.fillRect(w*.40,h*.10,wheelW,wheelH);
+
+if(isTrailer){
+  X.shadowColor='#0008';X.shadowBlur=8;X.shadowOffsetY=5;
+  X.fillStyle='#d7d7d7';X.beginPath();X.roundRect(-w*.48,-h*.5,w*.96,h*.84,5);X.fill();
+  X.shadowBlur=0;X.shadowOffsetY=0;
+  X.fillStyle='#bfc3c6';X.fillRect(-w*.41,-h*.38,w*.82,h*.08);
+  X.strokeStyle='#9aa0a5';X.lineWidth=1.5;
+  for(let yy=-h*.22;yy<h*.25;yy+=h*.13){X.beginPath();X.moveTo(-w*.38,yy);X.lineTo(w*.38,yy);X.stroke()}
+  X.fillStyle='#e33';X.fillRect(-w*.34,h*.27,w*.18,4);X.fillRect(w*.16,h*.27,w*.18,4);
+  X.restore();return;
+}
+
+// Main body with tapered nose/rear
+X.shadowColor='#0009';X.shadowBlur=9;X.shadowOffsetY=5;
+X.fillStyle=body;X.beginPath();
+if(isTruck){
+  X.roundRect(-w*.48,-h*.48,w*.96,h*.96,5);
+}else{
+  let nose=isSports?w*.30:w*.38;
+  X.moveTo(-nose,-h*.50);X.lineTo(nose,-h*.50);
+  X.quadraticCurveTo(w*.49,-h*.43,w*.49,-h*.28);
+  X.lineTo(w*.46,h*.34);
+  X.quadraticCurveTo(w*.39,h*.49,w*.27,h*.50);
+  X.lineTo(-w*.27,h*.50);
+  X.quadraticCurveTo(-w*.39,h*.49,-w*.46,h*.34);
+  X.lineTo(-w*.49,-h*.28);
+  X.quadraticCurveTo(-w*.49,-h*.43,-nose,-h*.50);
+}
+X.closePath();X.fill();
 X.shadowBlur=0;X.shadowOffsetY=0;
-X.fillStyle='#1b2630';X.fillRect(-w*.34,-h*.30,w*.68,h*.18);X.fillRect(-w*.34,h*.08,w*.68,h*.15);
-X.fillStyle='#fff9b0';X.fillRect(-w*.39,-h*.47,w*.22,4);X.fillRect(w*.17,-h*.47,w*.22,4);
-X.fillStyle='#e22';X.fillRect(-w*.38,h*.42,w*.18,4);X.fillRect(w*.20,h*.42,w*.18,4);
-if(type==='trailer'){X.fillStyle='#aaa';X.fillRect(-w*.40,-h*.02,w*.80,h*.38);X.strokeStyle='#888';X.strokeRect(-w*.40,-h*.02,w*.80,h*.38)}
+
+// Hood and trunk contours
+X.strokeStyle='rgba(0,0,0,.20)';X.lineWidth=1;
+X.beginPath();X.moveTo(-w*.31,-h*.30);X.lineTo(w*.31,-h*.30);X.stroke();
+X.beginPath();X.moveTo(-w*.30,h*.31);X.lineTo(w*.30,h*.31);X.stroke();
+
+// Glass
+X.fillStyle='#17232d';
+let frontY=isSports?-h*.24:-h*.20;
+X.beginPath();
+X.moveTo(-w*.32,frontY);X.lineTo(w*.32,frontY);
+X.lineTo(w*.27,-h*.04);X.lineTo(-w*.27,-h*.04);X.closePath();X.fill();
+X.beginPath();
+X.moveTo(-w*.27,h*.05);X.lineTo(w*.27,h*.05);
+X.lineTo(w*.31,h*.24);X.lineTo(-w*.31,h*.24);X.closePath();X.fill();
+X.fillStyle='rgba(120,190,230,.20)';
+X.fillRect(-w*.20,frontY+2,w*.08,Math.max(3,h*.11));
+X.fillRect(w*.10,frontY+2,w*.08,Math.max(3,h*.11));
+
+// Mirrors
+X.fillStyle=body;
+X.fillRect(-w*.58,-h*.09,w*.10,h*.10);
+X.fillRect(w*.48,-h*.09,w*.10,h*.10);
+
+// Headlights
+X.save();X.shadowColor='#fff4a8';X.shadowBlur=hero&&keys.gas?8:3;
+X.fillStyle='#fff3b0';
+X.beginPath();X.roundRect(-w*.38,-h*.47,w*.18,4,2);X.fill();
+X.beginPath();X.roundRect(w*.20,-h*.47,w*.18,4,2);X.fill();
+X.restore();
+
+// Tail/brake lights
+let braking=hero&&keys.brake;
+X.save();X.shadowColor='#ff2020';X.shadowBlur=braking?12:3;
+X.fillStyle=braking?'#ff2d2d':'#bb2424';
+X.fillRect(-w*.36,h*.42,w*.17,4);
+X.fillRect(w*.19,h*.42,w*.17,4);
+X.restore();
+
+// Center grille / vents
+X.fillStyle='#15191d';
+if(isTruck){
+  X.fillRect(-w*.30,-h*.43,w*.60,h*.12);
+  X.fillStyle='#c7d2da';X.fillRect(-w*.24,-h*.28,w*.48,h*.14);
+}else{
+  X.beginPath();X.roundRect(-w*.23,-h*.45,w*.46,5,2);X.fill();
+}
+if(isSports){
+  X.fillStyle='rgba(0,0,0,.35)';
+  X.fillRect(-w*.32,-h*.37,w*.14,4);X.fillRect(w*.18,-h*.37,w*.14,4);
+}
+if(isHatch){
+  X.strokeStyle='rgba(0,0,0,.35)';X.beginPath();X.moveTo(-w*.30,h*.34);X.lineTo(w*.30,h*.34);X.stroke();
+}
+if(isSedan){
+  X.strokeStyle='rgba(255,255,255,.22)';X.beginPath();X.moveTo(-w*.35,-h*.02);X.lineTo(-w*.37,h*.26);X.stroke();
+}
+if(['corvette','huracan','720s','f458','911turbo'].includes(model)){
+  X.fillStyle='#20252a';X.fillRect(-w*.34,h*.34,w*.68,3);
+}
+if(model==='gtr'||model==='mustang'){
+  X.fillStyle='#191d20';X.fillRect(-w*.30,h*.38,w*.60,4);
+}
+
 X.restore()
 }
+
+function roadsideTree(x,y,scale=1,variant=0){
+  X.save();X.translate(x,y);X.scale(scale,scale);
+
+  // Ground shadow
+  X.globalAlpha=.20;X.fillStyle='#000';
+  X.beginPath();X.ellipse(5,11,15,7,0,0,Math.PI*2);X.fill();
+  X.globalAlpha=1;
+
+  // Trunk
+  X.fillStyle=variant%2?'#745238':'#69482f';
+  X.fillRect(-3,-2,6,20);
+
+  // Layered foliage
+  const greens=variant%3===0?['#1d5527','#2f7537','#438b45']:
+               variant%3===1?['#214f2a','#33713c','#4a8b4b']:
+                              ['#184c28','#2d6d39','#3f8445'];
+  X.fillStyle=greens[0];X.beginPath();X.arc(0,-14,15,0,Math.PI*2);X.fill();
+  X.fillStyle=greens[1];X.beginPath();X.arc(-9,-8,12,0,Math.PI*2);X.fill();
+  X.beginPath();X.arc(9,-8,12,0,Math.PI*2);X.fill();
+  X.fillStyle=greens[2];X.beginPath();X.arc(0,-20,10,0,Math.PI*2);X.fill();
+
+  // Highlight
+  X.globalAlpha=.18;X.fillStyle='#d8f3c4';
+  X.beginPath();X.arc(-5,-22,5,0,Math.PI*2);X.fill();
+  X.restore();
+}
+function drawRoadsideTrees(){
+  const spacing=88;
+  const travel=(roadOffset*1.45)%(spacing);
+  for(let i=-1;i<Math.ceil(H/spacing)+2;i++){
+    let y=i*spacing+travel;
+    let wobble=(i%3)*7;
+    roadsideTree(roadX-34-wobble,y,0.72+(i%3)*.08,i);
+    roadsideTree(roadX+roadW+34+wobble,y+spacing*.48,0.70+((i+1)%3)*.08,i+5);
+  }
+}
+
 function draw(){
 X.clearRect(0,0,W,H);X.save();
 if(shake>0)X.translate((Math.random()-.5)*7*shake,(Math.random()-.5)*7*shake);
 
 let grass=X.createLinearGradient(0,0,0,H);grass.addColorStop(0,'#477c43');grass.addColorStop(1,'#244923');
 X.fillStyle=grass;X.fillRect(0,0,W,H);
+
+drawRoadsideTrees();
 
 X.fillStyle='#777';X.fillRect(roadX-9,0,9,H);X.fillRect(roadX+roadW,0,9,H);
 X.fillStyle='#e7e7e7';X.fillRect(roadX-3,0,3,H);X.fillRect(roadX+roadW,0,3,H);
