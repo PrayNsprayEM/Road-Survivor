@@ -8,7 +8,7 @@
 .showroom{height:calc(100% - 64px);display:grid;grid-template-columns:80px 1fr minmax(200px,30%) 80px;align-items:center;background:radial-gradient(circle at 50% 28%,#404046 0 7%,#25252a 35%,#111 68%,#060606 100%);position:relative;overflow:hidden}
 .arrowBtn{min-width:0;width:62px;height:90px;font-size:46px;padding:0;border:0;background:transparent}
 .carStage{text-align:center;align-self:stretch;display:flex;flex-direction:column;justify-content:center;min-width:0;position:relative}.carStage:before{content:'';position:absolute;left:8%;right:8%;bottom:22%;height:18%;background:radial-gradient(ellipse,#ffffff1f 0,#ffffff08 45%,transparent 72%);filter:blur(3px);pointer-events:none}
-#dealerCanvas{width:100%;height:240px;max-height:42vh}
+#dealerCanvas{width:100%;height:auto;aspect-ratio:13/6;max-height:42vh;object-fit:contain}
 .carName{font-size:28px;font-weight:950;margin-top:-8px}
 .buyCar{background:linear-gradient(#34bdf2,#168bc4);min-width:210px;font-size:22px;box-shadow:0 6px 0 #0b5d85,0 12px 22px #0008}
 .carSpecs{text-align:left;align-self:start;margin-top:22px;padding:18px;background:#101014dd;border:1px solid #ffffff22;border-radius:12px;font-weight:800;line-height:1.6;box-shadow:0 10px 30px #0008}
@@ -18,7 +18,7 @@
   .showroom{height:calc(100% - 52px);grid-template-columns:54px 1fr 145px 54px}
   .arrowBtn{width:48px;font-size:36px}.carSpecs{font-size:12px;padding-top:16px}
   .carSpecs h3{font-size:17px}.carName{font-size:21px}.buyCar{min-width:160px;font-size:17px;padding:9px}
-  #dealerCanvas{height:170px}
+  #dealerCanvas{height:auto;max-height:170px}
 }
 
 
