@@ -177,6 +177,66 @@ body.upgradesOpen #upgrades{
   user-select:none!important;
 }
 #brake,#gas{pointer-events:auto!important}
+
+/* Final mobile driving-control layout fix */
+#steerControls{
+  position:absolute!important;
+  left:18px!important;
+  right:auto!important;
+  bottom:22px!important;
+  width:auto!important;
+  display:flex!important;
+  gap:10px!important;
+  z-index:60!important;
+  pointer-events:auto!important;
+}
+#steerControls button{
+  width:82px!important;
+  height:68px!important;
+  min-width:82px!important;
+  min-height:68px!important;
+  margin:0!important;
+  padding:0!important;
+  flex:none!important;
+}
+#pedalControls{
+  position:absolute!important;
+  right:18px!important;
+  left:auto!important;
+  bottom:22px!important;
+  width:112px!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:stretch!important;
+  gap:10px!important;
+  z-index:60!important;
+  pointer-events:auto!important;
+}
+#pedalControls #brake,#pedalControls #gas{
+  position:relative!important;
+  inset:auto!important;
+  width:112px!important;
+  height:68px!important;
+  min-width:112px!important;
+  min-height:68px!important;
+  margin:0!important;
+  padding:0!important;
+  flex:none!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  opacity:1!important;
+  font-size:18px!important;
+  line-height:1!important;
+}
+#pedalControls #brake{order:1!important}
+#pedalControls #gas{order:2!important}
+#joystick{
+  left:18px!important;
+  right:auto!important;
+  bottom:22px!important;
+  z-index:60!important;
+}
 </style>
 <style>
 /* Racing realism polish */
