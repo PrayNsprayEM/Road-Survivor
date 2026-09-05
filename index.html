@@ -131,15 +131,15 @@ body.upgradesOpen #upgrades{
 }
 
 
-/* Keep leaderboard at the top of the screen */
+/* Leaderboard top positioning — fixed for iPhone */
 #leader{
-  align-self:flex-start !important;
-  margin-top:8px !important;
-  top:0 !important;
-  transform:none !important;
-}
-#leader.leaderboardPanel{
-  justify-content:flex-start !important;
+  top:8px !important;
+  left:50% !important;
+  transform:translateX(-50%) !important;
+  margin:0 !important;
+  max-height:calc(100% - 16px) !important;
+  overflow-y:auto !important;
+  -webkit-overflow-scrolling:touch;
 }
 
 </style>
