@@ -76,7 +76,7 @@ Easy:{trafficSpeed:50,spawn:1.45,max:4,truck:.02,trailer:0,power:.0025},
 Medium:{trafficSpeed:63,spawn:1.08,max:7,truck:.06,trailer:.01,power:.0023},
 Hard:{trafficSpeed:78,spawn:.82,max:10,truck:.12,trailer:.04,power:.0021},
 Extreme:{trafficSpeed:96,spawn:.58,max:15,truck:.24,trailer:.12,power:.002}
-},upgradeItems=[['Twin Turbo',5400],['Supercharger',3600],['Large Turbo',4700],['Sport Brakes',1300],['Race Brakes',2100],['Race Spoiler',1100],['Front Bumper',1200],['Rear Bumper',1200],['Grip Tires',1500]],owned=JSON.parse(localStorage.getItem('owned')||'[]'),keys={left:0,right:0,gas:0,brake:0};
+},scoreMult={Easy:1,Medium:1.5,Hard:2,Extreme:2.5},upgradeItems=[['Twin Turbo',5400],['Supercharger',3600],['Large Turbo',4700],['Sport Brakes',1300],['Race Brakes',2100],['Race Spoiler',1100],['Front Bumper',1200],['Rear Bumper',1200],['Grip Tires',1500]],owned=JSON.parse(localStorage.getItem('owned')||'[]'),keys={left:0,right:0,gas:0,brake:0};
 function resize(){W=innerWidth;H=innerHeight;C.width=W*devicePixelRatio;C.height=H*devicePixelRatio;X.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);roadW=Math.min(W*.72,520);roadX=(W-roadW)/2}addEventListener('resize',resize);resize();
 function panels(id){['menu','dealership','upgrades','leader','settings','crash'].forEach(k=>els[k].classList.toggle('hide',k!==id));}
 function dc(el,v){el.textContent=v.toUpperCase();el.className='diff '+v.toLowerCase()}
@@ -271,7 +271,7 @@ if(nosUntil>nowMs)effects.push('NOS '+((nosUntil-nowMs)/1000).toFixed(1)+'s');
 els.status.textContent=(active?'':'TIMER PAUSED — SPEED TOO LOW')+(effects.length?((active?'':' • ')+effects.join(' • ')):'');
 
 if(active){
-t+=dt;dist+=player.s*.44704*dt;score=Math.floor(t*10+dist)+nearMissBonus;spawn-=dt;
+t+=dt;dist+=player.s*.44704*dt;score=Math.floor((Math.floor(t*10+dist)+nearMissBonus)*scoreMult[diff]);spawn-=dt;
 let c=cfg[diff];
 if(spawn<=0&&traffic.length<c.max){
 let lane=Math.floor(Math.random()*3),r=Math.random(),type='car',w=29,h=50;
@@ -333,7 +333,7 @@ let nearGap=(player.w+v.w)*.78;
 if(xGap>=hitGap&&xGap<nearGap){
 v.nearMissAwarded=true;
 nearMissBonus+=100;
-score=Math.floor(t*10+dist)+nearMissBonus;
+score=Math.floor((Math.floor(t*10+dist)+nearMissBonus)*scoreMult[diff]);
 nearMissUntil=performance.now()+1000;
 els.nearMissToast.textContent='NEAR MISS +100';
 els.nearMissToast.style.opacity='1';
