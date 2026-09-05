@@ -156,6 +156,9 @@ body.upgradesOpen #upgrades{
 .lbRow.me span{color:#fff !important}
 .lbRow.me .score{color:#fff !important}
 
+
+#joystick{display:none;position:absolute;left:18px;bottom:22px;width:118px;height:118px;border:3px solid #fff;border-radius:50%;background:#111a;touch-action:none}
+#joystickKnob{position:absolute;left:34px;top:34px;width:44px;height:44px;border:3px solid #fff;border-radius:50%;background:#777;box-shadow:0 3px 10px #000}
 </style>
 <style>
 /* Racing realism polish */
@@ -260,7 +263,7 @@ canvas{
 </div>
 <div id="settings" class="p hide"><h2>SETTINGS</h2><div class="card">Driving controls<br><button id="mode">BUTTONS</button></div><div class="card">Music <input id="music" type="range" min="0" max="100"></div><div class="card">SFX <input id="sfx" type="range" min="0" max="100"></div><div class="card">Song<br><button id="song">TRACK 1</button></div><button id="sb">BACK</button></div>
 <div id="crash" class="p hide"><h2>CRASH!</h2><p>Time: <b id="ft"></b></p><p>Distance: <b id="fd"></b></p><p>Score: <b id="fs"></b></p><p>Run earnings: <b id="earnings">$0</b></p><p>Best: <b id="fb"></b></p><button id="retry">RETRY</button><button id="cm">MENU</button><button id="cl">LEADERBOARD</button></div>
-<div id="hud" class="hide"><div id="speed" class="stat leftstat">0 MPH</div><div id="score" class="stat rightstat">0</div><div id="status" class="status"></div><div id="nearMissToast">NEAR MISS +100</div><div class="controls" id="controls"><div id="steerControls"><button class="ctrl" id="left">◀</button><button class="ctrl" id="right">▶</button></div><div id="pedalControls"><button class="ctrl pedal brake" id="brake">BRAKE</button><button class="ctrl pedal gas" id="gas">GAS</button></div></div></div></div>
+<div id="hud" class="hide"><div id="speed" class="stat leftstat">0 MPH</div><div id="score" class="stat rightstat">0</div><div id="status" class="status"></div><div id="nearMissToast">NEAR MISS +100</div><div class="controls" id="controls"><div id="steerControls"><button class="ctrl" id="left">◀</button><button class="ctrl" id="right">▶</button></div><div id="joystick"><div id="joystickKnob"></div></div><div id="pedalControls"><button class="ctrl pedal brake" id="brake">BRAKE</button><button class="ctrl pedal gas" id="gas">GAS</button></div></div></div></div>
 <script>
 if(!CanvasRenderingContext2D.prototype.roundRect){CanvasRenderingContext2D.prototype.roundRect=function(x,y,w,h,r){this.rect(x,y,w,h);return this}};
 const C=document.getElementById('c'),X=C.getContext('2d');
@@ -271,7 +274,7 @@ const els={
   ul:document.getElementById('ul'),ub:document.getElementById('ub'),upgrades:document.getElementById('upgrades'),upgradeCats:document.getElementById('upgradeCats'),upgradeDetail:document.getElementById('upgradeDetail'),upgradeCatBack:document.getElementById('upgradeCatBack'),upgradeCatTitle:document.getElementById('upgradeCatTitle'),upgradeCarName:document.getElementById('upgradeCarName'),scores:document.getElementById('scores'),lbback:document.getElementById('lbback'),
   mode:document.getElementById('mode'),music:document.getElementById('music'),sfx:document.getElementById('sfx'),song:document.getElementById('song'),sb:document.getElementById('sb'),
   ft:document.getElementById('ft'),fd:document.getElementById('fd'),fs:document.getElementById('fs'),earnings:document.getElementById('earnings'),fb:document.getElementById('fb'),retry:document.getElementById('retry'),cm:document.getElementById('cm'),cl:document.getElementById('cl'),
-  hud:document.getElementById('hud'),speed:document.getElementById('speed'),score:document.getElementById('score'),status:document.getElementById('status'),nearMissToast:document.getElementById('nearMissToast'),controls:document.getElementById('controls'),steerControls:document.getElementById('steerControls'),pedalControls:document.getElementById('pedalControls')
+  hud:document.getElementById('hud'),speed:document.getElementById('speed'),score:document.getElementById('score'),status:document.getElementById('status'),nearMissToast:document.getElementById('nearMissToast'),controls:document.getElementById('controls'),steerControls:document.getElementById('steerControls'),joystick:document.getElementById('joystick'),joystickKnob:document.getElementById('joystickKnob'),pedalControls:document.getElementById('pedalControls')
 };
 let W,H,roadX,roadW,run=false,last=0,t=0,dist=0,score=0,nearMissBonus=0,spawn=0,traffic=[],player,weather='Clear',weatherNext=0,weatherFade=0,rainDrops=[],cash=+localStorage.getItem('cash')||10000,diff=localStorage.getItem('diff')||'Easy',mode=localStorage.getItem('mode')||'buttons',musicVol=+(localStorage.getItem('music')||70),sfxVol=+(localStorage.getItem('sfx')||70),song=+(localStorage.getItem('song')||1),powerUps=[],invisibleUntil=0,nosUntil=0,nearMissUntil=0,roadOffset=0,shake=0,steerVel=0,selectedCar=localStorage.getItem('selectedCar')||'civic',dealerIndex=0,ownedCars=JSON.parse(localStorage.getItem('ownedCars')||'["civic"]');
 
@@ -768,10 +771,11 @@ function dealerPurchaseOrSelect(){
   dealerUI();
 }
 
-function modeBtn(){els.mode.textContent=mode.toUpperCase()}
+function modeBtn(){els.mode.textContent=mode==='buttons'?'BUTTONS':mode==='gyro'?'GYRO':'JOYSTICK'}
 function controlLayout(){
-  const gyro=mode==='gyro';
-  els.steerControls.style.display=gyro?'none':'block';
+  const gyro=mode==='gyro',joy=mode==='joystick';
+  els.steerControls.style.display=(gyro||joy)?'none':'block';
+  els.joystick.style.display=joy?'block':'none';
   els.pedalControls.style.display='flex';
   els.pedalControls.style.flexDirection='column';
   els.pedalControls.style.gap='8px';
@@ -958,6 +962,24 @@ function bind(id,k){
 }['left','right','gas','brake'].forEach(k=>bind(k,k));
 addEventListener('keydown',e=>{if(e.key==='ArrowLeft')keys.left=1;if(e.key==='ArrowRight')keys.right=1;if(e.key==='ArrowUp')keys.gas=1;if(e.key==='ArrowDown')keys.brake=1});
 addEventListener('keyup',e=>{if(e.key==='ArrowLeft')keys.left=0;if(e.key==='ArrowRight')keys.right=0;if(e.key==='ArrowUp')keys.gas=0;if(e.key==='ArrowDown')keys.brake=0});
+let joystickSteer=0;
+function resetJoystick(){
+  joystickSteer=0;
+  if(els.joystickKnob){els.joystickKnob.style.left='34px';els.joystickKnob.style.top='34px';}
+}
+function moveJoystick(e){
+  e.preventDefault();
+  const r=els.joystick.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;
+  let dx=e.clientX-cx,dy=e.clientY-cy,max=36;
+  const d=Math.hypot(dx,dy)||1;
+  if(d>max){dx=dx/d*max;dy=dy/d*max;}
+  joystickSteer=clamp(dx/max);
+  els.joystickKnob.style.left=(34+dx)+'px';
+  els.joystickKnob.style.top=(34+dy)+'px';
+}
+els.joystick.addEventListener('pointerdown',e=>{els.joystick.setPointerCapture?.(e.pointerId);moveJoystick(e)});
+els.joystick.addEventListener('pointermove',e=>{if(e.buttons||e.pointerType==='touch')moveJoystick(e)});
+['pointerup','pointercancel','pointerleave'].forEach(ev=>els.joystick.addEventListener(ev,resetJoystick));
 let tilt=0,gyroPermission='unknown';
 function clamp(v){return Math.max(-1,Math.min(1,v))}
 function handleOrientation(e){
@@ -1007,7 +1029,7 @@ let brakePower=42;
 if(player.s<target)player.s=Math.min(target,player.s+accel*dt);
 else player.s=Math.max(target,player.s-(braking?brakePower:13)*dt);
 
-let steerInput=mode==='gyro'?tilt:(keys.right-keys.left);
+let steerInput=mode==='gyro'?tilt:(mode==='joystick'?joystickSteer:(keys.right-keys.left));
 let speedFactor=.35+Math.min(player.s/100,1)*.75;
 steerVel+=(steerInput*330*speedFactor-steerVel)*Math.min(1,dt*8);
 player.x+=steerVel*dt;
@@ -1759,9 +1781,12 @@ els.mode.onclick=async()=>{
     const ok=await requestGyroPermission();
     if(!ok)return;
     mode='gyro';
+  }else if(mode==='gyro'){
+    mode='joystick';
+    tilt=0;
   }else{
     mode='buttons';
-    tilt=0;
+    resetJoystick();
   }
   modeBtn();
   controlLayout();
