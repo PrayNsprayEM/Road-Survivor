@@ -280,7 +280,7 @@ const els={
   ft:document.getElementById('ft'),fd:document.getElementById('fd'),fs:document.getElementById('fs'),earnings:document.getElementById('earnings'),fb:document.getElementById('fb'),retry:document.getElementById('retry'),cm:document.getElementById('cm'),cl:document.getElementById('cl'),
   hud:document.getElementById('hud'),speed:document.getElementById('speed'),score:document.getElementById('score'),status:document.getElementById('status'),nearMissToast:document.getElementById('nearMissToast'),controls:document.getElementById('controls'),steerControls:document.getElementById('steerControls'),joystick:document.getElementById('joystick'),joystickKnob:document.getElementById('joystickKnob'),pedalControls:document.getElementById('pedalControls')
 };
-let W,H,roadX,roadW,run=false,last=0,t=0,dist=0,score=0,nearMissBonus=0,spawn=0,traffic=[],player,weather='Clear',weatherNext=0,weatherFade=0,rainDrops=[],cash=+localStorage.getItem('cash')||10000,diff=localStorage.getItem('diff')||'Easy',mode=localStorage.getItem('mode')||'buttons',musicVol=+(localStorage.getItem('music')||70),sfxVol=+(localStorage.getItem('sfx')||70),song=+(localStorage.getItem('song')||1),powerUps=[],invisibleUntil=0,nosUntil=0,nearMissUntil=0,roadOffset=0,shake=0,steerVel=0,selectedCar=localStorage.getItem('selectedCar')||'civic',dealerIndex=0,ownedCars=JSON.parse(localStorage.getItem('ownedCars')||'["civic"]');
+let W,H,roadX,roadW,run=false,last=0,t=0,dist=0,score=0,nearMissBonus=0,spawn=0,traffic=[],player,weather='Clear',weatherNext=0,weatherFade=0,rainDrops=[],stormStrikeAt=0,stormStrikeRolled=false,lightningHitUntil=0,lightningDamaged=false,lightningFlashUntil=0,skidUntil=0,cash=+localStorage.getItem('cash')||10000,diff=localStorage.getItem('diff')||'Easy',mode=localStorage.getItem('mode')||'buttons',musicVol=+(localStorage.getItem('music')||70),sfxVol=+(localStorage.getItem('sfx')||70),song=+(localStorage.getItem('song')||1),powerUps=[],invisibleUntil=0,nosUntil=0,nearMissUntil=0,roadOffset=0,shake=0,steerVel=0,selectedCar=localStorage.getItem('selectedCar')||'civic',dealerIndex=0,ownedCars=JSON.parse(localStorage.getItem('ownedCars')||'["civic"]');
 
 const cars=[
   {id:'civic',name:'Honda Civic',price:0,hp:158,top:126,weight:2935,drive:'FWD',zero:'7.8s',desc:'Reliable starter car'},
@@ -951,7 +951,7 @@ async function scores(){
   }
 }
 
-function start(){panels(null);els.hud.classList.remove('hide');controlLayout();t=dist=score=nearMissBonus=spawn=0;traffic=[];powerUps=[];invisibleUntil=0;nosUntil=0;nearMissUntil=0;els.nearMissToast.style.opacity='0';player={x:W/2,y:H*.68,w:30,h:52,s:0};weather='Clear';weatherFade=1;weatherNext=performance.now()+30000+Math.random()*20000;rainDrops=[];run=true;last=performance.now();requestAnimationFrame(loop)}
+function start(){panels(null);els.hud.classList.remove('hide');controlLayout();t=dist=score=nearMissBonus=spawn=0;traffic=[];powerUps=[];invisibleUntil=0;nosUntil=0;nearMissUntil=0;els.nearMissToast.style.opacity='0';player={x:W/2,y:H*.68,w:30,h:52,s:0};weather='Clear';weatherFade=1;stormStrikeAt=0;stormStrikeRolled=false;lightningHitUntil=0;lightningDamaged=false;lightningFlashUntil=0;skidUntil=0;weatherNext=performance.now()+30000+Math.random()*20000;rainDrops=[];run=true;last=performance.now();requestAnimationFrame(loop)}
 function bind(id,k){
   let b=document.getElementById(id);
   const down=e=>{e.preventDefault();keys[k]=1};
@@ -1035,7 +1035,8 @@ else player.s=Math.max(target,player.s-(braking?brakePower:13)*dt);
 
 let steerInput=mode==='gyro'?tilt:(mode==='joystick'?joystickSteer:(keys.right-keys.left));
 let speedFactor=.35+Math.min(player.s/100,1)*.75;
-steerVel+=(steerInput*330*speedFactor-steerVel)*Math.min(1,dt*8);
+let lightningSteerFactor=(weather==='Storm'&&lightningDamaged)?.70:1;
+steerVel+=(steerInput*330*speedFactor*lightningSteerFactor-steerVel)*Math.min(1,dt*(lightningDamaged?5.6:8));
 player.x+=steerVel*dt;
 player.x=Math.max(roadX+24,Math.min(roadX+roadW-24,player.x));
 
@@ -1239,8 +1240,10 @@ if(isTruck){nose=.45;shoulder=.48;rear=.48;roofTop=-.18;roofBot=.30;}
 X.fillStyle='#111';
 let ww=Math.max(4,w*.15), wh=Math.max(10,h*.21);
 let wf= isSports?.57:.55;
-X.fillRect(-w*wf,-h*.31,ww,wh);X.fillRect(w*(wf-.15),-h*.31,ww,wh);
-X.fillRect(-w*wf,h*.12,ww,wh);X.fillRect(w*(wf-.15),h*.12,ww,wh);
+if(!(hero&&weather==='Storm'&&lightningDamaged)){
+  X.fillRect(-w*wf,-h*.31,ww,wh);X.fillRect(w*(wf-.15),-h*.31,ww,wh);
+  X.fillRect(-w*wf,h*.12,ww,wh);X.fillRect(w*(wf-.15),h*.12,ww,wh);
+}
 
 X.shadowColor='#0009';X.shadowBlur=9;X.shadowOffsetY=5;
 X.fillStyle=body;X.beginPath();
@@ -1522,7 +1525,50 @@ if(isPoints){X.strokeStyle='#eaffef';X.lineWidth=3;X.stroke()}
 X.shadowBlur=0;X.fillStyle='#111';X.font=isPoints?'bold 11px system-ui':'bold 10px system-ui';X.textAlign='center';X.textBaseline='middle';
 X.fillText(p.type==='invis'?'INVIS':p.type==='nos'?'NOS':'+'+p.value,p.x,p.y);X.restore()
 });
-X.save();car(player.x,player.y,player.w,player.h,true);X.restore();
+X.save();if(performance.now()<skidUntil){
+  X.save();
+  X.strokeStyle='#111';X.globalAlpha=.72;X.lineWidth=4;
+  X.beginPath();
+  X.moveTo(player.x-player.w*.25,player.y+player.h*.25);
+  X.quadraticCurveTo(player.x-player.w*.70,player.y+player.h*.72,player.x-player.w*.35,player.y+player.h*1.25);
+  X.moveTo(player.x+player.w*.25,player.y+player.h*.25);
+  X.quadraticCurveTo(player.x+player.w*.70,player.y+player.h*.72,player.x+player.w*.35,player.y+player.h*1.25);
+  X.stroke();X.restore();
+}
+car(player.x,player.y,player.w,player.h,true);
+
+// Sparks shoot from the wheel areas for the rest of the active storm after a lightning hit.
+if(weather==='Storm' && lightningDamaged){
+  X.save();
+  const sparkT=performance.now()*.025;
+  const wheelPts=[
+    [player.x-player.w*.43,player.y-player.h*.18],
+    [player.x+player.w*.43,player.y-player.h*.18],
+    [player.x-player.w*.43,player.y+player.h*.24],
+    [player.x+player.w*.43,player.y+player.h*.24]
+  ];
+  X.lineWidth=2;
+  for(let wi=0;wi<wheelPts.length;wi++){
+    const [wx,wy]=wheelPts[wi];
+    for(let k=0;k<3;k++){
+      const phase=sparkT+wi*1.7+k*2.1;
+      const len=6+((Math.sin(phase*1.9)+1)*4);
+      const dx=Math.sin(phase)*len;
+      const dy=7+Math.abs(Math.cos(phase*1.3))*12;
+      X.strokeStyle=k===0?'#fff6b0':(k===1?'#ffd24a':'#ff8a22');
+      X.shadowColor='#ffb02e';X.shadowBlur=8;
+      X.beginPath();X.moveTo(wx,wy);X.lineTo(wx+dx,wy+dy);X.stroke();
+    }
+  }
+  X.restore();
+}
+
+if(performance.now()<lightningHitUntil){
+  X.save();X.strokeStyle='#fff7a8';X.shadowColor='#fff';X.shadowBlur=18;X.lineWidth=5;
+  X.beginPath();X.moveTo(player.x+8,0);X.lineTo(player.x-14,player.y*.35);X.lineTo(player.x+10,player.y*.57);X.lineTo(player.x-5,player.y-20);X.stroke();
+  X.restore();
+}
+X.restore();
 
 if(player.s>85){let g=X.createRadialGradient(W/2,H/2,Math.min(W,H)*.25,W/2,H/2,Math.max(W,H)*.7);g.addColorStop(0,'#0000');g.addColorStop(1,'#0005');X.fillStyle=g;X.fillRect(0,0,W,H)}
 drawWeather();
@@ -1542,11 +1588,35 @@ function chooseNextWeather(){
   weatherNext=performance.now()+randomWeatherDelay();
   weatherBannerUntil=performance.now()+2200;
   rainDrops=[];
+  stormStrikeRolled=false;
+  stormStrikeAt=0;
+
+  // Lightning damage only lasts while the storm is active.
+  if(weather!=='Storm'){
+    lightningDamaged=false;
+    lightningHitUntil=0;
+    lightningFlashUntil=0;
+    skidUntil=0;
+  }
+
+  if(weather==='Storm'){
+    stormStrikeRolled=true;
+    if(Math.random()<0.30) stormStrikeAt=performance.now()+2000+Math.random()*6000;
+  }
 }
 function updateWeather(dt){
   if(!run)return;
   if(performance.now()>=weatherNext)chooseNextWeather();
   weatherFade=Math.min(1,weatherFade+dt*.55);
+  if(weather==='Storm' && stormStrikeAt && performance.now()>=stormStrikeAt){
+    stormStrikeAt=0;
+    lightningDamaged=true;
+    lightningHitUntil=performance.now()+1200;
+    lightningFlashUntil=performance.now()+450;
+    skidUntil=performance.now()+1400;
+    shake=Math.max(shake,12);
+    steerVel*=1.8;
+  }
   if(weather==='Rain'||weather==='Storm'){
     const target=weather==='Storm'?105:65;
     while(rainDrops.length<target) rainDrops.push({x:Math.random()*W,y:Math.random()*H,l:10+Math.random()*18,s:500+Math.random()*450});
@@ -1575,9 +1645,16 @@ function drawWeather(){
     const flash=Math.sin(performance.now()*.006)>0.992;
     if(flash){X.globalAlpha=.32;X.fillStyle='#e8f3ff';X.fillRect(0,0,W,H)}
   }
+  if(performance.now()<lightningFlashUntil){
+    X.globalAlpha=.72;X.fillStyle='#f5fbff';X.fillRect(0,0,W,H);
+  }
   // Always-visible weather indicator plus a clear change banner.
   X.globalAlpha=.88;X.fillStyle='#000b';X.fillRect(W/2-52,8,104,27);
   X.globalAlpha=1;X.fillStyle='#fff';X.font='900 12px system-ui';X.textAlign='center';X.textBaseline='middle';X.fillText(weather.toUpperCase(),W/2,21.5);
+  if(performance.now()<lightningHitUntil){
+    X.globalAlpha=1;X.fillStyle='#000c';X.fillRect(W/2-128,H*.27-22,256,44);
+    X.fillStyle='#fff7a8';X.font='900 17px system-ui';X.fillText('LIGHTNING HIT — TIRES LOST',W/2,H*.27);
+  }
   if(performance.now()<weatherBannerUntil){
     const left=Math.max(0,weatherBannerUntil-performance.now());
     X.globalAlpha=Math.min(1,left/350);X.fillStyle='#000c';X.fillRect(W/2-108,H*.18-22,216,44);
