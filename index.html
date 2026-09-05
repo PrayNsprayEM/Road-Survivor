@@ -275,27 +275,58 @@ body.upgradesOpen #upgrades{
   }
 }
 </style>
+
+<style id="backgroundHotspotStyle">
+#menuHotspots{position:absolute;inset:0;pointer-events:none}
+#menuHotspots button{
+  position:absolute;
+  margin:0;
+  padding:0;
+  min-width:0;
+  border:0;
+  background:transparent;
+  color:transparent;
+  box-shadow:none;
+  opacity:0;
+  pointer-events:auto;
+  touch-action:manipulation;
+  -webkit-tap-highlight-color:transparent;
+}
+#hotPlay{left:2.5%;top:35%;width:26.5%;height:9%}
+#hotDealer{left:2.5%;top:51%;width:26.5%;height:8.2%}
+#hotUpgrades{left:2.5%;top:59.7%;width:26.5%;height:8.2%}
+#hotSettings{left:2.5%;top:68.4%;width:26.5%;height:8.2%}
+#hotLeaderboard{right:2.2%;top:3.2%;width:19%;height:9.4%}
+#hotEasy{right:23.0%;bottom:3.5%;width:6.3%;height:7.5%}
+#hotMedium{right:15.6%;bottom:3.5%;width:7%;height:7.5%}
+#hotHard{right:8.3%;bottom:3.5%;width:6.4%;height:7.5%}
+#hotExtreme{right:1.6%;bottom:3.5%;width:6.5%;height:7.5%}
+</style>
 </head><body><canvas id="c"></canvas><div id="ui">
 <div id="menu" class="p">
-  <div class="menuLiveControls">
-    <div class="leftMenuButtons">
-      <button id="play">PLAY</button>
-      <button id="dealerBtn">DEALERSHIP</button>
-      <button id="up">UPGRADES</button>
-      <button id="set">SETTINGS</button>
-    </div>
-    <div class="liveCash">TOTAL MONEY &nbsp; <b id="cash"></b></div>
-    <button id="lb" class="leaderQuick">LEADERBOARD</button>
-    <div class="difficultyDock">
-      <div class="difficultyLabel">SELECT DIFFICULTY</div>
-      <button type="button" class="diffChoice easy" data-diff="Easy">EASY</button>
-      <button type="button" class="diffChoice medium" data-diff="Medium">MEDIUM</button>
-      <button type="button" class="diffChoice hard" data-diff="Hard">HARD</button>
-      <button type="button" class="diffChoice extreme" data-diff="Extreme">EXTREME</button>
-      <button id="dif" class="diff hide">EASY</button>
-    </div>
+  <div id="menuHotspots" aria-label="Main menu controls">
+    <button id="hotPlay" aria-label="Play"></button>
+    <button id="hotDealer" aria-label="Dealership"></button>
+    <button id="hotUpgrades" aria-label="Upgrades"></button>
+    <button id="hotSettings" aria-label="Settings"></button>
+    <button id="hotLeaderboard" aria-label="Leaderboard"></button>
+    <button id="hotEasy" aria-label="Easy difficulty"></button>
+    <button id="hotMedium" aria-label="Medium difficulty"></button>
+    <button id="hotHard" aria-label="Hard difficulty"></button>
+    <button id="hotExtreme" aria-label="Extreme difficulty"></button>
   </div>
 </div>
+
+<div class="hide" aria-hidden="true">
+  <button id="play"></button>
+  <button id="dealerBtn"></button>
+  <button id="up"></button>
+  <button id="set"></button>
+  <button id="lb"></button>
+  <button id="dif"></button>
+  <b id="cash"></b>
+</div>
+
 <div id="dealership" class="p dealer hide">
   <div class="dealerTop">
     <div class="dealerCash">Cash: <span id="dealerCash">$0</span></div>
@@ -844,20 +875,19 @@ els.mode.onclick=async()=>{
   saveSettings();
 };els.song.onclick=()=>{song=song%3+1;songBtn()};els.music.oninput=()=>musicVol=+els.music.value;els.sfx.oninput=()=>sfxVol=+els.sfx.value;
 
-function syncDifficultyChoices(){
-  document.querySelectorAll('.diffChoice').forEach(b=>{
-    b.classList.toggle('active', b.dataset.diff===diff);
-  });
-  dc(els.dif,diff);
-}
-document.querySelectorAll('.diffChoice').forEach(b=>{
-  b.addEventListener('click',()=>{
-    diff=b.dataset.diff;
+const hotspotDiff={hotEasy:'Easy',hotMedium:'Medium',hotHard:'Hard',hotExtreme:'Extreme'};
+document.getElementById('hotPlay').onclick=()=>els.play.click();
+document.getElementById('hotDealer').onclick=()=>els.dealerBtn.click();
+document.getElementById('hotUpgrades').onclick=()=>els.up.click();
+document.getElementById('hotSettings').onclick=()=>els.set.click();
+document.getElementById('hotLeaderboard').onclick=()=>els.lb.click();
+Object.entries(hotspotDiff).forEach(([id,d])=>{
+  document.getElementById(id).onclick=()=>{
+    diff=d;
     localStorage.setItem('diff',diff);
-    syncDifficultyChoices();
-  });
+    dc(els.dif,diff);
+  };
 });
-syncDifficultyChoices();
 
 dc(els.dif,diff);cashUI();dealerUI();panels('menu');
 </script></body></html>
