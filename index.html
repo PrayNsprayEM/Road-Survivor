@@ -145,6 +145,17 @@ body.upgradesOpen #upgrades{
   -webkit-overflow-scrolling:touch;
 }
 
+
+/* Put YOU directly inside the leaderboard */
+.lbRow.me{
+  background:rgba(45,189,245,.20) !important;
+  outline:2px solid #2dbdf5;
+  outline-offset:-2px;
+  color:#fff;
+  font-weight:1000;
+}
+.lbRow.me .score{color:#fff}
+
 </style>
 <style>
 /* Racing realism polish */
@@ -803,17 +814,35 @@ function scores(){
   const scoreEl=document.getElementById('yourRankScore');
   if(!list||!placeEl||!scoreEl)return;
 
-  const rows=seededLeaderboard(lbSelected);
+  const cpuRows=seededLeaderboard(lbSelected);
   const b=bestRunFor(lbSelected);
-  const userScore=b?b.s:0;
+  const userScore=b?Number(b.s)||0:0;
 
-  let ahead=0;
-  for(const r of rows){ if(r.score>userScore) ahead++; }
-  const yourPlace=ahead+1;
+  // Build one ranked list that includes YOU as a real row.
+  const ranked=cpuRows.map(r=>({name:r.name,score:r.score,isYou:false}));
+  ranked.push({name:'YOU',score:userScore,isYou:true});
+  ranked.sort((a,b)=>{
+    if(b.score!==a.score) return b.score-a.score;
+    if(a.isYou) return -1;
+    if(b.isYou) return 1;
+    return 0;
+  });
+
+  const yourIndex=ranked.findIndex(r=>r.isYou);
+  const yourPlace=yourIndex+1;
+
+  // Show the actual top 100. If YOU are outside the top 100,
+  // keep the bottom rank bar showing the real place and score.
+  const top100=ranked.slice(0,100);
 
   let html='';
-  for(let i=0;i<rows.length;i++){
-    html+='<div class="lbRow"><span>#'+(i+1)+'</span><span>'+rows[i].name+'</span><span class="score">'+rows[i].score.toLocaleString()+'</span></div>';
+  for(let i=0;i<top100.length;i++){
+    const r=top100[i];
+    html+='<div class="lbRow'+(r.isYou?' me':'')+'" data-you="'+(r.isYou?'1':'0')+'">'+
+      '<span>#'+(i+1)+'</span>'+
+      '<span>'+(r.isYou?'YOU':r.name)+'</span>'+
+      '<span class="score">'+r.score.toLocaleString()+'</span>'+
+      '</div>';
   }
   list.innerHTML=html;
 
@@ -822,6 +851,14 @@ function scores(){
 
   document.querySelectorAll('.lbDiff').forEach(btn=>{
     btn.classList.toggle('active',btn.dataset.lbdiff===lbSelected);
+  });
+
+  // If YOU are in the top 100, scroll the leaderboard so your highlighted row is visible.
+  requestAnimationFrame(()=>{
+    const youRow=list.querySelector('.lbRow.me');
+    if(youRow){
+      youRow.scrollIntoView({block:'center',behavior:'smooth'});
+    }
   });
 }
 function start(){panels(null);els.hud.classList.remove('hide');controlLayout();t=dist=score=nearMissBonus=spawn=0;traffic=[];powerUps=[];invisibleUntil=0;nosUntil=0;nearMissUntil=0;els.nearMissToast.style.opacity='0';player={x:W/2,y:H*.68,w:30,h:52,s:0};run=true;last=performance.now();requestAnimationFrame(loop)}
