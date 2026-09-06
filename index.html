@@ -1538,7 +1538,7 @@ const carData=cars.find(c=>c.id===selectedCar)||cars[0];
 let throttle=keys.gas?1:0,braking=keys.brake?1:0;
 let target=throttle?carData.top:8;
 if(braking)target=0;
-if(performance.now()<nosUntil)target=Math.min(carData.top+40,148);
+if(performance.now()<nosUntil)target=carData.top+35;
 
 let accel=selectedCar==='mx5'?27:23;
 let brakePower=42;
