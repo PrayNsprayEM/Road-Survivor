@@ -1264,8 +1264,32 @@ document.addEventListener('visibilitychange',()=>{
   if(!document.hidden && musicVol>0) startMusic();
 });
 function songBtn(){els.song.textContent='CHANGE SONG — '+songs[song-1].name}
-function settingsUI(){modeBtn();controlLayout();els.music.value=musicVol;els.sfx.value=sfxVol;songBtn();loadSelectedSong(false)}
-function saveSettings(){localStorage.setItem('mode',mode);localStorage.setItem('music',musicVol);localStorage.setItem('sfx',sfxVol);localStorage.setItem('song',song)}
+function settingsUI(){
+  modeBtn();
+  controlLayout();
+  els.music.value=musicVol;
+  els.sfx.value=sfxVol;
+  songBtn();
+  applyMusicVolume();
+  applySfxVolume();
+}
+function applySfxVolume(){
+  const v=Math.max(0,Math.min(1,(+sfxVol||0)/100));
+  try{
+    if(window.rsSfxMaster && window.rsSfxMaster.gain){
+      if(rsAudioCtx) window.rsSfxMaster.gain.setTargetAtTime(v,rsAudioCtx.currentTime,.02);
+      else window.rsSfxMaster.gain.value=v;
+    }
+  }catch(e){}
+  try{ if(typeof rsBrakeClip!=='undefined') rsBrakeClip.volume=v*.9; }catch(e){}
+  try{ if(typeof rsCrashClip!=='undefined') rsCrashClip.volume=v; }catch(e){}
+}
+function saveSettings(){
+  localStorage.setItem('mode',mode);
+  localStorage.setItem('music',musicVol);
+  localStorage.setItem('sfx',sfxVol);
+  localStorage.setItem('song',song);
+}
 function bestRunFor(d){
   let a=JSON.parse(localStorage.getItem('scores_'+d)||'[]');
   if(!Array.isArray(a))a=[];
@@ -2691,7 +2715,35 @@ els.mode.onclick=async()=>{
   modeBtn();
   controlLayout();
   saveSettings();
-};els.song.onclick=(e)=>{e.preventDefault();e.stopPropagation();song=(song%songs.length)+1;saveSettings();loadSelectedSong(true)};els.music.oninput=()=>{musicVol=+els.music.value;applyMusicVolume();saveSettings();if(musicVol>0)startMusic();else bgMusic.pause()};els.sfx.oninput=()=>sfxVol=+els.sfx.value;
+};
+els.song.onclick=(e)=>{
+  e.preventDefault();e.stopPropagation();
+  song=(song%songs.length)+1;
+  saveSettings();
+  loadSelectedSong(musicVol>0);
+};
+
+function rsMusicSliderChanged(){
+  musicVol=Math.max(0,Math.min(100,+els.music.value||0));
+  applyMusicVolume();
+  saveSettings();
+  if(musicVol<=0){
+    bgMusic.pause();
+  }else{
+    startMusic();
+  }
+}
+function rsSfxSliderChanged(){
+  sfxVol=Math.max(0,Math.min(100,+els.sfx.value||0));
+  applySfxVolume();
+  saveSettings();
+}
+els.music.addEventListener('input',rsMusicSliderChanged);
+els.music.addEventListener('change',rsMusicSliderChanged);
+els.sfx.addEventListener('input',rsSfxSliderChanged);
+els.sfx.addEventListener('change',rsSfxSliderChanged);
+
+applyMusicVolume();applySfxVolume();
 dc(els.dif,diff);cashUI();dealerUI();panels('menu');
 
 // --- PLAYER PROFILE ---
