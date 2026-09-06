@@ -354,7 +354,7 @@ const els={
   ft:document.getElementById('ft'),fd:document.getElementById('fd'),fs:document.getElementById('fs'),earnings:document.getElementById('earnings'),fb:document.getElementById('fb'),retry:document.getElementById('retry'),cm:document.getElementById('cm'),cl:document.getElementById('cl'),
   hud:document.getElementById('hud'),speed:document.getElementById('speed'),score:document.getElementById('score'),status:document.getElementById('status'),nearMissToast:document.getElementById('nearMissToast'),controls:document.getElementById('controls'),steerControls:document.getElementById('steerControls'),joystick:document.getElementById('joystick'),joystickKnob:document.getElementById('joystickKnob'),pedalControls:document.getElementById('pedalControls')
 };
-let W,H,roadX,roadW,run=false,last=0,t=0,dist=0,score=0,nearMissBonus=0,spawn=0,traffic=[],player,weather='Clear',weatherNext=0,weatherFade=0,rainDrops=[],stormStrikeAt=0,stormStrikeRolled=false,lightningHitUntil=0,lightningDamaged=false,lightningFlashUntil=0,skidUntil=0,cash=+localStorage.getItem('cash')||10000,diff=localStorage.getItem('diff')||'Easy',mode=localStorage.getItem('mode')||'buttons',musicVol=+(localStorage.getItem('music')||70),sfxVol=+(localStorage.getItem('sfx')||70),song=+(localStorage.getItem('song')||1),powerUps=[],invisibleUntil=0,nosUntil=0,nearMissUntil=0,roadOffset=0,shake=0,steerVel=0,selectedCar=localStorage.getItem('selectedCar')||'civic',dealerIndex=0,ownedCars=JSON.parse(localStorage.getItem('ownedCars')||'["civic"]');
+let W,H,roadX,roadW,run=false,last=0,t=0,dist=0,score=0,nearMissBonus=0,spawn=0,traffic=[],player,weather='Clear',weatherNext=0,weatherFade=0,rainDrops=[],coinDrops=[],weatherDoubleBonus=0,lastWeatherBase=0,stormStrikeAt=0,stormStrikeRolled=false,lightningHitUntil=0,lightningDamaged=false,lightningFlashUntil=0,skidUntil=0,cash=+localStorage.getItem('cash')||10000,diff=localStorage.getItem('diff')||'Easy',mode=localStorage.getItem('mode')||'buttons',musicVol=+(localStorage.getItem('music')||70),sfxVol=+(localStorage.getItem('sfx')||70),song=+(localStorage.getItem('song')||1),powerUps=[],invisibleUntil=0,nosUntil=0,nearMissUntil=0,roadOffset=0,shake=0,steerVel=0,selectedCar=localStorage.getItem('selectedCar')||'civic',dealerIndex=0,ownedCars=JSON.parse(localStorage.getItem('ownedCars')||'["civic"]');
 
 const cars=[
   {id:'civic',name:'Honda Civic',price:0,hp:158,top:126,weight:2935,drive:'FWD',zero:'7.8s',desc:'Reliable starter car'},
@@ -1026,7 +1026,7 @@ async function scores(){
   }
 }
 
-function start(){panels(null);els.hud.classList.remove('hide');controlLayout();t=dist=score=nearMissBonus=spawn=0;traffic=[];powerUps=[];invisibleUntil=0;nosUntil=0;nearMissUntil=0;els.nearMissToast.style.opacity='0';player={x:W/2,y:H*.68,w:30,h:52,s:0};weather='Clear';weatherFade=1;stormStrikeAt=0;stormStrikeRolled=false;lightningHitUntil=0;lightningDamaged=false;lightningFlashUntil=0;skidUntil=0;weatherNext=performance.now()+30000+Math.random()*20000;rainDrops=[];run=true;last=performance.now();requestAnimationFrame(loop)}
+function start(){panels(null);els.hud.classList.remove('hide');controlLayout();t=dist=score=nearMissBonus=spawn=0;traffic=[];powerUps=[];invisibleUntil=0;nosUntil=0;nearMissUntil=0;els.nearMissToast.style.opacity='0';player={x:W/2,y:H*.68,w:30,h:52,s:0};weather='Clear';weatherFade=1;stormStrikeAt=0;stormStrikeRolled=false;lightningHitUntil=0;lightningDamaged=false;lightningFlashUntil=0;skidUntil=0;weatherNext=performance.now()+30000+Math.random()*20000;rainDrops=[];coinDrops=[];weatherDoubleBonus=0;lastWeatherBase=0;run=true;last=performance.now();requestAnimationFrame(loop)}
 const activeControlPointers=new Map();
 
 function bind(id,k){
@@ -1162,10 +1162,16 @@ let active=player.s>=30;
 let nowMs=performance.now(),effects=[];
 if(invisibleUntil>nowMs)effects.push('INVIS '+((invisibleUntil-nowMs)/1000).toFixed(1)+'s');
 if(nosUntil>nowMs)effects.push('NOS '+((nosUntil-nowMs)/1000).toFixed(1)+'s');
+if(weather==="It's Raining Points and Coins")effects.push('POINTS x2');
 els.status.textContent=(active?'':'TIMER PAUSED — SPEED TOO LOW')+(effects.length?((active?'':' • ')+effects.join(' • ')):'');
 
 if(active){
-t+=dt;dist+=player.s*.44704*dt;score=Math.floor((Math.floor(t*10+dist)+nearMissBonus)*scoreMult[diff]*collectionMultiplier());spawn-=dt;
+t+=dt;dist+=player.s*.44704*dt;
+let currentWeatherBase=Math.floor(t*10+dist)+nearMissBonus;
+let gainedWeatherBase=Math.max(0,currentWeatherBase-lastWeatherBase);
+if(weather==="It's Raining Points and Coins") weatherDoubleBonus+=gainedWeatherBase;
+lastWeatherBase=currentWeatherBase;
+score=Math.floor((currentWeatherBase+weatherDoubleBonus)*scoreMult[diff]*collectionMultiplier());spawn-=dt;
 let c=cfg[diff];
 if(spawn<=0&&traffic.length<c.max){
 let lane=Math.floor(Math.random()*3),r=Math.random(),type='car',w=29,h=50;
@@ -1264,7 +1270,7 @@ let nearGap=(player.w+v.w)*.78;
 if(xGap>=hitGap&&xGap<nearGap){
 v.nearMissAwarded=true;
 nearMissBonus+=100;
-score=Math.floor((Math.floor(t*10+dist)+nearMissBonus)*scoreMult[diff]*collectionMultiplier());
+score=Math.floor((Math.floor(t*10+dist)+nearMissBonus+weatherDoubleBonus)*scoreMult[diff]*collectionMultiplier());
 nearMissUntil=performance.now()+1000;
 els.nearMissToast.textContent='NEAR MISS +100';
 els.nearMissToast.style.opacity='1';
@@ -1282,7 +1288,7 @@ if(p.type==='invis')invisibleUntil=performance.now()+5000;
 if(p.type==='nos')nosUntil=performance.now()+3000;
 if(p.type==='points'){
   nearMissBonus+=p.value;
-  score=Math.floor((Math.floor(t*10+dist)+nearMissBonus)*scoreMult[diff]*collectionMultiplier());
+  score=Math.floor((Math.floor(t*10+dist)+nearMissBonus+weatherDoubleBonus)*scoreMult[diff]*collectionMultiplier());
   nearMissUntil=performance.now()+1100;
   els.nearMissToast.textContent='POINTS +'+p.value.toLocaleString();
   els.nearMissToast.style.opacity='1';
@@ -1693,16 +1699,23 @@ X.restore()
 
 
 // --- Random changing weather ---
-const WEATHER_TYPES=['Clear','Rain','Fog','Night','Storm'];
+const WEATHER_TYPES=['Clear','Rain','Fog','Night','Storm',"It's Raining Points and Coins"];
 let weatherBannerUntil=0;
 function randomWeatherDelay(){return 30000+Math.random()*20000}
 function chooseNextWeather(){
-  const choices=WEATHER_TYPES.filter(w=>w!==weather);
-  weather=choices[Math.floor(Math.random()*choices.length)];
+  const coinWeather="It's Raining Points and Coins";
+  // The special coin weather has exactly a 10% chance each time weather changes.
+  if(weather!==coinWeather && Math.random()<0.10){
+    weather=coinWeather;
+  }else{
+    const choices=WEATHER_TYPES.filter(w=>w!==weather && w!==coinWeather);
+    weather=choices[Math.floor(Math.random()*choices.length)];
+  }
   weatherFade=0;
   weatherNext=performance.now()+randomWeatherDelay();
   weatherBannerUntil=performance.now()+2200;
   rainDrops=[];
+  coinDrops=[];
   stormStrikeRolled=false;
   stormStrikeAt=0;
 
@@ -1737,6 +1750,26 @@ function updateWeather(dt){
     while(rainDrops.length<target) rainDrops.push({x:Math.random()*W,y:Math.random()*H,l:10+Math.random()*18,s:500+Math.random()*450});
     rainDrops.forEach(r=>{r.y+=r.s*dt;r.x-=r.s*.18*dt;if(r.y>H+30||r.x<-30){r.y=-30;r.x=Math.random()*W+30}});
   }else if(rainDrops.length) rainDrops.length=0;
+
+  if(weather==="It's Raining Points and Coins"){
+    const target=55;
+    while(coinDrops.length<target){
+      coinDrops.push({
+        x:Math.random()*W,
+        y:Math.random()*H,
+        r:2.5+Math.random()*2.5,
+        s:150+Math.random()*220,
+        wobble:Math.random()*Math.PI*2
+      });
+    }
+    coinDrops.forEach(c=>{
+      c.y+=c.s*dt;
+      c.x+=Math.sin(performance.now()*.004+c.wobble)*12*dt;
+      if(c.y>H+12){c.y=-12;c.x=Math.random()*W}
+    });
+  }else if(coinDrops.length){
+    coinDrops.length=0;
+  }
 }
 function drawWeather(){
   const a=.18+.82*weatherFade;
@@ -1760,20 +1793,44 @@ function drawWeather(){
     const flash=Math.sin(performance.now()*.006)>0.992;
     if(flash){X.globalAlpha=.32;X.fillStyle='#e8f3ff';X.fillRect(0,0,W,H)}
   }
+
+  if(weather==="It's Raining Points and Coins"){
+    X.save();
+    for(const c of coinDrops){
+      X.globalAlpha=.95*a;
+      X.fillStyle='#ffd43b';
+      X.shadowColor='#ffb000';
+      X.shadowBlur=6;
+      X.beginPath();X.arc(c.x,c.y,c.r,0,Math.PI*2);X.fill();
+      X.shadowBlur=0;
+      X.strokeStyle='#fff3a0';X.lineWidth=1;
+      X.beginPath();X.arc(c.x,c.y,c.r*.62,0,Math.PI*2);X.stroke();
+    }
+    X.restore();
+
+    X.globalAlpha=.13*a;
+    X.fillStyle='#ffd43b';
+    X.fillRect(0,0,W,H);
+  }
+
   if(performance.now()<lightningFlashUntil){
     X.globalAlpha=.72;X.fillStyle='#f5fbff';X.fillRect(0,0,W,H);
   }
   // Always-visible weather indicator plus a clear change banner.
-  X.globalAlpha=.88;X.fillStyle='#000b';X.fillRect(W/2-52,8,104,27);
-  X.globalAlpha=1;X.fillStyle='#fff';X.font='900 12px system-ui';X.textAlign='center';X.textBaseline='middle';X.fillText(weather.toUpperCase(),W/2,21.5);
+  const weatherLabel=weather.toUpperCase();
+  const weatherWide=weather==="It's Raining Points and Coins";
+  const weatherBoxW=weatherWide?230:104;
+  X.globalAlpha=.88;X.fillStyle='#000b';X.fillRect(W/2-weatherBoxW/2,8,weatherBoxW,27);
+  X.globalAlpha=1;X.fillStyle=weatherWide?'#ffd43b':'#fff';X.font=weatherWide?'900 11px system-ui':'900 12px system-ui';X.textAlign='center';X.textBaseline='middle';X.fillText(weatherLabel,W/2,21.5);
   if(performance.now()<lightningHitUntil){
     X.globalAlpha=1;X.fillStyle='#000c';X.fillRect(W/2-128,H*.27-22,256,44);
     X.fillStyle='#fff7a8';X.font='900 17px system-ui';X.fillText('LIGHTNING HIT — TIRES LOST',W/2,H*.27);
   }
   if(performance.now()<weatherBannerUntil){
     const left=Math.max(0,weatherBannerUntil-performance.now());
-    X.globalAlpha=Math.min(1,left/350);X.fillStyle='#000c';X.fillRect(W/2-108,H*.18-22,216,44);
-    X.globalAlpha=1;X.fillStyle='#fff';X.font='900 18px system-ui';X.fillText('WEATHER: '+weather.toUpperCase(),W/2,H*.18);
+    const bannerW=weatherWide?330:216;
+    X.globalAlpha=Math.min(1,left/350);X.fillStyle='#000c';X.fillRect(W/2-bannerW/2,H*.18-22,bannerW,44);
+    X.globalAlpha=1;X.fillStyle=weatherWide?'#ffd43b':'#fff';X.font=weatherWide?'900 15px system-ui':'900 18px system-ui';X.fillText('WEATHER: '+weatherLabel,W/2,H*.18);
   }
   X.restore();
 }
