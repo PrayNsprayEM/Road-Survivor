@@ -1531,7 +1531,77 @@ async function requestGyroPermission(){
     return false;
   }
 }
-function loop(now){if(!run)return;let dt=Math.min(.035,(now-last)/1000);last=now;update(dt);draw();requestAnimationFrame(loop)}
+
+// --- SAFE CAR SFX (audio only; does not touch canvas rendering) ---
+let rsAudioCtx=null, rsEngineOsc=null, rsEngineGain=null, rsEngineFilter=null;
+let rsRoadSrc=null, rsRoadGain=null, rsAudioStarted=false;
+
+function rsStartAudio(){
+  if(rsAudioStarted) {
+    if(rsAudioCtx && rsAudioCtx.state==='suspended') rsAudioCtx.resume().catch(()=>{});
+    return;
+  }
+  try{
+    const AC=window.AudioContext||window.webkitAudioContext;
+    if(!AC)return;
+    rsAudioCtx=new AC();
+
+    const master=rsAudioCtx.createGain();
+    master.gain.value=Math.max(0,Math.min(1,(+sfxVol||0)/100));
+    master.connect(rsAudioCtx.destination);
+    window.rsSfxMaster=master;
+
+    rsEngineOsc=rsAudioCtx.createOscillator();
+    rsEngineOsc.type='sawtooth';
+    rsEngineFilter=rsAudioCtx.createBiquadFilter();
+    rsEngineFilter.type='lowpass';
+    rsEngineFilter.frequency.value=500;
+    rsEngineGain=rsAudioCtx.createGain();
+    rsEngineGain.gain.value=0.0001;
+    rsEngineOsc.connect(rsEngineFilter);
+    rsEngineFilter.connect(rsEngineGain);
+    rsEngineGain.connect(master);
+    rsEngineOsc.start();
+
+    const seconds=2, len=rsAudioCtx.sampleRate*seconds;
+    const buf=rsAudioCtx.createBuffer(1,len,rsAudioCtx.sampleRate);
+    const data=buf.getChannelData(0);
+    for(let i=0;i<len;i++) data[i]=(Math.random()*2-1)*0.35;
+    rsRoadSrc=rsAudioCtx.createBufferSource();
+    rsRoadSrc.buffer=buf; rsRoadSrc.loop=true;
+    const roadFilter=rsAudioCtx.createBiquadFilter();
+    roadFilter.type='lowpass'; roadFilter.frequency.value=650;
+    rsRoadGain=rsAudioCtx.createGain(); rsRoadGain.gain.value=0.0001;
+    rsRoadSrc.connect(roadFilter); roadFilter.connect(rsRoadGain); rsRoadGain.connect(master);
+    rsRoadSrc.start();
+
+    rsAudioStarted=true;
+    rsAudioCtx.resume().catch(()=>{});
+  }catch(e){ console.warn('SFX unavailable',e); }
+}
+
+function rsUpdateAudio(){
+  if(!rsAudioStarted||!rsAudioCtx||!rsEngineOsc||!rsEngineGain)return;
+  const now=rsAudioCtx.currentTime;
+  const car=cars.find(c=>c.id===selectedCar)||cars[0];
+  const mph=(typeof player!=='undefined'&&player&&Number.isFinite(player.s))?player.s:0;
+  const top=Math.max(80,(car&&car.top)||130);
+  const pct=Math.max(0,Math.min(1.3,mph/top));
+  const gas=(typeof keys!=='undefined'&&keys&&keys.gas)?1:0;
+  const brake=(typeof keys!=='undefined'&&keys&&keys.brake)?1:0;
+
+  rsEngineOsc.frequency.setTargetAtTime(48+pct*115+gas*22,now,.045);
+  rsEngineFilter.frequency.setTargetAtTime(260+pct*900+gas*250,now,.06);
+  rsEngineGain.gain.setTargetAtTime(run ? (.018+pct*.055+gas*.025) : .0001,now,.06);
+  if(rsRoadGain) rsRoadGain.gain.setTargetAtTime(run ? (.003+pct*.026+brake*.012) : .0001,now,.08);
+  if(window.rsSfxMaster) window.rsSfxMaster.gain.setTargetAtTime(Math.max(0,Math.min(1,(+sfxVol||0)/100)),now,.04);
+}
+
+['pointerdown','touchstart'].forEach(ev=>{
+  document.addEventListener(ev,rsStartAudio,{passive:true});
+});
+
+function loop(now){if(!run)return;let dt=Math.min(.035,(now-last)/1000);last=now;update(dt);rsUpdateAudio();draw();requestAnimationFrame(loop)}
 function update(dt){
 updateWeather(dt);
 const carData=cars.find(c=>c.id===selectedCar)||cars[0];
