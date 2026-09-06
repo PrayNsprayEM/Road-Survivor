@@ -2741,10 +2741,21 @@ function rsOpenProfile(){
   document.getElementById('psMedium').textContent=rsBest('Medium').toLocaleString();
   document.getElementById('psHard').textContent=rsBest('Hard').toLocaleString();
   document.getElementById('psExtreme').textContent=rsBest('Extreme').toLocaleString();
-  document.getElementById('profileScreen').classList.add('show');
+  const pscreen=document.getElementById('profileScreen');
+  pscreen.style.display='';
+  pscreen.classList.add('show');
 }
 document.getElementById('profileBtn').addEventListener('click',rsOpenProfile);
-document.getElementById('profileClose').addEventListener('click',()=>document.getElementById('profileScreen').classList.remove('show'));
+function rsCloseProfile(e){
+  if(e){e.preventDefault();e.stopPropagation();}
+  const p=document.getElementById('profileScreen');
+  if(p){p.classList.remove('show');p.style.display='none';}
+}
+const rsProfileCloseBtn=document.getElementById('profileClose');
+if(rsProfileCloseBtn){
+  rsProfileCloseBtn.addEventListener('click',rsCloseProfile);
+  rsProfileCloseBtn.addEventListener('pointerup',rsCloseProfile);
+}
 
 </script>
 <div id="profileScreen">
@@ -2766,7 +2777,7 @@ document.getElementById('profileClose').addEventListener('click',()=>document.ge
    <div class="profileScoreRow"><span>🟠 Hard</span><b id="psHard">0</b></div>
    <div class="profileScoreRow"><span>🔴 Extreme</span><b id="psExtreme">0</b></div>
   </div>
-  <button id="profileClose">BACK</button>
+  <button type="button" id="profileClose">BACK</button>
  </div>
 </div>
 
