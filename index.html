@@ -974,6 +974,21 @@ function playWithUsername(){
 }
 document.getElementById('usernameConfirm').onclick=claimUsername;
 document.getElementById('usernameInput').addEventListener('keydown',e=>{if(e.key==='Enter')claimUsername()});
+window.addEventListener('load',()=>{
+  if(!savedUsername()){
+    setTimeout(()=>{
+      const gate=document.getElementById('usernameGate');
+      const input=document.getElementById('usernameInput');
+      const msg=document.getElementById('usernameMessage');
+      if(gate&&input){
+        if(msg)msg.textContent='';
+        gate.classList.remove('hide');
+        input.focus();
+      }
+    },120);
+  }
+});
+
 
 async function syncMyBest(d){
   const b=bestRunFor(d);
