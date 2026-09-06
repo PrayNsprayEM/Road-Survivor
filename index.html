@@ -2005,7 +2005,6 @@ function drawRoadsideTrees(){
 }
 function draw(){
 X.clearRect(0,0,W,H);X.save();
-drawRealisticRoadFX();
 if(shake>0)X.translate((Math.random()-.5)*7*shake,(Math.random()-.5)*7*shake);
 
 let grass=X.createLinearGradient(0,0,0,H);grass.addColorStop(0,'#477c43');grass.addColorStop(1,'#244923');
