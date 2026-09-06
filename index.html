@@ -2660,7 +2660,7 @@ function crashGame(){
   try{const ps=rsProfileStats();ps.crashes++;ps.runs++;rsSaveProfileStats(ps)}catch(e){}
 rsPlayCrashSound();
   run=false;
-  let reward=Math.floor(score/2);
+  let reward=Math.floor(score/3);
   cash+=reward;
   localStorage.setItem('cash',cash);
 
