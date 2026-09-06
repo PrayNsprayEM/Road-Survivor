@@ -367,9 +367,6 @@ canvas{
 }
 </style>
 
-<style id="realisticDrivingPolish">
-#game canvas{filter:saturate(.92) contrast(1.06)}
-</style>
 </head><body><div id="usernameGate" class="hide"><div class="usernameCard"><h2>USERNAME</h2><input id="usernameInput" maxlength="16" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Username"><button id="usernameConfirm">CONFIRM</button><p id="usernameMessage"></p></div></div><canvas id="c"></canvas><div id="ui">
 <div id="menu" class="p"><h1>ROAD SURVIVOR</h1><p>Dodge traffic. Survive as long as you can.</p><p>Cash: <b id="cash"></b></p><button id="play">PLAY</button><br><button id="up">UPGRADES</button><button id="dealerBtn">DEALERSHIP</button><br><button id="lb">LEADERBOARD</button><button id="set">SETTINGS</button><br><button id="challengeBtn">DAILY CHALLENGES</button><button id="rewardMenuBtn">DAILY REWARD</button><p>Difficulty</p><button id="dif" class="diff">EASY</button></div>
 
@@ -1481,7 +1478,6 @@ function bind(id,k){
 }['left','right','gas','brake'].forEach(k=>bind(k,k));
 addEventListener('keydown',e=>{if(e.key==='ArrowLeft')keys.left=1;if(e.key==='ArrowRight')keys.right=1;if(e.key==='ArrowUp')keys.gas=1;if(e.key==='ArrowDown')keys.brake=1});
 addEventListener('keyup',e=>{if(e.key==='ArrowLeft')keys.left=0;if(e.key==='ArrowRight')keys.right=0;if(e.key==='ArrowUp')keys.gas=0;if(e.key==='ArrowDown')keys.brake=0});
-let steerSmooth=0;
 let joystickSteer=0;
 function resetJoystick(){
   joystickSteer=0;
@@ -1535,46 +1531,7 @@ async function requestGyroPermission(){
     return false;
   }
 }
-
-let carAudioCtx=null,carAudioMaster=null,carEngine=null,carEngineGain=null,carRoadNoise=null,carRoadGain=null;
-function startStableCarAudio(){
-  if(carAudioCtx)return;
-  try{
-    const AC=window.AudioContext||window.webkitAudioContext;
-    if(!AC)return;
-    carAudioCtx=new AC();
-    carAudioMaster=carAudioCtx.createGain();
-    carAudioMaster.gain.value=.12;
-    carAudioMaster.connect(carAudioCtx.destination);
-
-    carEngine=carAudioCtx.createOscillator();
-    carEngine.type='sawtooth';
-    carEngineGain=carAudioCtx.createGain();
-    carEngineGain.gain.value=0;
-    carEngine.connect(carEngineGain);carEngineGain.connect(carAudioMaster);carEngine.start();
-
-    const b=carAudioCtx.createBuffer(1,carAudioCtx.sampleRate,carAudioCtx.sampleRate);
-    const d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;
-    carRoadNoise=carAudioCtx.createBufferSource();carRoadNoise.buffer=b;carRoadNoise.loop=true;
-    const f=carAudioCtx.createBiquadFilter();f.type='bandpass';f.frequency.value=700;
-    carRoadGain=carAudioCtx.createGain();carRoadGain.gain.value=0;
-    carRoadNoise.connect(f);f.connect(carRoadGain);carRoadGain.connect(carAudioMaster);carRoadNoise.start();
-  }catch(e){}
-}
-function updateStableCarAudio(){
-  if(!carAudioCtx||!player)return;
-  const mph=Math.max(0,player.s||0), top=Math.max(80,(carData&&carData.top)||130);
-  const r=Math.min(1.25,mph/top), now=carAudioCtx.currentTime;
-  carEngine.frequency.setTargetAtTime(42+r*105+(keys.gas?18:0),now,.05);
-  carEngineGain.gain.setTargetAtTime(mph>1?.055+(keys.gas?.035:0):.012,now,.06);
-  carRoadGain.gain.setTargetAtTime(Math.min(.045,mph/3500)+(keys.brake&&mph>30?.015:0),now,.08);
-  carAudioMaster.gain.setTargetAtTime(.12*Math.max(0,Math.min(1,(+sfxVol||0)/100)),now,.08);
-}
-document.addEventListener('pointerdown',startStableCarAudio,{once:true});
-document.addEventListener('touchstart',startStableCarAudio,{once:true,passive:true});
-
-function loop(now){
-updateStableCarAudio();if(!run)return;let dt=Math.min(.035,(now-last)/1000);last=now;update(dt);draw();requestAnimationFrame(loop)}
+function loop(now){if(!run)return;let dt=Math.min(.035,(now-last)/1000);last=now;update(dt);draw();requestAnimationFrame(loop)}
 function update(dt){
 updateWeather(dt);
 const carData=cars.find(c=>c.id===selectedCar)||cars[0];
@@ -1588,9 +1545,7 @@ let brakePower=42;
 if(player.s<target)player.s=Math.min(target,player.s+accel*dt);
 else player.s=Math.max(target,player.s-(braking?brakePower:13)*dt);
 
-let rawSteerInput=mode==='gyro'?tilt:(mode==='joystick'?joystickSteer:(keys.right-keys.left));
-steerSmooth+=(rawSteerInput-steerSmooth)*Math.min(1,dt*9);
-let steerInput=steerSmooth;
+let steerInput=mode==='gyro'?tilt:(mode==='joystick'?joystickSteer:(keys.right-keys.left));
 let speedFactor=.35+Math.min(player.s/100,1)*.75;
 let lightningSteerFactor=(weather==='Storm'&&lightningDamaged)?.70:1;
 steerVel+=(steerInput*330*speedFactor*lightningSteerFactor-steerVel)*Math.min(1,dt*(lightningDamaged?5.6:8));
