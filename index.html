@@ -253,7 +253,13 @@ canvas{
 }
 </style>
 
-</head><body><canvas id="c"></canvas><div id="ui">
+<style>
+#usernameGate{position:absolute;inset:0;z-index:500;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.78);font-family:system-ui,sans-serif}
+#usernameGate.hide{display:none}.usernameCard{width:min(330px,86vw);background:#151515;border:3px solid #fff;border-radius:16px;padding:22px;text-align:center;box-shadow:0 10px 35px #000}
+.usernameCard h2{margin:0 0 14px;font-size:25px}#usernameInput{width:100%;box-sizing:border-box;padding:13px 12px;border-radius:9px;border:2px solid #777;background:#090909;color:#fff;font-size:18px;text-align:center;outline:none}
+#usernameConfirm{margin-top:12px;width:100%;padding:13px;border:0;border-radius:9px;background:#20a447;color:#fff;font-weight:900;font-size:18px}#usernameMessage{min-height:22px;margin:9px 0 0;font-weight:900;color:#ff5b5b}
+</style>
+</head><body><div id="usernameGate" class="hide"><div class="usernameCard"><h2>USERNAME</h2><input id="usernameInput" maxlength="16" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Username"><button id="usernameConfirm">CONFIRM</button><p id="usernameMessage"></p></div></div><canvas id="c"></canvas><div id="ui">
 <div id="menu" class="p"><h1>ROAD SURVIVOR</h1><p>Dodge traffic. Survive as long as you can.</p><p>Cash: <b id="cash"></b></p><button id="play">PLAY</button><br><button id="up">UPGRADES</button><button id="dealerBtn">DEALERSHIP</button><br><button id="lb">LEADERBOARD</button><button id="set">SETTINGS</button><p>Difficulty</p><button id="dif" class="diff">EASY</button></div>
 
 <div id="dealership" class="p dealer hide">
@@ -948,6 +954,27 @@ async function lbRequest(path,opts={}){
   return await res.json();
 }
 
+function savedUsername(){return localStorage.getItem('rs_username')||''}
+async function claimUsername(){
+ const input=document.getElementById('usernameInput'),msg=document.getElementById('usernameMessage'),btn=document.getElementById('usernameConfirm');
+ const username=(input.value||'').trim();msg.textContent='';
+ if(!/^[A-Za-z0-9_]{3,16}$/.test(username)){msg.textContent='USE 3–16 LETTERS, NUMBERS, OR _';return}
+ btn.disabled=true;btn.textContent='CHECKING...';
+ try{
+  const taken=await lbRequest('player_usernames?select=player_id,username&username=ilike.'+encodeURIComponent(username));
+  if(taken.length&&taken[0].player_id!==getPlayerId()){msg.textContent='USER TAKEN';return}
+  if(!taken.length)await lbRequest('player_usernames',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({player_id:getPlayerId(),username})});
+  localStorage.setItem('rs_username',username);document.getElementById('usernameGate').classList.add('hide');start();
+ }catch(e){msg.textContent=String(e).includes('409')?'USER TAKEN':'COULD NOT CHECK USERNAME'}
+ finally{btn.disabled=false;btn.textContent='CONFIRM'}
+}
+function playWithUsername(){
+ if(savedUsername()){start();return}
+ document.getElementById('usernameMessage').textContent='';document.getElementById('usernameGate').classList.remove('hide');setTimeout(()=>document.getElementById('usernameInput').focus(),50)
+}
+document.getElementById('usernameConfirm').onclick=claimUsername;
+document.getElementById('usernameInput').addEventListener('keydown',e=>{if(e.key==='Enter')claimUsername()});
+
 async function syncMyBest(d){
   const b=bestRunFor(d);
   const bestScore=b?Number(b.s)||0:0;
@@ -958,7 +985,7 @@ async function syncMyBest(d){
       headers:{'Prefer':'resolution=merge-duplicates,return=minimal'},
       body:JSON.stringify({
         player_id:getPlayerId(),
-        player_name:'PLAYER',
+        player_name:savedUsername()||'PLAYER',
         difficulty:d,
         score:bestScore
       })
@@ -2015,7 +2042,7 @@ function crashGame(){
   playCrashExplosion(()=>panels('crash'));
 }
 els.dif.onclick=()=>{diff=cyc(diff);localStorage.setItem('diff',diff);dc(els.dif,diff)};
-els.play.onclick=start;els.retry.onclick=start;
+els.play.onclick=playWithUsername;els.retry.onclick=start;
 els.up.onclick=()=>{upgradesUI();panels('upgrades')};
 document.querySelectorAll('.upgradeCat').forEach(b=>b.onclick=()=>upgradesUI(b.dataset.cat));
 els.upgradeCatBack.onclick=()=>{upgradesUI();els.upgrades.scrollTop=0};
