@@ -1634,7 +1634,58 @@ function rsUpdateAudio(){
   document.addEventListener(ev,rsStartAudio,{passive:true});
 });
 
-function loop(now){if(!run)return;let dt=Math.min(.035,(now-last)/1000);last=now;update(dt);rsUpdateAudio();rsUpdateBrakeClip();draw();requestAnimationFrame(loop)}
+
+// --- SAFE TRAFFIC FOLLOWING / ANTI-OVERLAP ---
+function rsKeepTrafficSeparated(dt){
+  if(typeof traffic==='undefined' || !Array.isArray(traffic)) return;
+  const safeGap=72;
+  const brakeGap=125;
+
+  for(const car of traffic){
+    if(!car) continue;
+
+    let nearest=null, nearestGap=Infinity;
+
+    for(const other of traffic){
+      if(!other || other===car) continue;
+
+      // Same / nearly same lane
+      if(Math.abs((other.x||0)-(car.x||0))>34) continue;
+
+      // In this game's screen coordinates, a car with smaller y is ahead.
+      const gap=(car.y||0)-(other.y||0);
+      if(gap>0 && gap<nearestGap){
+        nearestGap=gap;
+        nearest=other;
+      }
+    }
+
+    if(nearest){
+      const leadSpeed=Number.isFinite(nearest.s)?nearest.s:(Number.isFinite(nearest.speed)?nearest.speed:0);
+      let mySpeed=Number.isFinite(car.s)?car.s:(Number.isFinite(car.speed)?car.speed:0);
+
+      if(nearestGap<brakeGap){
+        const strength=Math.max(0,Math.min(1,(brakeGap-nearestGap)/(brakeGap-safeGap)));
+        const target=Math.max(0,leadSpeed-4);
+
+        if(Number.isFinite(car.s)){
+          car.s += (target-car.s)*Math.min(1,dt*(3+strength*7));
+        }else if(Number.isFinite(car.speed)){
+          car.speed += (target-car.speed)*Math.min(1,dt*(3+strength*7));
+        }
+      }
+
+      // Hard stop against overlap: never allow traffic cars to occupy each other.
+      if(nearestGap<safeGap){
+        if(Number.isFinite(car.s)) car.s=Math.min(car.s,leadSpeed);
+        if(Number.isFinite(car.speed)) car.speed=Math.min(car.speed,leadSpeed);
+        car.y=(nearest.y||0)+safeGap;
+      }
+    }
+  }
+}
+
+function loop(now){if(!run)return;let dt=Math.min(.035,(now-last)/1000);last=now;update(dt);rsKeepTrafficSeparated(dt);rsUpdateAudio();rsUpdateBrakeClip();draw();requestAnimationFrame(loop)}
 function update(dt){
 updateWeather(dt);
 const carData=cars.find(c=>c.id===selectedCar)||cars[0];
