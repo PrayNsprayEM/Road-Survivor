@@ -370,14 +370,6 @@ canvas{
 <style id="realisticDrivingPolish">
 #game canvas{filter:saturate(.92) contrast(1.06)}
 </style>
-
-<style id="hyperRealisticCanvas">
-#game canvas{
-  filter:saturate(.94) contrast(1.08) brightness(.98);
-  image-rendering:auto;
-}
-</style>
-
 </head><body><div id="usernameGate" class="hide"><div class="usernameCard"><h2>USERNAME</h2><input id="usernameInput" maxlength="16" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Username"><button id="usernameConfirm">CONFIRM</button><p id="usernameMessage"></p></div></div><canvas id="c"></canvas><div id="ui">
 <div id="menu" class="p"><h1>ROAD SURVIVOR</h1><p>Dodge traffic. Survive as long as you can.</p><p>Cash: <b id="cash"></b></p><button id="play">PLAY</button><br><button id="up">UPGRADES</button><button id="dealerBtn">DEALERSHIP</button><br><button id="lb">LEADERBOARD</button><button id="set">SETTINGS</button><br><button id="challengeBtn">DAILY CHALLENGES</button><button id="rewardMenuBtn">DAILY REWARD</button><p>Difficulty</p><button id="dif" class="diff">EASY</button></div>
 
@@ -1544,113 +1536,45 @@ async function requestGyroPermission(){
   }
 }
 
-/* ===== REALISTIC PROCEDURAL CAR AUDIO ===== */
-let carAudioCtx=null,carMaster=null,engineOsc1=null,engineOsc2=null,engineGain=null,
-    turboOsc=null,turboGain=null,tireNoise=null,tireGain=null,audioStarted=false;
-
-function startCarAudio(){
-  if(audioStarted)return;
+let carAudioCtx=null,carAudioMaster=null,carEngine=null,carEngineGain=null,carRoadNoise=null,carRoadGain=null;
+function startStableCarAudio(){
+  if(carAudioCtx)return;
   try{
     const AC=window.AudioContext||window.webkitAudioContext;
     if(!AC)return;
     carAudioCtx=new AC();
-    carMaster=carAudioCtx.createGain();
-    carMaster.gain.value=0.20;
-    carMaster.connect(carAudioCtx.destination);
+    carAudioMaster=carAudioCtx.createGain();
+    carAudioMaster.gain.value=.12;
+    carAudioMaster.connect(carAudioCtx.destination);
 
-    engineGain=carAudioCtx.createGain();
-    engineGain.gain.value=0;
-    engineGain.connect(carMaster);
+    carEngine=carAudioCtx.createOscillator();
+    carEngine.type='sawtooth';
+    carEngineGain=carAudioCtx.createGain();
+    carEngineGain.gain.value=0;
+    carEngine.connect(carEngineGain);carEngineGain.connect(carAudioMaster);carEngine.start();
 
-    engineOsc1=carAudioCtx.createOscillator();
-    engineOsc1.type='sawtooth';
-    engineOsc1.connect(engineGain);
-    engineOsc1.start();
-
-    engineOsc2=carAudioCtx.createOscillator();
-    engineOsc2.type='triangle';
-    const harmonic=carAudioCtx.createGain();
-    harmonic.gain.value=.24;
-    engineOsc2.connect(harmonic);
-    harmonic.connect(engineGain);
-    engineOsc2.start();
-
-    turboGain=carAudioCtx.createGain();
-    turboGain.gain.value=0;
-    turboGain.connect(carMaster);
-    turboOsc=carAudioCtx.createOscillator();
-    turboOsc.type='sine';
-    turboOsc.connect(turboGain);
-    turboOsc.start();
-
-    // filtered noise for tire/road sound
-    const buffer=carAudioCtx.createBuffer(1,carAudioCtx.sampleRate*2,carAudioCtx.sampleRate);
-    const data=buffer.getChannelData(0);
-    for(let i=0;i<data.length;i++)data[i]=Math.random()*2-1;
-    tireNoise=carAudioCtx.createBufferSource();
-    tireNoise.buffer=buffer;
-    tireNoise.loop=true;
-    const filter=carAudioCtx.createBiquadFilter();
-    filter.type='bandpass';
-    filter.frequency.value=900;
-    filter.Q.value=.7;
-    tireGain=carAudioCtx.createGain();
-    tireGain.gain.value=0;
-    tireNoise.connect(filter); filter.connect(tireGain); tireGain.connect(carMaster);
-    tireNoise.start();
-
-    audioStarted=true;
+    const b=carAudioCtx.createBuffer(1,carAudioCtx.sampleRate,carAudioCtx.sampleRate);
+    const d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;
+    carRoadNoise=carAudioCtx.createBufferSource();carRoadNoise.buffer=b;carRoadNoise.loop=true;
+    const f=carAudioCtx.createBiquadFilter();f.type='bandpass';f.frequency.value=700;
+    carRoadGain=carAudioCtx.createGain();carRoadGain.gain.value=0;
+    carRoadNoise.connect(f);f.connect(carRoadGain);carRoadGain.connect(carAudioMaster);carRoadNoise.start();
   }catch(e){}
 }
-
-function updateCarAudio(){
-  if(!audioStarted||!carAudioCtx||!player)return;
-  if(carAudioCtx.state==='suspended')carAudioCtx.resume().catch(()=>{});
-  const mph=Math.max(0,player.s||0);
-  const top=Math.max(80,(carData&&carData.top)||130);
-  const ratio=Math.min(1.2,mph/top);
-  const throttleOn=!!keys.gas;
-  const brakeOn=!!keys.brake;
-  const now=carAudioCtx.currentTime;
-
-  // Simulated RPM: idle ~900, rising naturally with road speed.
-  const rpm=900+ratio*6100+(throttleOn?550:0);
-  const baseHz=30+rpm/58;
-
-  engineOsc1.frequency.setTargetAtTime(baseHz,now,.035);
-  engineOsc2.frequency.setTargetAtTime(baseHz*2.02,now,.04);
-  engineGain.gain.setTargetAtTime((mph>1?.055:.018)+(throttleOn?.055:0),now,.045);
-
-  // Higher-performance cars get a subtle induction/turbo whistle at speed.
-  const hp=(carData&&carData.hp)||150;
-  const boost=Math.max(0,ratio-.34)*Math.min(1,hp/500);
-  turboOsc.frequency.setTargetAtTime(650+ratio*1450,now,.04);
-  turboGain.gain.setTargetAtTime(throttleOn?boost*.022:0,now,.06);
-
-  // Tire/road noise grows with speed; braking/steering adds scrub.
-  const steering=Math.abs(typeof steerInput==='number'?steerInput:0);
-  const roadNoise=Math.min(.065,mph/3000)+(brakeOn&&mph>35?.025:0)+(steering>.65&&mph>55?.018:0);
-  tireGain.gain.setTargetAtTime(roadNoise,now,.07);
-
-  if(carMaster){
-    const vol=(typeof sfxVol==='number'?sfxVol:1);
-    carMaster.gain.setTargetAtTime(.16*Math.max(0,vol),now,.08);
-  }
+function updateStableCarAudio(){
+  if(!carAudioCtx||!player)return;
+  const mph=Math.max(0,player.s||0), top=Math.max(80,(carData&&carData.top)||130);
+  const r=Math.min(1.25,mph/top), now=carAudioCtx.currentTime;
+  carEngine.frequency.setTargetAtTime(42+r*105+(keys.gas?18:0),now,.05);
+  carEngineGain.gain.setTargetAtTime(mph>1?.055+(keys.gas?.035:0):.012,now,.06);
+  carRoadGain.gain.setTargetAtTime(Math.min(.045,mph/3500)+(keys.brake&&mph>30?.015:0),now,.08);
+  carAudioMaster.gain.setTargetAtTime(.12*Math.max(0,Math.min(1,(+sfxVol||0)/100)),now,.08);
 }
-
-function stopCarAudio(){
-  if(engineGain&&carAudioCtx)engineGain.gain.setTargetAtTime(0,carAudioCtx.currentTime,.08);
-  if(turboGain&&carAudioCtx)turboGain.gain.setTargetAtTime(0,carAudioCtx.currentTime,.08);
-  if(tireGain&&carAudioCtx)tireGain.gain.setTargetAtTime(0,carAudioCtx.currentTime,.08);
-}
-
-document.addEventListener('pointerdown',startCarAudio,{once:true});
-document.addEventListener('touchstart',startCarAudio,{once:true,passive:true});
-/* ===== END REALISTIC PROCEDURAL CAR AUDIO ===== */
+document.addEventListener('pointerdown',startStableCarAudio,{once:true});
+document.addEventListener('touchstart',startStableCarAudio,{once:true,passive:true});
 
 function loop(now){
-updateCarAudio();
-if(!run)return;let dt=Math.min(.035,(now-last)/1000);last=now;update(dt);draw();requestAnimationFrame(loop)}
+updateStableCarAudio();if(!run)return;let dt=Math.min(.035,(now-last)/1000);last=now;update(dt);draw();requestAnimationFrame(loop)}
 function update(dt){
 updateWeather(dt);
 const carData=cars.find(c=>c.id===selectedCar)||cars[0];
@@ -2127,8 +2051,6 @@ function drawRoadsideTrees(){
 function draw(){
 X.clearRect(0,0,W,H);X.save();
 drawRealisticRoadFX();
-X.translate(cameraLean*2.2,suspensionBob);
-X.rotate(cameraLean*.0018);
 if(shake>0)X.translate((Math.random()-.5)*7*shake,(Math.random()-.5)*7*shake);
 
 let grass=X.createLinearGradient(0,0,0,H);grass.addColorStop(0,'#477c43');grass.addColorStop(1,'#244923');
@@ -2155,7 +2077,6 @@ for(let y=-40+(roadOffset%48);y<H+40;y+=48){X.fillStyle='#f7ef9a';X.fillRect(roa
 traffic.forEach(v=>{
 X.save();
 if(performance.now()<invisibleUntil)X.globalAlpha=.28;
-drawVehicleShadow(v.x,v.y,v.w,v.h);
 car(v.x,v.y,v.w,v.h,false,v.type,v.color,v.signalDir,v.signalStart);
 X.restore();
 });
@@ -2178,10 +2099,7 @@ X.save();if(performance.now()<skidUntil){
   X.quadraticCurveTo(player.x+player.w*.70,player.y+player.h*.72,player.x+player.w*.35,player.y+player.h*1.25);
   X.stroke();X.restore();
 }
-drawPlayerHeadlights();
-drawVehicleShadow(player.x,player.y,player.w,player.h);
 car(player.x,player.y,player.w,player.h,true);
-drawBrakeGlow(player.x,player.y,player.w,player.h,!!keys.brake);
 
 // Sparks shoot from the wheel areas for the rest of the active storm after a lightning hit.
 if(weather==='Storm' && lightningDamaged){
@@ -2426,132 +2344,6 @@ function drawRealisticRoadFX(){
   X.restore();
 }
 
-
-function drawHyperRealismOverlay(){
-  if(!X || !player) return;
-  const mph=Math.max(0,player.s||0);
-  const wet=(weather==='Rain'||weather==='Storm');
-
-  X.save();
-
-  // Fine asphalt aggregate, seams, repairs, and tiny road imperfections.
-  X.beginPath(); X.rect(roadX,0,roadW,H); X.clip();
-
-  for(let i=0;i<95;i++){
-    const xx=roadX+((i*137+31)%Math.max(1,roadW));
-    const yy=(i*79+roadOffset*4.7)%(H+30)-15;
-    const a=.025+(i%4)*.009;
-    X.fillStyle=`rgba(${i%2?235:10},${i%2?235:10},${i%2?235:10},${a})`;
-    X.fillRect(xx,yy,1+(i%2),1);
-  }
-
-  // Worn tire paths where real traffic repeatedly runs.
-  for(let lane=0;lane<3;lane++){
-    const cx=roadX+roadW*(lane+.5)/3;
-    const g=X.createLinearGradient(cx-28,0,cx+28,0);
-    g.addColorStop(0,'rgba(0,0,0,0)');
-    g.addColorStop(.34,'rgba(0,0,0,.035)');
-    g.addColorStop(.66,'rgba(0,0,0,.035)');
-    g.addColorStop(1,'rgba(0,0,0,0)');
-    X.fillStyle=g;
-    X.fillRect(cx-30,0,60,H);
-  }
-
-  // Asphalt repair patches that move with the road.
-  for(let i=0;i<7;i++){
-    const pw=22+(i%3)*13;
-    const ph=8+(i%2)*5;
-    const px=roadX+18+((i*109)%Math.max(30,roadW-55));
-    const py=(i*173+roadOffset*3.3)%(H+90)-45;
-    X.fillStyle='rgba(20,20,20,.12)';
-    X.fillRect(px,py,pw,ph);
-    X.strokeStyle='rgba(115,115,115,.055)';
-    X.lineWidth=1;
-    X.strokeRect(px+.5,py+.5,pw-1,ph-1);
-  }
-
-  // Small cracks.
-  X.strokeStyle='rgba(8,8,8,.15)';
-  X.lineWidth=1;
-  for(let i=0;i<8;i++){
-    const px=roadX+20+((i*97)%Math.max(30,roadW-40));
-    const py=(i*141+roadOffset*4)%(H+50)-25;
-    X.beginPath();
-    X.moveTo(px,py);
-    X.lineTo(px+5,py+7);
-    X.lineTo(px+2,py+13);
-    X.lineTo(px+8,py+20);
-    X.stroke();
-  }
-
-  // Wet-road sheen and elongated reflections during rain/storm.
-  if(wet){
-    const sheen=X.createLinearGradient(roadX,0,roadX+roadW,0);
-    sheen.addColorStop(0,'rgba(180,210,225,.025)');
-    sheen.addColorStop(.5,'rgba(230,240,245,.10)');
-    sheen.addColorStop(1,'rgba(180,210,225,.025)');
-    X.fillStyle=sheen; X.fillRect(roadX,0,roadW,H);
-
-    for(let i=0;i<13;i++){
-      const x=roadX+12+((i*73)%Math.max(20,roadW-24));
-      const y=(i*91+roadOffset*5.2)%(H+100)-50;
-      const grad=X.createLinearGradient(x,y,x,y+42);
-      grad.addColorStop(0,'rgba(225,235,245,.12)');
-      grad.addColorStop(1,'rgba(225,235,245,0)');
-      X.fillStyle=grad;
-      X.fillRect(x,y,2+(i%3),42);
-    }
-  }
-
-  X.restore();
-
-  // Peripheral motion blur grows naturally with speed.
-  if(mph>65){
-    const alpha=Math.min(.18,(mph-65)/520);
-    X.save();
-    X.globalAlpha=alpha;
-    X.strokeStyle='#e9ecef';
-    X.lineWidth=1.4;
-    for(let i=0;i<18;i++){
-      const y=(i*53+roadOffset*7)%(H+80)-40;
-      const len=12+Math.min(40,mph*.13);
-      X.beginPath();X.moveTo(roadX-5,y);X.lineTo(roadX-5,y+len);X.stroke();
-      X.beginPath();X.moveTo(roadX+roadW+5,y);X.lineTo(roadX+roadW+5,y+len);X.stroke();
-    }
-    X.restore();
-  }
-
-  // Natural camera lens vignette / exposure falloff.
-  X.save();
-  const vg=X.createRadialGradient(W*.5,H*.48,Math.min(W,H)*.24,W*.5,H*.48,Math.max(W,H)*.76);
-  vg.addColorStop(.58,'rgba(0,0,0,0)');
-  vg.addColorStop(1,'rgba(0,0,0,.16)');
-  X.fillStyle=vg; X.fillRect(0,0,W,H);
-  X.restore();
-}
-
-function drawPlayerHeadlights(){
-  if(!X || !player) return;
-  if(weather!=='Night' && weather!=='Storm' && weather!=='Fog') return;
-  X.save();
-  X.globalCompositeOperation='screen';
-  const beamLen=Math.min(H*.42,240);
-  const left=player.x-player.w*.22, right=player.x+player.w*.22;
-  [left,right].forEach(x=>{
-    const g=X.createLinearGradient(x,player.y-player.h*.35,x,player.y-beamLen);
-    g.addColorStop(0,'rgba(255,248,205,.30)');
-    g.addColorStop(1,'rgba(255,248,205,0)');
-    X.fillStyle=g;
-    X.beginPath();
-    X.moveTo(x-4,player.y-player.h*.32);
-    X.lineTo(x-38,player.y-beamLen);
-    X.lineTo(x+38,player.y-beamLen);
-    X.closePath();
-    X.fill();
-  });
-  X.restore();
-}
-
 function drawVehicleShadow(x,y,w,h){
   if(!X) return;
   X.save();
@@ -2573,8 +2365,7 @@ function drawBrakeGlow(x,y,w,h,on){
   X.fillStyle='#ff3030';
   X.fillRect(x-w*.26,y+h*.32,w*.12,5);
   X.fillRect(x+w*.14,y+h*.32,w*.12,5);
-  drawHyperRealismOverlay();
-X.restore();
+  X.restore();
 }
 
 let crashExplosionRAF=0;
