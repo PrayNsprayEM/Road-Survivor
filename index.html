@@ -1543,7 +1543,114 @@ async function requestGyroPermission(){
     return false;
   }
 }
-function loop(now){if(!run)return;let dt=Math.min(.035,(now-last)/1000);last=now;update(dt);draw();requestAnimationFrame(loop)}
+
+/* ===== REALISTIC PROCEDURAL CAR AUDIO ===== */
+let carAudioCtx=null,carMaster=null,engineOsc1=null,engineOsc2=null,engineGain=null,
+    turboOsc=null,turboGain=null,tireNoise=null,tireGain=null,audioStarted=false;
+
+function startCarAudio(){
+  if(audioStarted)return;
+  try{
+    const AC=window.AudioContext||window.webkitAudioContext;
+    if(!AC)return;
+    carAudioCtx=new AC();
+    carMaster=carAudioCtx.createGain();
+    carMaster.gain.value=0.20;
+    carMaster.connect(carAudioCtx.destination);
+
+    engineGain=carAudioCtx.createGain();
+    engineGain.gain.value=0;
+    engineGain.connect(carMaster);
+
+    engineOsc1=carAudioCtx.createOscillator();
+    engineOsc1.type='sawtooth';
+    engineOsc1.connect(engineGain);
+    engineOsc1.start();
+
+    engineOsc2=carAudioCtx.createOscillator();
+    engineOsc2.type='triangle';
+    const harmonic=carAudioCtx.createGain();
+    harmonic.gain.value=.24;
+    engineOsc2.connect(harmonic);
+    harmonic.connect(engineGain);
+    engineOsc2.start();
+
+    turboGain=carAudioCtx.createGain();
+    turboGain.gain.value=0;
+    turboGain.connect(carMaster);
+    turboOsc=carAudioCtx.createOscillator();
+    turboOsc.type='sine';
+    turboOsc.connect(turboGain);
+    turboOsc.start();
+
+    // filtered noise for tire/road sound
+    const buffer=carAudioCtx.createBuffer(1,carAudioCtx.sampleRate*2,carAudioCtx.sampleRate);
+    const data=buffer.getChannelData(0);
+    for(let i=0;i<data.length;i++)data[i]=Math.random()*2-1;
+    tireNoise=carAudioCtx.createBufferSource();
+    tireNoise.buffer=buffer;
+    tireNoise.loop=true;
+    const filter=carAudioCtx.createBiquadFilter();
+    filter.type='bandpass';
+    filter.frequency.value=900;
+    filter.Q.value=.7;
+    tireGain=carAudioCtx.createGain();
+    tireGain.gain.value=0;
+    tireNoise.connect(filter); filter.connect(tireGain); tireGain.connect(carMaster);
+    tireNoise.start();
+
+    audioStarted=true;
+  }catch(e){}
+}
+
+function updateCarAudio(){
+  if(!audioStarted||!carAudioCtx||!player)return;
+  if(carAudioCtx.state==='suspended')carAudioCtx.resume().catch(()=>{});
+  const mph=Math.max(0,player.s||0);
+  const top=Math.max(80,(carData&&carData.top)||130);
+  const ratio=Math.min(1.2,mph/top);
+  const throttleOn=!!keys.gas;
+  const brakeOn=!!keys.brake;
+  const now=carAudioCtx.currentTime;
+
+  // Simulated RPM: idle ~900, rising naturally with road speed.
+  const rpm=900+ratio*6100+(throttleOn?550:0);
+  const baseHz=30+rpm/58;
+
+  engineOsc1.frequency.setTargetAtTime(baseHz,now,.035);
+  engineOsc2.frequency.setTargetAtTime(baseHz*2.02,now,.04);
+  engineGain.gain.setTargetAtTime((mph>1?.055:.018)+(throttleOn?.055:0),now,.045);
+
+  // Higher-performance cars get a subtle induction/turbo whistle at speed.
+  const hp=(carData&&carData.hp)||150;
+  const boost=Math.max(0,ratio-.34)*Math.min(1,hp/500);
+  turboOsc.frequency.setTargetAtTime(650+ratio*1450,now,.04);
+  turboGain.gain.setTargetAtTime(throttleOn?boost*.022:0,now,.06);
+
+  // Tire/road noise grows with speed; braking/steering adds scrub.
+  const steering=Math.abs(typeof steerInput==='number'?steerInput:0);
+  const roadNoise=Math.min(.065,mph/3000)+(brakeOn&&mph>35?.025:0)+(steering>.65&&mph>55?.018:0);
+  tireGain.gain.setTargetAtTime(roadNoise,now,.07);
+
+  if(carMaster){
+    const vol=(typeof sfxVol==='number'?sfxVol:1);
+    carMaster.gain.setTargetAtTime(.16*Math.max(0,vol),now,.08);
+  }
+}
+
+function stopCarAudio(){
+  if(engineGain&&carAudioCtx)engineGain.gain.setTargetAtTime(0,carAudioCtx.currentTime,.08);
+  if(turboGain&&carAudioCtx)turboGain.gain.setTargetAtTime(0,carAudioCtx.currentTime,.08);
+  if(tireGain&&carAudioCtx)tireGain.gain.setTargetAtTime(0,carAudioCtx.currentTime,.08);
+}
+
+document.addEventListener('pointerdown',startCarAudio,{once:true});
+document.addEventListener('touchstart',startCarAudio,{once:true,passive:true});
+/* ===== END REALISTIC PROCEDURAL CAR AUDIO ===== */
+
+function loop(now){
+updateCarAudio();
+if(!run)return;let dt=Math.min(.035,(now-last)/1000);last=now;update(dt);draw();requestAnimationFrame(loop)}
 function update(dt){
 updateWeather(dt);
 const carData=cars.find(c=>c.id===selectedCar)||cars[0];
