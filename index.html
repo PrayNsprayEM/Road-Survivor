@@ -237,6 +237,43 @@ body.upgradesOpen #upgrades{
   bottom:22px!important;
   z-index:60!important;
 }
+
+/* Player Profile */
+#profileScreen{position:fixed;inset:0;background:#0d0f14ee;z-index:1400;display:none;overflow:auto;padding:28px 18px;color:#fff}
+#profileScreen.show{display:block}
+.profileCard{max-width:430px;margin:0 auto;background:#20232b;border:2px solid #ffffff33;border-radius:20px;padding:20px;box-shadow:0 12px 35px #0009}
+.profileTop{text-align:center;margin-bottom:18px}.profileAvatar{width:76px;height:76px;border-radius:50%;margin:0 auto 10px;display:flex;align-items:center;justify-content:center;background:#343944;border:3px solid #fff;font-size:36px}
+.profileName{font-size:25px;font-weight:900}.profileSub{opacity:.7;font-size:13px;margin-top:4px}
+.profileGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.profileStat{background:#15171c;border:1px solid #ffffff18;border-radius:13px;padding:12px}
+.profileStat b{display:block;font-size:19px;margin-top:4px}.profileLabel{font-size:11px;opacity:.68;text-transform:uppercase;letter-spacing:.7px}
+.profileScores{margin-top:15px}.profileScoreRow{display:flex;justify-content:space-between;padding:9px 4px;border-bottom:1px solid #ffffff16}
+#profileClose{width:100%;margin-top:17px}
+
+
+#profileBtn{
+  position:fixed!important;
+  left:14px!important;
+  top:273px!important;
+  width:58px!important;
+  height:58px!important;
+  min-width:58px!important;
+  min-height:58px!important;
+  margin:0!important;
+  padding:0!important;
+  border:2px solid #fff!important;
+  border-radius:13px!important;
+  background:#25262d!important;
+  color:transparent!important;
+  font-size:0!important;
+  line-height:1!important;
+  z-index:999!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  box-shadow:0 4px 12px #0008!important;
+}
+#profileBtn::after{content:"👤";color:#fff;font-size:28px!important}
+
 </style>
 <style>
 /* Racing realism polish */
@@ -368,7 +405,7 @@ canvas{
 </style>
 
 </head><body><div id="usernameGate" class="hide"><div class="usernameCard"><h2>USERNAME</h2><input id="usernameInput" maxlength="16" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Username"><button id="usernameConfirm">CONFIRM</button><p id="usernameMessage"></p></div></div><canvas id="c"></canvas><div id="ui">
-<div id="menu" class="p"><h1>ROAD SURVIVOR</h1><p>Dodge traffic. Survive as long as you can.</p><p>Cash: <b id="cash"></b></p><button id="play">PLAY</button><br><button id="up">UPGRADES</button><button id="dealerBtn">DEALERSHIP</button><br><button id="lb">LEADERBOARD</button><button id="set">SETTINGS</button><br><button id="challengeBtn">DAILY CHALLENGES</button><button id="rewardMenuBtn">DAILY REWARD</button><p>Difficulty</p><button id="dif" class="diff">EASY</button></div>
+<div id="menu" class="p"><h1>ROAD SURVIVOR</h1><p>Dodge traffic. Survive as long as you can.</p><p>Cash: <b id="cash"></b></p><button id="play">PLAY</button><br><button id="up">UPGRADES</button><button id="dealerBtn">DEALERSHIP</button><br><button id="lb">LEADERBOARD</button><button id="profileBtn">👤 PROFILE</button><button id="set">SETTINGS</button><br><button id="challengeBtn">DAILY CHALLENGES</button><button id="rewardMenuBtn">DAILY REWARD</button><p>Difficulty</p><button id="dif" class="diff">EASY</button></div>
 
 <div id="dealership" class="p dealer hide">
   <div class="dealerTop">
@@ -2598,7 +2635,9 @@ function playCrashExplosion(done){
   crashExplosionRAF=requestAnimationFrame(frame);
 }
 
-function crashGame(){rsPlayCrashSound();
+function crashGame(){
+  try{const ps=rsProfileStats();ps.crashes++;ps.runs++;rsSaveProfileStats(ps)}catch(e){}
+rsPlayCrashSound();
   run=false;
   let reward=Math.floor(score/2);
   cash+=reward;
@@ -2654,7 +2693,84 @@ els.mode.onclick=async()=>{
   saveSettings();
 };els.song.onclick=(e)=>{e.preventDefault();e.stopPropagation();song=(song%songs.length)+1;saveSettings();loadSelectedSong(true)};els.music.oninput=()=>{musicVol=+els.music.value;applyMusicVolume();saveSettings();if(musicVol>0)startMusic();else bgMusic.pause()};els.sfx.oninput=()=>sfxVol=+els.sfx.value;
 dc(els.dif,diff);cashUI();dealerUI();panels('menu');
-</script></body></html>
+
+// --- PLAYER PROFILE ---
+const RS_PROFILE_KEY='rs_profile_stats';
+function rsProfileStats(){
+  try{return Object.assign({distance:0,crashes:0,near:0,runs:0},JSON.parse(localStorage.getItem(RS_PROFILE_KEY)||'{}'))}
+  catch(e){return {distance:0,crashes:0,near:0,runs:0}}
+}
+function rsSaveProfileStats(s){localStorage.setItem(RS_PROFILE_KEY,JSON.stringify(s))}
+let rsProfileRunStartDistance=0;
+
+function rsProfileCash(){
+  for(const k of ['cash','coins','money','balance','rs_cash']){
+    const v=localStorage.getItem(k); if(v!==null && isFinite(+v)) return +v;
+  }
+  try{ if(typeof coins!=='undefined'&&isFinite(coins))return coins }catch(e){}
+  try{ if(typeof cash!=='undefined'&&isFinite(cash))return cash }catch(e){}
+  return 0;
+}
+function rsBest(diff){
+  try{
+    const b=bestRunFor(diff);
+    if(typeof b==='number')return Math.floor(b);
+    if(b&&isFinite(b.score))return Math.floor(b.score);
+  }catch(e){}
+  for(const k of ['best_'+diff.toLowerCase(),'best'+diff,'rs_best_'+diff.toLowerCase()]){
+    const v=localStorage.getItem(k);if(v!==null&&isFinite(+v))return Math.floor(+v);
+  }
+  return 0;
+}
+function rsOpenProfile(){
+  const car=(typeof cars!=='undefined'&&cars.find(c=>c.id===selectedCar))||null;
+  const owned=(typeof ownedCars!=='undefined'&&Array.isArray(ownedCars))?ownedCars.length:
+              (typeof ownedCars!=='undefined'&&ownedCars instanceof Set)?ownedCars.size:1;
+  const st=rsProfileStats();
+  document.getElementById('profileName').textContent=savedUsername()||'Player';
+  document.getElementById('profileCash').textContent='$'+Math.floor(rsProfileCash()).toLocaleString();
+  document.getElementById('profileCar').textContent=car?car.name:'—';
+  document.getElementById('profileOwned').textContent=owned;
+  const rank=Math.max(0,Math.min(10,owned-1));
+  document.getElementById('profileRank').textContent='+'+(rank*.1).toFixed(1)+'x';
+  document.getElementById('profileDistance').textContent=st.distance.toFixed(1)+' mi';
+  document.getElementById('profileCrashes').textContent=st.crashes;
+  document.getElementById('profileNear').textContent=st.near;
+  document.getElementById('profileRuns').textContent=st.runs;
+  document.getElementById('psEasy').textContent=rsBest('Easy').toLocaleString();
+  document.getElementById('psMedium').textContent=rsBest('Medium').toLocaleString();
+  document.getElementById('psHard').textContent=rsBest('Hard').toLocaleString();
+  document.getElementById('psExtreme').textContent=rsBest('Extreme').toLocaleString();
+  document.getElementById('profileScreen').classList.add('show');
+}
+document.getElementById('profileBtn').addEventListener('click',rsOpenProfile);
+document.getElementById('profileClose').addEventListener('click',()=>document.getElementById('profileScreen').classList.remove('show'));
+
+</script>
+<div id="profileScreen">
+ <div class="profileCard">
+  <div class="profileTop"><div class="profileAvatar">👤</div><div class="profileName" id="profileName">Player</div><div class="profileSub">ROAD SURVIVOR PROFILE</div></div>
+  <div class="profileGrid">
+   <div class="profileStat"><span class="profileLabel">Cash</span><b id="profileCash">$0</b></div>
+   <div class="profileStat"><span class="profileLabel">Selected Car</span><b id="profileCar">—</b></div>
+   <div class="profileStat"><span class="profileLabel">Cars Owned</span><b id="profileOwned">1</b></div>
+   <div class="profileStat"><span class="profileLabel">Car Rank Bonus</span><b id="profileRank">+0.0x</b></div>
+   <div class="profileStat"><span class="profileLabel">Total Distance</span><b id="profileDistance">0 mi</b></div>
+   <div class="profileStat"><span class="profileLabel">Crashes</span><b id="profileCrashes">0</b></div>
+   <div class="profileStat"><span class="profileLabel">Near Misses</span><b id="profileNear">0</b></div>
+   <div class="profileStat"><span class="profileLabel">Runs</span><b id="profileRuns">0</b></div>
+  </div>
+  <div class="profileScores"><b>BEST SCORES</b>
+   <div class="profileScoreRow"><span>🟢 Easy</span><b id="psEasy">0</b></div>
+   <div class="profileScoreRow"><span>🟡 Medium</span><b id="psMedium">0</b></div>
+   <div class="profileScoreRow"><span>🟠 Hard</span><b id="psHard">0</b></div>
+   <div class="profileScoreRow"><span>🔴 Extreme</span><b id="psExtreme">0</b></div>
+  </div>
+  <button id="profileClose">BACK</button>
+ </div>
+</div>
+
+</body></html>
 <style>
 @media (orientation:portrait){
   #dealerCanvas{
