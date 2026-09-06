@@ -330,6 +330,43 @@ canvas{
 }
 </style>
 
+
+<style id="smallDailySideButtons">
+#challengeBtn,#rewardMenuBtn{
+  position:fixed!important;
+  left:14px!important;
+  width:58px!important;
+  height:58px!important;
+  min-width:58px!important;
+  min-height:58px!important;
+  margin:0!important;
+  padding:0!important;
+  border:2px solid #fff!important;
+  border-radius:13px!important;
+  background:#25262d!important;
+  color:transparent!important;
+  font-size:0!important;
+  line-height:1!important;
+  z-index:999!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  box-shadow:0 4px 12px #0008!important;
+}
+#challengeBtn{top:135px!important}
+#rewardMenuBtn{top:204px!important}
+#challengeBtn::after,#rewardMenuBtn::after{
+  color:#fff!important;
+  font-size:31px!important;
+  line-height:1!important;
+}
+#challengeBtn::after{content:"📋"}
+#rewardMenuBtn::after{content:"🎁"}
+#rewardMenuBtn.claimable{
+  box-shadow:0 0 0 3px #35d66f,0 4px 12px #0008!important;
+}
+</style>
+
 </head><body><div id="usernameGate" class="hide"><div class="usernameCard"><h2>USERNAME</h2><input id="usernameInput" maxlength="16" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Username"><button id="usernameConfirm">CONFIRM</button><p id="usernameMessage"></p></div></div><canvas id="c"></canvas><div id="ui">
 <div id="menu" class="p"><h1>ROAD SURVIVOR</h1><p>Dodge traffic. Survive as long as you can.</p><p>Cash: <b id="cash"></b></p><button id="play">PLAY</button><br><button id="up">UPGRADES</button><button id="dealerBtn">DEALERSHIP</button><br><button id="lb">LEADERBOARD</button><button id="set">SETTINGS</button><br><button id="challengeBtn">DAILY CHALLENGES</button><button id="rewardMenuBtn">DAILY REWARD</button><p>Difficulty</p><button id="dif" class="diff">EASY</button></div>
 
