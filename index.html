@@ -979,6 +979,7 @@ async function claimUsername(){
   // accept it immediately.
   if(Array.isArray(taken)&&taken.length&&taken[0].player_id===getPlayerId()){
     localStorage.setItem('rs_username',taken[0].username||username);
+    ['Easy','Medium','Hard','Extreme'].forEach(d=>syncMyBest(d));
     document.getElementById('usernameGate').classList.add('hide');
     start();
     return;
@@ -1027,9 +1028,21 @@ window.addEventListener('load',()=>{
 
 async function syncMyBest(d){
   const b=bestRunFor(d);
-  const bestScore=b?Number(b.s)||0:0;
-  if(!bestScore) return;
+  const localBest=b?Number(b.s)||0:0;
+  if(!localBest) return;
+
   try{
+    // Read the score already stored online first. Never replace a higher
+    // leaderboard score with an older/lower score from another device.
+    const rows=await lbRequest(
+      'leaderboard_scores?select=score&player_id=eq.'+
+      encodeURIComponent(getPlayerId())+
+      '&difficulty=eq.'+encodeURIComponent(d)
+    );
+
+    const onlineBest=Array.isArray(rows)&&rows.length ? Number(rows[0].score)||0 : 0;
+    const bestScore=Math.max(localBest,onlineBest);
+
     await lbRequest('leaderboard_scores?on_conflict=player_id,difficulty',{
       method:'POST',
       headers:{'Prefer':'resolution=merge-duplicates,return=minimal'},
