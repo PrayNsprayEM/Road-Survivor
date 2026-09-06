@@ -1533,6 +1533,18 @@ async function requestGyroPermission(){
 }
 
 
+
+// User-provided crash sound
+const rsCrashClip=new Audio('crash-sound.m4a');
+rsCrashClip.preload='auto';
+function rsPlayCrashSound(){
+  try{
+    rsCrashClip.pause(); rsCrashClip.currentTime=0;
+    rsCrashClip.volume=Math.max(0,Math.min(1,(+sfxVol||0)/100));
+    rsCrashClip.play().catch(()=>{});
+  }catch(e){}
+}
+
 // User-provided brake sound
 const rsBrakeClip=new Audio('brake-sound.m4a');
 rsBrakeClip.preload='auto';
@@ -2478,7 +2490,7 @@ function playCrashExplosion(done){
   crashExplosionRAF=requestAnimationFrame(frame);
 }
 
-function crashGame(){
+function crashGame(){rsPlayCrashSound();
   run=false;
   let reward=Math.floor(score/2);
   cash+=reward;
