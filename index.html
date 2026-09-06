@@ -586,9 +586,6 @@ function finishDailyChallenge(def,state){
   dailyToast('DAILY COMPLETE +$'+def.reward.toLocaleString());
   return true;
 }
-function updateDailyProgress(kind,value,add=false){
-  const s=loadDailyState();
-
 const DAILY_REWARDS=[500,750,1000,1500,2000,3000,5000];
 
 function rewardDateKey(d=new Date()){
@@ -647,6 +644,10 @@ function rewardUI(){
 function claimDailyReward(){
   const s=loadRewardState();
   if(s.claimedToday)return rewardUI();
+
+function updateDailyProgress(kind,value,add=false){
+  const s=loadDailyState();
+
 
   const today=new Date();
   if(s.lastClaim){
