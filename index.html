@@ -1532,6 +1532,27 @@ async function requestGyroPermission(){
   }
 }
 
+
+// User-provided brake sound
+const rsBrakeClip=new Audio('brake-sound.m4a');
+rsBrakeClip.preload='auto';
+rsBrakeClip.loop=true;
+let rsBrakeClipPlaying=false;
+
+function rsUpdateBrakeClip(){
+  const braking=!!(run && typeof keys!=='undefined' && keys && keys.brake &&
+                   typeof player!=='undefined' && player && player.s>2);
+  rsBrakeClip.volume=Math.max(0,Math.min(1,(+sfxVol||0)/100))*0.9;
+  if(braking && !rsBrakeClipPlaying){
+    rsBrakeClip.currentTime=0;
+    rsBrakeClip.play().then(()=>{rsBrakeClipPlaying=true}).catch(()=>{});
+  }else if(!braking && rsBrakeClipPlaying){
+    rsBrakeClip.pause();
+    rsBrakeClip.currentTime=0;
+    rsBrakeClipPlaying=false;
+  }
+}
+
 // --- SAFE CAR SFX (audio only; does not touch canvas rendering) ---
 let rsAudioCtx=null, rsEngineOsc=null, rsEngineGain=null, rsEngineFilter=null;
 let rsRoadSrc=null, rsRoadGain=null, rsAudioStarted=false;
@@ -1601,7 +1622,7 @@ function rsUpdateAudio(){
   document.addEventListener(ev,rsStartAudio,{passive:true});
 });
 
-function loop(now){if(!run)return;let dt=Math.min(.035,(now-last)/1000);last=now;update(dt);rsUpdateAudio();draw();requestAnimationFrame(loop)}
+function loop(now){if(!run)return;let dt=Math.min(.035,(now-last)/1000);last=now;update(dt);rsUpdateAudio();rsUpdateBrakeClip();draw();requestAnimationFrame(loop)}
 function update(dt){
 updateWeather(dt);
 const carData=cars.find(c=>c.id===selectedCar)||cars[0];
