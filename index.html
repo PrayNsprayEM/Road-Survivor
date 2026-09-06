@@ -50,6 +50,22 @@
 .upgradeDetailHead{display:flex;align-items:center;justify-content:center;gap:16px;margin:8px 0 12px}
 .upgradeDetailHead h3{margin:0;font-size:22px}
 #upgradeDetail #ul{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;max-width:760px;margin:0 auto}
+
+/* Upgrade accordion: selected category expands in place */
+#upgradeDetail.upgradeAccordion{
+  grid-column:1/-1;
+  width:100%;
+  margin:0 0 8px;
+  padding:8px 0 4px;
+  border-top:1px solid #ffffff22;
+  border-bottom:1px solid #ffffff22;
+}
+#upgradeDetail.upgradeAccordion .upgradeDetailHead{display:none!important}
+#upgradeDetail.upgradeAccordion #ul{width:100%;margin:0;max-width:none}
+.upgradeCat.expanded{
+  border-color:#38bdf8;
+  box-shadow:0 0 0 2px #38bdf833,0 10px 24px #0007;
+}
 @media(max-width:700px){.upgradeCats,#upgradeDetail #ul{grid-template-columns:1fr}.upgradeCat{min-height:145px}}
 
 
@@ -623,6 +639,47 @@ function syncVipCar(){
 }
 syncVipCar();
 
+// Ad system: menu/crash banner only. Real AdSense starts only after an adult-owned
+// AdSense account is approved and the public client + slot IDs are filled in below.
+// No Ads owners never load or see the ad unit.
+const RS_ADSENSE_CLIENT=''; // e.g. ca-pub-1234567890123456 (public ID, not a secret)
+const RS_ADSENSE_SLOT='';   // public display-ad slot ID from AdSense
+let rsAdScriptLoaded=false,rsAdPushed=false;
+function rsEnsureAdUI(){
+  if(document.getElementById('rsAdBanner'))return;
+  const style=document.createElement('style');
+  style.textContent=`#rsAdBanner{position:fixed;left:50%;bottom:8px;transform:translateX(-50%);z-index:1700;width:min(92vw,430px);min-height:54px;border:1px solid #ffffff35;border-radius:10px;background:#0d0f14e8;box-shadow:0 6px 20px #0008;display:none;align-items:center;justify-content:center;overflow:hidden;padding:3px}#rsAdBanner .rsAdLabel{position:absolute;left:7px;top:3px;font-size:8px;letter-spacing:1px;color:#ffffff70;z-index:2;pointer-events:none}#rsAdBanner .adsbygoogle{width:100%;min-height:48px}`;
+  document.head.appendChild(style);
+  const box=document.createElement('div');
+  box.id='rsAdBanner';
+  box.innerHTML='<span class="rsAdLabel">ADVERTISEMENT</span><ins class="adsbygoogle" style="display:block" data-ad-format="auto" data-full-width-responsive="true"></ins>';
+  document.body.appendChild(box);
+}
+function rsAdsConfigured(){return /^ca-pub-\d+$/.test(RS_ADSENSE_CLIENT)&&/^\d+$/.test(RS_ADSENSE_SLOT)}
+function rsLoadAdSense(){
+  if(rsEntitlements.no_ads||!rsAdsConfigured()||rsAdScriptLoaded)return;
+  rsAdScriptLoaded=true;
+  const script=document.createElement('script');
+  script.async=true;script.crossOrigin='anonymous';
+  script.src='https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client='+encodeURIComponent(RS_ADSENSE_CLIENT);
+  script.onload=()=>rsPushAd();
+  document.head.appendChild(script);
+}
+function rsPushAd(){
+  if(rsEntitlements.no_ads||!rsAdsConfigured()||rsAdPushed)return;
+  const ins=document.querySelector('#rsAdBanner .adsbygoogle');if(!ins)return;
+  ins.setAttribute('data-ad-client',RS_ADSENSE_CLIENT);ins.setAttribute('data-ad-slot',RS_ADSENSE_SLOT);
+  try{(window.adsbygoogle=window.adsbygoogle||[]).push({});rsAdPushed=true}catch(e){}
+}
+function rsUpdateAdVisibility(panelId){
+  rsEnsureAdUI();
+  const box=document.getElementById('rsAdBanner');if(!box)return;
+  const allowed=!rsEntitlements.no_ads&&rsAdsConfigured();
+  const panel=panelId||(!document.getElementById('menu').classList.contains('hide')?'menu':'');
+  box.style.display=(allowed&&(panel==='menu'||panel==='crash'))?'flex':'none';
+  if(allowed){rsLoadAdSense();if(rsAdScriptLoaded)rsPushAd();}
+}
+
 function collectionMultiplier(){
   let highestPosition=0;
   cars.filter(car=>car.id!=='ownerjesko').forEach((car,index)=>{
@@ -662,7 +719,7 @@ function ownedForCar(){if(!carUpgradeOwned[selectedCar])carUpgradeOwned[selected
 function saveCarUpgrades(){localStorage.setItem('carUpgradeOwned',JSON.stringify(carUpgradeOwned))}
 let activeUpgradeCategory=null;
 function resize(){W=innerWidth;H=innerHeight;C.width=W*devicePixelRatio;C.height=H*devicePixelRatio;X.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);roadW=Math.min(W*.72,520);roadX=(W-roadW)/2}addEventListener('resize',resize);resize();
-function panels(id){document.body.classList.toggle('upgradesOpen',id==='upgrades');['menu','dealership','upgrades','leader','challenges','dailyReward','settings','crash'].forEach(k=>els[k].classList.toggle('hide',k!==id));}
+function panels(id){document.body.classList.toggle('upgradesOpen',id==='upgrades');['menu','dealership','upgrades','leader','challenges','dailyReward','settings','crash'].forEach(k=>els[k].classList.toggle('hide',k!==id));rsUpdateAdVisibility(id);}
 
 const DAILY_CHALLENGE_DEFS=[
   {id:'near5',type:'near',label:'Get 5 near misses',target:5,reward:1500},
@@ -847,17 +904,26 @@ function dc(el,v){el.textContent=v.toUpperCase();el.className='diff '+v.toLowerC
 function cyc(v){return D[(D.indexOf(v)+1)%4]}
 function cashUI(){els.cash.textContent='$'+cash.toLocaleString()}
 function upgradesUI(cat=null){
-  activeUpgradeCategory=cat;
   const car=cars.find(c=>c.id===selectedCar);
   if(els.upgradeCarName)els.upgradeCarName.textContent=(car?car.name:'Current car')+' upgrades';
 
+  // Tapping the already-open category collapses it.
+  if(cat && activeUpgradeCategory===cat && !els.upgradeDetail.classList.contains('hide')) cat=null;
+  activeUpgradeCategory=cat;
+
+  document.querySelectorAll('.upgradeCat').forEach(b=>b.classList.toggle('expanded',!!cat&&b.dataset.cat===cat));
+  els.upgradeCats.classList.remove('hide');
+
   if(!cat){
     els.upgradeDetail.classList.add('hide');
-    els.upgradeCats.classList.remove('hide');
+    els.upgradeDetail.classList.remove('upgradeAccordion');
+    els.ul.innerHTML='';
     return;
   }
 
-  els.upgradeCats.classList.add('hide');
+  const clicked=document.querySelector('.upgradeCat[data-cat="'+cat+'"]');
+  if(clicked) clicked.insertAdjacentElement('afterend',els.upgradeDetail);
+  els.upgradeDetail.classList.add('upgradeAccordion');
   els.upgradeDetail.classList.remove('hide');
   els.upgradeCatTitle.textContent=cat.toUpperCase();
   els.ul.innerHTML='';
@@ -876,19 +942,25 @@ function upgradesUI(cat=null){
         localStorage.setItem('cash',cash);
         saveCarUpgrades();
         cashUI();
-        upgradesUI(cat);
+        const wasOpen=activeUpgradeCategory;
+        activeUpgradeCategory=null;
+        upgradesUI(wasOpen);
       }else{
-        const p=d.querySelector('.price');
-        p.textContent='NOT ENOUGH CASH';
-        setTimeout(()=>upgradesUI(cat),800);
+        const price=d.querySelector('.price');
+        price.textContent='NOT ENOUGH CASH';
+        setTimeout(()=>{
+          const wasOpen=activeUpgradeCategory;
+          activeUpgradeCategory=null;
+          upgradesUI(wasOpen);
+        },800);
       }
     };
 
     els.ul.appendChild(d);
   });
 
-  // Start the category screen at the top on iPhone.
-  els.upgrades.scrollTop=0;
+  // Keep the selected category near the top without jumping to the bottom.
+  if(clicked) clicked.scrollIntoView({block:'nearest',behavior:'smooth'});
 }
 
 function dealerDrawCar(car){
@@ -2826,7 +2898,7 @@ els.dif.onclick=()=>{diff=cyc(diff);localStorage.setItem('diff',diff);dc(els.dif
 els.play.onclick=playWithUsername;els.retry.onclick=start;
 els.up.onclick=()=>{upgradesUI();panels('upgrades')};
 document.querySelectorAll('.upgradeCat').forEach(b=>b.onclick=()=>upgradesUI(b.dataset.cat));
-els.upgradeCatBack.onclick=()=>{upgradesUI();els.upgrades.scrollTop=0};
+els.upgradeCatBack.onclick=()=>upgradesUI();
 els.ub.onclick=()=>{controlLayout();panels('menu')};
 els.dealerBtn.onclick=()=>{dealerIndex=Math.max(0,cars.findIndex(c=>c.id===selectedCar));dealerUI();panels('dealership')};
 els.dealerBack.onclick=()=>{cashUI();panels('menu')};
@@ -3087,13 +3159,13 @@ if(rsProfileCloseBtn){
     }catch(e){button.disabled=false;button.textContent=before;alert(String(e.message||e).toUpperCase());}
   }
   async function refreshEntitlements(){
-    const s=savedSession();if(!s||!s.access_token){setBuyState();return false;}
+    const s=savedSession();if(!s||!s.access_token){setBuyState();rsUpdateAdVisibility();return false;}
     try{
       const r=await fetch(FN+'/get-entitlements',{method:'GET',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+s.access_token}});
       const d=await r.json();if(!r.ok)throw new Error(d.error||'Entitlement check failed');
       rsEntitlements={vip:!!d.vip,no_ads:!!d.no_ads};
       localStorage.setItem('rs_entitlements',JSON.stringify(rsEntitlements));
-      syncVipCar();setBuyState();return true;
+      syncVipCar();setBuyState();rsUpdateAdVisibility();return true;
     }catch(e){setBuyState();return false;}
   }
   async function claimVipCash(){
@@ -3113,6 +3185,7 @@ if(rsProfileCloseBtn){
     (async()=>{for(let i=0;i<6;i++){if(await refreshEntitlements())break;await new Promise(r=>setTimeout(r,900));}await claimVipCash();history.replaceState({},'',location.pathname+location.hash);})();
   }else if(qs.get('checkout')==='cancelled'){history.replaceState({},'',location.pathname+location.hash);}
   window.rsRefreshEntitlements=refreshEntitlements;
+  rsUpdateAdVisibility();
 })();
 </script>
 
