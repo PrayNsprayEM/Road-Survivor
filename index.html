@@ -1638,48 +1638,105 @@ function rsUpdateAudio(){
 // --- SAFE TRAFFIC FOLLOWING / ANTI-OVERLAP ---
 function rsKeepTrafficSeparated(dt){
   if(typeof traffic==='undefined' || !Array.isArray(traffic)) return;
-  const safeGap=72;
-  const brakeGap=125;
 
+  // Cars travel DOWN the screen, so a larger Y value means "ahead".
+  const extraGap=16;
+
+  // Stop unsafe lane changes before they can merge into another vehicle.
+  for(const car of traffic){
+    if(!car || car.pendingLane==null) continue;
+    const targetLane=car.pendingLane;
+    const targetX=roadX+roadW*(targetLane+.5)/3;
+    const blocked=traffic.some(other=>{
+      if(!other || other===car) return false;
+      const otherLane=(other.lane==null?1:other.lane);
+      const otherTarget=(other.pendingLane==null?otherLane:other.pendingLane);
+      if(otherLane!==targetLane && otherTarget!==targetLane) return false;
+      const needed=((car.h||70)+(other.h||70))*.5+38;
+      return Math.abs((other.y||0)-(car.y||0))<needed &&
+             Math.abs((other.x||targetX)-targetX)<((car.w||40)+(other.w||40))*.55;
+    });
+    if(blocked){
+      car.pendingLane=null;
+      car.targetX=roadX+roadW*((car.lane??1)+.5)/3;
+      car.signalDir=0;
+      car.laneTimer=.8+Math.random()*1.8;
+    }
+  }
+
+  // Brake trailing cars for vehicles ahead.
   for(const car of traffic){
     if(!car) continue;
-
-    let nearest=null, nearestGap=Infinity;
+    let leader=null, best=Infinity;
 
     for(const other of traffic){
       if(!other || other===car) continue;
+      const xLimit=((car.w||40)+(other.w||40))*.48;
+      if(Math.abs((other.x||0)-(car.x||0))>=xLimit) continue;
 
-      // Same / nearly same lane
-      if(Math.abs((other.x||0)-(car.x||0))>34) continue;
-
-      // In this game's screen coordinates, a car with smaller y is ahead.
-      const gap=(car.y||0)-(other.y||0);
-      if(gap>0 && gap<nearestGap){
-        nearestGap=gap;
-        nearest=other;
+      // Larger Y is ahead because traffic moves downward.
+      const gap=(other.y||0)-(car.y||0);
+      if(gap>0 && gap<best){
+        best=gap;
+        leader=other;
       }
     }
 
-    if(nearest){
-      const leadSpeed=Number.isFinite(nearest.s)?nearest.s:(Number.isFinite(nearest.speed)?nearest.speed:0);
-      let mySpeed=Number.isFinite(car.s)?car.s:(Number.isFinite(car.speed)?car.speed:0);
+    if(leader){
+      const minGap=((car.h||70)+(leader.h||70))*.5+extraGap;
+      const brakeGap=minGap+85;
+      const leadSpeed=Number.isFinite(leader.s)?leader.s:
+                      (Number.isFinite(leader.speed)?leader.speed:0);
 
-      if(nearestGap<brakeGap){
-        const strength=Math.max(0,Math.min(1,(brakeGap-nearestGap)/(brakeGap-safeGap)));
-        const target=Math.max(0,leadSpeed-4);
-
-        if(Number.isFinite(car.s)){
-          car.s += (target-car.s)*Math.min(1,dt*(3+strength*7));
-        }else if(Number.isFinite(car.speed)){
-          car.speed += (target-car.speed)*Math.min(1,dt*(3+strength*7));
-        }
+      if(best<brakeGap){
+        const strength=Math.max(0,Math.min(1,(brakeGap-best)/(brakeGap-minGap)));
+        const target=Math.max(0,leadSpeed-(3+strength*10));
+        if(Number.isFinite(car.s))
+          car.s+=(target-car.s)*Math.min(1,dt*(5+strength*12));
+        if(Number.isFinite(car.speed))
+          car.speed+=(target-car.speed)*Math.min(1,dt*(5+strength*12));
       }
 
-      // Hard stop against overlap: never allow traffic cars to occupy each other.
-      if(nearestGap<safeGap){
+      if(best<minGap){
+        // Put the trailing vehicle back behind the leader.
+        car.y=(leader.y||0)-minGap;
         if(Number.isFinite(car.s)) car.s=Math.min(car.s,leadSpeed);
         if(Number.isFinite(car.speed)) car.speed=Math.min(car.speed,leadSpeed);
-        car.y=(nearest.y||0)+safeGap;
+      }
+    }
+  }
+
+  // Final physical anti-overlap pass. Run several times so traffic piles stay separated.
+  for(let pass=0;pass<3;pass++){
+    for(let i=0;i<traffic.length;i++){
+      for(let j=i+1;j<traffic.length;j++){
+        const a=traffic[i], b=traffic[j];
+        if(!a||!b) continue;
+
+        const xNeed=((a.w||40)+(b.w||40))*.46;
+        const yNeed=((a.h||70)+(b.h||70))*.5+10;
+        const dx=Math.abs((a.x||0)-(b.x||0));
+        const dy=Math.abs((a.y||0)-(b.y||0));
+
+        if(dx<xNeed && dy<yNeed){
+          // Larger Y is the vehicle ahead.
+          const lead=(a.y||0)>=(b.y||0)?a:b;
+          const trail=lead===a?b:a;
+          trail.y=(lead.y||0)-yNeed;
+
+          const ls=Number.isFinite(lead.s)?lead.s:
+                   (Number.isFinite(lead.speed)?lead.speed:0);
+          if(Number.isFinite(trail.s)) trail.s=Math.min(trail.s,ls);
+          if(Number.isFinite(trail.speed)) trail.speed=Math.min(trail.speed,ls);
+
+          // If they were merging, send the trailing car back to its lane.
+          if(trail.pendingLane!=null){
+            trail.pendingLane=null;
+            trail.targetX=roadX+roadW*((trail.lane??1)+.5)/3;
+            trail.signalDir=0;
+            trail.laneTimer=1+Math.random()*2;
+          }
+        }
       }
     }
   }
