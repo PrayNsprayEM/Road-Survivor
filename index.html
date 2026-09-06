@@ -259,8 +259,35 @@ canvas{
 .usernameCard h2{margin:0 0 14px;font-size:25px}#usernameInput{width:100%;box-sizing:border-box;padding:13px 12px;border-radius:9px;border:2px solid #777;background:#090909;color:#fff;font-size:18px;text-align:center;outline:none}
 #usernameConfirm{margin-top:12px;width:100%;padding:13px;border:0;border-radius:9px;background:#20a447;color:#fff;font-weight:900;font-size:18px}#usernameMessage{min-height:22px;margin:9px 0 0;font-weight:900;color:#ff5b5b}
 </style>
+
+<style>
+#challenges.p{
+  width:min(92%,520px);
+  max-height:calc(100% - 24px);
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+}
+.dailySub{opacity:.75;margin-top:-8px}
+.dailyCard{
+  background:#1c2028;
+  border:2px solid #3a4351;
+  border-radius:13px;
+  padding:13px;
+  margin:10px 0;
+  text-align:left;
+}
+.dailyCard.done{border-color:#2fbf64;background:#173121}
+.dailyTop{display:flex;justify-content:space-between;gap:10px;align-items:center;font-weight:900}
+.dailyReward{color:#ffd54a;white-space:nowrap}
+.dailyProgressText{font-size:13px;opacity:.8;margin-top:7px}
+.dailyBar{height:10px;background:#090b0f;border-radius:999px;overflow:hidden;margin-top:7px;border:1px solid #ffffff1a}
+.dailyFill{height:100%;background:linear-gradient(90deg,#28a9e0,#39d273);width:0%}
+.dailyCard.done .dailyFill{background:#39d273}
+.dailyDone{color:#50e27c;font-weight:1000}
+</style>
+
 </head><body><div id="usernameGate" class="hide"><div class="usernameCard"><h2>USERNAME</h2><input id="usernameInput" maxlength="16" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Username"><button id="usernameConfirm">CONFIRM</button><p id="usernameMessage"></p></div></div><canvas id="c"></canvas><div id="ui">
-<div id="menu" class="p"><h1>ROAD SURVIVOR</h1><p>Dodge traffic. Survive as long as you can.</p><p>Cash: <b id="cash"></b></p><button id="play">PLAY</button><br><button id="up">UPGRADES</button><button id="dealerBtn">DEALERSHIP</button><br><button id="lb">LEADERBOARD</button><button id="set">SETTINGS</button><p>Difficulty</p><button id="dif" class="diff">EASY</button></div>
+<div id="menu" class="p"><h1>ROAD SURVIVOR</h1><p>Dodge traffic. Survive as long as you can.</p><p>Cash: <b id="cash"></b></p><button id="play">PLAY</button><br><button id="up">UPGRADES</button><button id="dealerBtn">DEALERSHIP</button><br><button id="lb">LEADERBOARD</button><button id="set">SETTINGS</button><br><button id="challengeBtn">DAILY CHALLENGES</button><p>Difficulty</p><button id="dif" class="diff">EASY</button></div>
 
 <div id="dealership" class="p dealer hide">
   <div class="dealerTop">
@@ -345,6 +372,15 @@ canvas{
   </div>
   <button id="lbback">BACK</button>
 </div>
+
+<div id="challenges" class="p hide">
+  <h2>DAILY CHALLENGES</h2>
+  <p class="dailySub">3 challenges • resets every day</p>
+  <div id="dailyList"></div>
+  <p>Today's rewards: <b id="dailyRewardTotal">$0</b></p>
+  <button id="challengeBack">BACK</button>
+</div>
+
 <div id="settings" class="p hide"><h2>SETTINGS</h2><div class="card">Driving controls<br><button id="mode">BUTTONS</button></div><div class="card">Music <input id="music" type="range" min="0" max="100"></div><div class="card">SFX <input id="sfx" type="range" min="0" max="100"></div><div class="card">Song<br><button id="song">TRACK 1</button></div><button id="sb">BACK</button></div>
 <div id="crash" class="p hide"><h2>CRASH!</h2><p>Time: <b id="ft"></b></p><p>Distance: <b id="fd"></b></p><p>Score: <b id="fs"></b></p><p>Run earnings: <b id="earnings">$0</b></p><p>Best: <b id="fb"></b></p><button id="retry">RETRY</button><button id="cm">MENU</button><button id="cl">LEADERBOARD</button></div>
 <div id="hud" class="hide"><div id="speed" class="stat leftstat">0 MPH</div><div id="score" class="stat rightstat">0</div><div id="status" class="status"></div><div id="nearMissToast">NEAR MISS +100</div><div class="controls" id="controls"><div id="steerControls"><button class="ctrl" id="left">◀</button><button class="ctrl" id="right">▶</button></div><div id="joystick"><div id="joystickKnob"></div></div><div id="pedalControls"><button class="ctrl pedal brake" id="brake">BRAKE</button><button class="ctrl pedal gas" id="gas">GAS</button></div></div></div></div>
@@ -352,8 +388,8 @@ canvas{
 if(!CanvasRenderingContext2D.prototype.roundRect){CanvasRenderingContext2D.prototype.roundRect=function(x,y,w,h,r){this.rect(x,y,w,h);return this}};
 const C=document.getElementById('c'),X=C.getContext('2d');
 const els={
-  menu:document.getElementById('menu'),upgrades:document.getElementById('upgrades'),leader:document.getElementById('leader'),settings:document.getElementById('settings'),crash:document.getElementById('crash'),
-  cash:document.getElementById('cash'),play:document.getElementById('play'),up:document.getElementById('up'),dealerBtn:document.getElementById('dealerBtn'),lb:document.getElementById('lb'),set:document.getElementById('set'),dif:document.getElementById('dif'),
+  menu:document.getElementById('menu'),upgrades:document.getElementById('upgrades'),leader:document.getElementById('leader'),challenges:document.getElementById('challenges'),settings:document.getElementById('settings'),crash:document.getElementById('crash'),
+  cash:document.getElementById('cash'),play:document.getElementById('play'),up:document.getElementById('up'),dealerBtn:document.getElementById('dealerBtn'),lb:document.getElementById('lb'),set:document.getElementById('set'),challengeBtn:document.getElementById('challengeBtn'),challengeBack:document.getElementById('challengeBack'),dailyList:document.getElementById('dailyList'),dailyRewardTotal:document.getElementById('dailyRewardTotal'),dif:document.getElementById('dif'),
   dealership:document.getElementById('dealership'),dealerCash:document.getElementById('dealerCash'),dealerBack:document.getElementById('dealerBack'),dealerPrev:document.getElementById('dealerPrev'),dealerNext:document.getElementById('dealerNext'),dealerCanvas:document.getElementById('dealerCanvas'),dealerName:document.getElementById('dealerName'),dealerBuy:document.getElementById('dealerBuy'),dealerSpecs:document.getElementById('dealerSpecs'),
   ul:document.getElementById('ul'),ub:document.getElementById('ub'),upgrades:document.getElementById('upgrades'),upgradeCats:document.getElementById('upgradeCats'),upgradeDetail:document.getElementById('upgradeDetail'),upgradeCatBack:document.getElementById('upgradeCatBack'),upgradeCatTitle:document.getElementById('upgradeCatTitle'),upgradeCarName:document.getElementById('upgradeCarName'),scores:document.getElementById('scores'),lbback:document.getElementById('lbback'),
   mode:document.getElementById('mode'),music:document.getElementById('music'),sfx:document.getElementById('sfx'),song:document.getElementById('song'),sb:document.getElementById('sb'),
@@ -412,7 +448,92 @@ function ownedForCar(){if(!carUpgradeOwned[selectedCar])carUpgradeOwned[selected
 function saveCarUpgrades(){localStorage.setItem('carUpgradeOwned',JSON.stringify(carUpgradeOwned))}
 let activeUpgradeCategory=null;
 function resize(){W=innerWidth;H=innerHeight;C.width=W*devicePixelRatio;C.height=H*devicePixelRatio;X.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);roadW=Math.min(W*.72,520);roadX=(W-roadW)/2}addEventListener('resize',resize);resize();
-function panels(id){document.body.classList.toggle('upgradesOpen',id==='upgrades');['menu','dealership','upgrades','leader','settings','crash'].forEach(k=>els[k].classList.toggle('hide',k!==id));}
+function panels(id){document.body.classList.toggle('upgradesOpen',id==='upgrades');['menu','dealership','upgrades','leader','challenges','settings','crash'].forEach(k=>els[k].classList.toggle('hide',k!==id));}
+
+const DAILY_CHALLENGE_DEFS=[
+  {id:'near5',type:'near',label:'Get 5 near misses',target:5,reward:1500},
+  {id:'score20k',type:'score',label:'Score 20,000 points in one run',target:20000,reward:2500},
+  {id:'survive60',type:'time',label:'Survive for 60 seconds in one run',target:60,reward:2000}
+];
+let dailyState=null,dailyProgressTick=0;
+
+function dailyDateKey(){
+  const d=new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function freshDailyState(){
+  const progress={};
+  DAILY_CHALLENGE_DEFS.forEach(c=>progress[c.id]={value:0,done:false});
+  return {date:dailyDateKey(),progress};
+}
+function loadDailyState(){
+  let s=null;
+  try{s=JSON.parse(localStorage.getItem('rs_daily_challenges')||'null')}catch(e){}
+  if(!s||s.date!==dailyDateKey()||!s.progress)s=freshDailyState();
+  DAILY_CHALLENGE_DEFS.forEach(c=>{
+    if(!s.progress[c.id])s.progress[c.id]={value:0,done:false};
+  });
+  dailyState=s;
+  saveDailyState();
+  return s;
+}
+function saveDailyState(){
+  if(dailyState)localStorage.setItem('rs_daily_challenges',JSON.stringify(dailyState));
+}
+function dailyToast(text){
+  nearMissUntil=performance.now()+1800;
+  els.nearMissToast.textContent=text;
+  els.nearMissToast.style.opacity='1';
+}
+function finishDailyChallenge(def,state){
+  if(state.done)return false;
+  if(state.value<def.target)return false;
+  state.done=true;
+  cash+=def.reward;
+  localStorage.setItem('cash',cash);
+  cashUI();
+  dailyToast('DAILY COMPLETE +$'+def.reward.toLocaleString());
+  return true;
+}
+function updateDailyProgress(kind,value,add=false){
+  const s=loadDailyState();
+  let changed=false,completed=false;
+  DAILY_CHALLENGE_DEFS.forEach(def=>{
+    if(def.type!==kind)return;
+    const p=s.progress[def.id];
+    const before=p.value||0;
+    p.value=add?before+value:Math.max(before,value);
+    if(p.value!==before)changed=true;
+    if(finishDailyChallenge(def,p)){changed=true;completed=true}
+  });
+  if(changed)saveDailyState();
+  if(completed)dailyChallengesUI();
+}
+function updateDailyLiveProgress(){
+  const now=performance.now();
+  if(now-dailyProgressTick<500)return;
+  dailyProgressTick=now;
+  updateDailyProgress('score',score,false);
+  updateDailyProgress('time',t,false);
+}
+function dailyChallengesUI(){
+  const s=loadDailyState();
+  els.dailyList.innerHTML=DAILY_CHALLENGE_DEFS.map(def=>{
+    const p=s.progress[def.id],v=Math.min(def.target,p.value||0);
+    const pct=Math.max(0,Math.min(100,(v/def.target)*100));
+    const shown=def.type==='score'?Math.floor(v).toLocaleString():def.type==='time'?Math.floor(v)+'s':Math.floor(v);
+    const target=def.type==='score'?def.target.toLocaleString():def.type==='time'?def.target+'s':def.target;
+    return '<div class="dailyCard '+(p.done?'done':'')+'">'+
+      '<div class="dailyTop"><span>'+def.label+'</span><span class="dailyReward">+$'+def.reward.toLocaleString()+'</span></div>'+
+      '<div class="dailyProgressText">'+(p.done?'<span class="dailyDone">COMPLETED ✓</span>':shown+' / '+target)+'</div>'+
+      '<div class="dailyBar"><div class="dailyFill" style="width:'+pct+'%"></div></div>'+
+    '</div>';
+  }).join('');
+  const total=DAILY_CHALLENGE_DEFS.reduce((sum,def)=>sum+(s.progress[def.id].done?def.reward:0),0);
+  els.dailyRewardTotal.textContent='$'+total.toLocaleString();
+}
+loadDailyState();
+
 function dc(el,v){el.textContent=v.toUpperCase();el.className='diff '+v.toLowerCase()}
 function cyc(v){return D[(D.indexOf(v)+1)%4]}
 function cashUI(){els.cash.textContent='$'+cash.toLocaleString()}
@@ -1261,7 +1382,7 @@ let currentWeatherBase=Math.floor(t*10+dist)+nearMissBonus;
 let gainedWeatherBase=Math.max(0,currentWeatherBase-lastWeatherBase);
 if(weather==="It's Raining Points and Coins") weatherDoubleBonus+=gainedWeatherBase;
 lastWeatherBase=currentWeatherBase;
-score=Math.floor((currentWeatherBase+weatherDoubleBonus)*scoreMult[diff]*collectionMultiplier());spawn-=dt;
+score=Math.floor((currentWeatherBase+weatherDoubleBonus)*scoreMult[diff]*collectionMultiplier());updateDailyLiveProgress();spawn-=dt;
 let c=cfg[diff];
 if(spawn<=0&&traffic.length<c.max){
 let lane=Math.floor(Math.random()*3),r=Math.random(),type='car',w=29,h=50;
@@ -1359,6 +1480,7 @@ let hitGap=(player.w+v.w)*.46;
 let nearGap=(player.w+v.w)*.78;
 if(xGap>=hitGap&&xGap<nearGap){
 v.nearMissAwarded=true;
+updateDailyProgress('near',1,true);
 nearMissBonus+=100;
 score=Math.floor((Math.floor(t*10+dist)+nearMissBonus+weatherDoubleBonus)*scoreMult[diff]*collectionMultiplier());
 nearMissUntil=performance.now()+1000;
@@ -2118,7 +2240,7 @@ els.dealerBuy.onclick=dealerPurchaseOrSelect;
 document.querySelectorAll('.lbDiff').forEach(btn=>{
   btn.onclick=()=>{lbSelected=btn.dataset.lbdiff;scores();};
 });
-els.lb.onclick=()=>{scores();panels('leader')};els.lbback.onclick=()=>panels('menu');els.set.onclick=()=>{settingsUI();panels('settings')};els.sb.onclick=()=>{saveSettings();panels('menu')};els.cm.onclick=()=>panels('menu');els.cl.onclick=()=>{scores();panels('leader')};
+els.lb.onclick=()=>{scores();panels('leader')};els.lbback.onclick=()=>panels('menu');els.challengeBtn.onclick=()=>{dailyChallengesUI();panels('challenges')};els.challengeBack.onclick=()=>panels('menu');els.set.onclick=()=>{settingsUI();panels('settings')};els.sb.onclick=()=>{saveSettings();panels('menu')};els.cm.onclick=()=>panels('menu');els.cl.onclick=()=>{scores();panels('leader')};
 els.mode.onclick=async()=>{
   if(mode==='buttons'){
     const ok=await requestGyroPermission();
