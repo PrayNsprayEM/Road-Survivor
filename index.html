@@ -643,13 +643,13 @@ function rewardUI(){
 }
 function claimDailyReward(){
   const s=loadRewardState();
-  if(s.claimedToday)return rewardUI();
-
-function updateDailyProgress(kind,value,add=false){
-  const s=loadDailyState();
-
+  if(s.claimedToday){
+    rewardUI();
+    return;
+  }
 
   const today=new Date();
+
   if(s.lastClaim){
     const gap=dayDiff(today,rewardDateFromKey(s.lastClaim));
     if(gap===1)s.streak=Math.min(7,s.streak+1);
@@ -660,6 +660,7 @@ function updateDailyProgress(kind,value,add=false){
 
   const rewardIndex=Math.max(0,Math.min(6,s.streak-1));
   const amount=DAILY_REWARDS[rewardIndex];
+
   cash+=amount;
   localStorage.setItem('cash',cash);
   cashUI();
@@ -671,20 +672,29 @@ function updateDailyProgress(kind,value,add=false){
   dailyToast('DAILY REWARD +$'+amount.toLocaleString());
   rewardUI();
 }
-rewardUI();
 
+function updateDailyProgress(kind,value,add=false){
+  const s=loadDailyState();
   let changed=false,completed=false;
+
   DAILY_CHALLENGE_DEFS.forEach(def=>{
     if(def.type!==kind)return;
     const p=s.progress[def.id];
     const before=p.value||0;
     p.value=add?before+value:Math.max(before,value);
     if(p.value!==before)changed=true;
-    if(finishDailyChallenge(def,p)){changed=true;completed=true}
+    if(finishDailyChallenge(def,p)){
+      changed=true;
+      completed=true;
+    }
   });
+
   if(changed)saveDailyState();
   if(completed)dailyChallengesUI();
 }
+
+rewardUI();
+
 function updateDailyLiveProgress(){
   const now=performance.now();
   if(now-dailyProgressTick<500)return;
