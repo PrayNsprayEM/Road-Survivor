@@ -2982,7 +2982,7 @@ if(rsProfileCloseBtn){
 </script>
 
 
-<div id="accountScreen"><div class="accountCard"><h2>ROAD SURVIVOR ACCOUNT</h2><div class="accountHint">Sign in so purchases and account perks can belong to you across devices.</div><div id="accountState">NOT SIGNED IN</div><input id="accountUsername" maxlength="16" autocomplete="username" placeholder="Username (3–16)"><input id="accountEmail" type="email" autocomplete="email" placeholder="Email"><input id="accountPassword" type="password" minlength="6" autocomplete="current-password" placeholder="Password (6+ characters)"><div class="accountRow"><button id="accountSignUp" type="button">CREATE ACCOUNT</button><button id="accountSignIn" type="button">SIGN IN</button></div><button id="accountSignOut" type="button" style="width:100%;margin-top:8px;display:none">SIGN OUT</button><div id="accountMsg"></div><button id="accountBack" type="button" style="width:100%;margin-top:10px">BACK</button></div></div>
+<div id="accountScreen"><div class="accountCard"><h2>ROAD SURVIVOR ACCOUNT</h2><div class="accountHint">Sign in so purchases and account perks can belong to you across devices.</div><div id="accountState">NOT SIGNED IN</div><input id="accountUsername" maxlength="16" autocomplete="username" placeholder="Username (3–16)"><input id="accountEmail" type="email" autocomplete="email" placeholder="Email"><input id="accountPassword" type="password" minlength="6" autocomplete="current-password" placeholder="Password (6+ characters)"><div class="accountRow"><button id="accountSignUp" type="button">CREATE ACCOUNT</button><button id="accountSignIn" type="button">SIGN IN</button></div><button id="accountSignOut" type="button" style="width:100%;margin-top:8px;display:none">SIGN OUT</button><button id="accountResend" type="button" style="width:100%;margin-top:8px">RESEND CONFIRMATION EMAIL</button><div id="accountMsg"></div><button id="accountBack" type="button" style="width:100%;margin-top:10px">BACK</button></div></div>
 <div id="shopScreen">
   <div class="shopPanel">
     <div class="shopTop">
@@ -3071,7 +3071,17 @@ if(rsProfileCloseBtn){
  function close(e){if(e){e.preventDefault();e.stopPropagation()}screen.classList.remove('show');screen.style.setProperty('display','none','important')}
  document.getElementById('accountOpen').addEventListener('click',open);document.getElementById('accountBack').addEventListener('click',close);document.getElementById('accountBack').addEventListener('pointerup',close);
  document.getElementById('accountSignUp').onclick=async()=>{msg.textContent='CREATING...';try{const u=username.value.trim(),em=email.value.trim(),pw=password.value;if(!/^[A-Za-z0-9_]{3,16}$/.test(u))throw new Error('Username must be 3–16 letters, numbers, or _.');if(pw.length<6)throw new Error('Password must be at least 6 characters.');const d=await auth('/signup?redirect_to='+encodeURIComponent('https://road-survivor.onrender.com'),{email:em,password:pw,data:{username:u}});if(d.access_token&&d.user){saveSession(d);await upsertProfile(d.user,u,d.access_token);msg.textContent='ACCOUNT CREATED ✓';render()}else msg.textContent='CHECK YOUR EMAIL TO CONFIRM, THEN SIGN IN.'}catch(e){msg.textContent=(e.message||'Could not create account').toUpperCase()}};
- document.getElementById('accountSignIn').onclick=async()=>{msg.textContent='SIGNING IN...';try{const d=await auth('/token?grant_type=password',{email:email.value.trim(),password:password.value});saveSession(d);if(username.value.trim())await upsertProfile(d.user,username.value.trim(),d.access_token);msg.textContent='SIGNED IN ✓';render()}catch(e){msg.textContent=(e.message||'Could not sign in').toUpperCase()}};
+ document.getElementById('accountSignIn').onclick=async()=>{msg.textContent='SIGNING IN...';try{const d=await auth('/token?grant_type=password',{email:email.value.trim(),password:password.value});saveSession(d);msg.textContent='SIGNED IN ✓';render()}catch(e){msg.textContent=(e.message||'Could not sign in').toUpperCase()}};
+
+ document.getElementById('accountResend').onclick=async()=>{
+   msg.textContent='SENDING...';
+   try{
+     const em=email.value.trim();
+     if(!em)throw new Error('Enter your email first.');
+     await auth('/resend',{type:'signup',email:em,options:{emailRedirectTo:'https://road-survivor.onrender.com'}});
+     msg.textContent='NEW CONFIRMATION EMAIL SENT ✓';
+   }catch(e){msg.textContent=(e.message||'Could not resend email').toUpperCase()}
+ };
  signOut.onclick=async()=>{const s=session();try{if(s&&s.access_token)await auth('/logout',null,s.access_token)}catch(e){}saveSession(null);msg.textContent='SIGNED OUT';render()};render();
 })();
 </script>\n</body></html>
