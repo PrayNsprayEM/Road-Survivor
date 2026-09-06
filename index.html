@@ -1931,7 +1931,14 @@ if(weather==="It's Raining Points and Coins")effects.push('POINTS x2');
 els.status.textContent=(active?'':'TIMER PAUSED — SPEED TOO LOW')+(effects.length?((active?'':' • ')+effects.join(' • ')):'');
 
 if(active){
-t+=dt;dist+=player.s*.44704*dt;
+t+=dt;
+const rsStepMeters=player.s*.44704*dt;
+dist+=rsStepMeters;
+try{
+  const ps=rsProfileStats();
+  ps.distance+=(rsStepMeters/1609.344);
+  rsSaveProfileStats(ps);
+}catch(e){}
 let currentWeatherBase=Math.floor(t*10+dist)+nearMissBonus;
 let gainedWeatherBase=Math.max(0,currentWeatherBase-lastWeatherBase);
 if(weather==="It's Raining Points and Coins") weatherDoubleBonus+=gainedWeatherBase;
@@ -2032,6 +2039,11 @@ let nearGap=(player.w+v.w)*.78;
 if(xGap>=hitGap&&xGap<nearGap){
 v.nearMissAwarded=true;
 updateDailyProgress('near',1,true);
+try{
+  const ps=rsProfileStats();
+  ps.near++;
+  rsSaveProfileStats(ps);
+}catch(e){}
 nearMissBonus+=100;
 score=Math.floor((Math.floor(t*10+dist)+nearMissBonus+weatherDoubleBonus)*scoreMult[diff]*collectionMultiplier()*carPointsMultiplier());
 nearMissUntil=performance.now()+1000;
@@ -2887,8 +2899,11 @@ function rsOpenProfile(){
   document.getElementById('profileCash').textContent='$'+Math.floor(rsProfileCash()).toLocaleString();
   document.getElementById('profileCar').textContent=car?car.name:'—';
   document.getElementById('profileOwned').textContent=owned;
-  const rank=Math.max(0,Math.min(10,owned-1));
-  document.getElementById('profileRank').textContent='+'+(rank*.1).toFixed(1)+'x';
+  let highestPosition=0;
+  cars.filter(c=>c.id!=='ownerjesko').forEach((c,index)=>{
+    if(ownedCars.includes(c.id)) highestPosition=Math.max(highestPosition,index+1);
+  });
+  document.getElementById('profileRank').textContent='+'+(highestPosition*.1).toFixed(1)+'x';
   document.getElementById('profileDistance').textContent=st.distance.toFixed(1)+' mi';
   document.getElementById('profileCrashes').textContent=st.crashes;
   document.getElementById('profileNear').textContent=st.near;
