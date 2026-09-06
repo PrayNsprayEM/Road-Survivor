@@ -414,8 +414,37 @@ body.rs-buttons-mode #joystick{display:none!important}
 body.rs-gyro-mode #steerControls{display:none!important}
 body.rs-gyro-mode #joystick{display:none!important}
 </style>
+
+<style>
+#shopBtn{
+  position:fixed!important;left:14px!important;top:342px!important;
+  width:58px!important;height:58px!important;min-width:58px!important;min-height:58px!important;
+  margin:0!important;padding:0!important;border:2px solid #fff!important;border-radius:13px!important;
+  background:#25262d!important;color:transparent!important;font-size:0!important;line-height:1!important;
+  z-index:999!important;display:flex!important;align-items:center!important;justify-content:center!important;
+  box-shadow:0 4px 12px #0008!important
+}
+#shopBtn::after{content:"🛒";color:#fff;font-size:28px!important}
+#shopScreen{position:fixed;inset:0;background:#0009;z-index:1800;display:none;padding:18px;overflow:auto}
+#shopScreen.show{display:block}
+.shopPanel{max-width:460px;margin:42px auto;background:#2b2d36;border:3px solid #16181e;border-radius:14px;box-shadow:0 12px 32px #000b;overflow:hidden}
+.shopTop{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:linear-gradient(180deg,#35ef63,#1cc64b);border-bottom:4px solid #15171c}
+.shopTitle{font-size:28px;font-weight:1000;color:#fff;text-shadow:0 2px 0 #000}
+#shopClose{min-width:auto!important;margin:0!important;padding:8px 12px!important;background:#d62828!important;border:3px solid #111!important;border-radius:7px!important;font-size:16px!important}
+.shopBody{padding:14px}
+.shopSectionTitle{text-align:center;font-size:24px;font-weight:1000;color:#ffe64f;margin:0 0 12px;text-shadow:0 2px 0 #000}
+.shopCard{display:flex;align-items:center;gap:12px;padding:12px;margin:10px 0;background:linear-gradient(135deg,#60dfff,#7ef2d0);border:3px solid #17191e;border-radius:10px;box-shadow:inset 0 0 0 2px #ffffff66}
+.shopCard.vip{background:linear-gradient(135deg,#fff27a,#ffd13b)}
+.shopIcon{width:58px;height:58px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#fff8;border:3px solid #222;font-size:30px;flex:0 0 58px}
+.shopInfo{flex:1;min-width:0}
+.shopItemTitle{font-size:21px;font-weight:1000;color:#fff;text-shadow:0 2px 0 #000}
+.shopItemDesc{font-size:13px;font-weight:800;color:#1b1b1f;line-height:1.25;margin-top:3px}
+.shopBuy{min-width:70px!important;margin:0!important;padding:10px 12px!important;background:#1e9f4b!important;border:3px solid #fff!important;border-radius:9px!important;font-size:18px!important}
+.shopNote{font-size:12px;color:#d8d8dc;text-align:center;margin:12px 4px 4px;line-height:1.35}
+</style>
+
 </head><body><div id="usernameGate" class="hide"><div class="usernameCard"><h2>USERNAME</h2><input id="usernameInput" maxlength="16" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Username"><button id="usernameConfirm">CONFIRM</button><p id="usernameMessage"></p></div></div><canvas id="c"></canvas><div id="ui">
-<div id="menu" class="p"><h1>ROAD SURVIVOR</h1><p>Dodge traffic. Survive as long as you can.</p><p>Cash: <b id="cash"></b></p><button id="play">PLAY</button><br><button id="up">UPGRADES</button><button id="dealerBtn">DEALERSHIP</button><br><button id="lb">LEADERBOARD</button><button id="profileBtn">👤 PROFILE</button><button id="set">SETTINGS</button><br><button id="challengeBtn">DAILY CHALLENGES</button><button id="rewardMenuBtn">DAILY REWARD</button><p>Difficulty</p><button id="dif" class="diff">EASY</button></div>
+<div id="menu" class="p"><h1>ROAD SURVIVOR</h1><p>Dodge traffic. Survive as long as you can.</p><p>Cash: <b id="cash"></b></p><button id="play">PLAY</button><br><button id="up">UPGRADES</button><button id="dealerBtn">DEALERSHIP</button><br><button id="lb">LEADERBOARD</button><button id="profileBtn">👤 PROFILE</button><button id="shopBtn" type="button">SHOP</button><button id="set">SETTINGS</button><br><button id="challengeBtn">DAILY CHALLENGES</button><button id="rewardMenuBtn">DAILY REWARD</button><p>Difficulty</p><button id="dif" class="diff">EASY</button></div>
 
 <div id="dealership" class="p dealer hide">
   <div class="dealerTop">
@@ -2867,6 +2896,81 @@ if(rsProfileCloseBtn){
   btn.onpointerup=closeProfile;
 })();
 </script>
+
+<div id="shopScreen">
+  <div class="shopPanel">
+    <div class="shopTop">
+      <div class="shopTitle">SHOP</div>
+      <button id="shopClose" type="button" aria-label="Back">BACK</button>
+    </div>
+    <div class="shopBody">
+      <div class="shopSectionTitle">PASSES</div>
+
+      <div class="shopCard">
+        <div class="shopIcon">🚫</div>
+        <div class="shopInfo">
+          <div class="shopItemTitle">NO ADS</div>
+          <div class="shopItemDesc">Remove ads permanently.</div>
+        </div>
+        <button class="shopBuy" id="buyNoAds" type="button">$5</button>
+      </div>
+
+      <div class="shopCard vip">
+        <div class="shopIcon">👑</div>
+        <div class="shopInfo">
+          <div class="shopItemTitle">VIP</div>
+          <div class="shopItemDesc">Unlock VIP car, $100,000 bonus, and 2× points while driving the VIP car.</div>
+        </div>
+        <button class="shopBuy" id="buyVip" type="button">$5</button>
+      </div>
+
+      <div class="shopNote">Purchases are not live yet. These buttons are placeholders until real payment setup is connected.</div>
+    </div>
+  </div>
+</div>
+
+
+<script>
+(function(){
+  const shopBtn=document.getElementById('shopBtn');
+  const shop=document.getElementById('shopScreen');
+  const close=document.getElementById('shopClose');
+
+  function openShop(e){
+    if(e){e.preventDefault();e.stopPropagation();}
+    if(shop){
+      shop.style.removeProperty('display');
+      shop.style.pointerEvents='auto';
+      shop.classList.add('show');
+    }
+  }
+  function closeShop(e){
+    if(e){e.preventDefault();e.stopPropagation();}
+    if(shop){
+      shop.classList.remove('show');
+      shop.style.setProperty('display','none','important');
+      shop.style.pointerEvents='none';
+    }
+  }
+
+  if(shopBtn){
+    shopBtn.addEventListener('click',openShop);
+    shopBtn.addEventListener('pointerup',openShop);
+  }
+  if(close){
+    close.addEventListener('click',closeShop);
+    close.addEventListener('pointerup',closeShop);
+    close.addEventListener('touchend',closeShop);
+  }
+
+  // Placeholder purchase buttons until a real IAP/payment provider is connected.
+  const noAds=document.getElementById('buyNoAds');
+  const vip=document.getElementById('buyVip');
+  if(noAds) noAds.onclick=()=>alert('No Ads purchase setup is not connected yet.');
+  if(vip) vip.onclick=()=>alert('VIP purchase setup is not connected yet.');
+})();
+</script>
+
 </body></html>
 <style>
 @media (orientation:portrait){
