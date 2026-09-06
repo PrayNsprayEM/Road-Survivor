@@ -1466,6 +1466,9 @@ async function syncMyBest(d){
   }catch(e){ console.warn(e); }
 }
 
+function escapeLbName(v){
+  return String(v||'PLAYER').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+}
 async function scores(){
   const list=document.getElementById('top100List');
   const placeEl=document.getElementById('yourRankPlace');
@@ -1489,6 +1492,22 @@ async function scores(){
 
     const me=getPlayerId();
 
+    // Pull the claimed usernames for every player in this leaderboard page.
+    // This also fixes older score rows whose player_name was saved as "PLAYER".
+    let usernameMap={};
+    try{
+      const ids=[...new Set(rows.map(r=>r.player_id).filter(Boolean))];
+      if(ids.length){
+        const names=await lbRequest(
+          'player_usernames?select=player_id,username&player_id=in.('+
+          ids.map(id=>encodeURIComponent(id)).join(',')+')'
+        );
+        if(Array.isArray(names)){
+          names.forEach(n=>{if(n&&n.player_id)usernameMap[n.player_id]=n.username||'';});
+        }
+      }
+    }catch(e){console.warn('Username lookup failed',e);}
+
     if(!rows.length){
       list.innerHTML='<div class="lbRow"><span>—</span><span>NO SCORES YET</span><span class="score">—</span></div>';
       if(rankBar) rankBar.style.display='none';
@@ -1499,7 +1518,7 @@ async function scores(){
       const isMe=r.player_id===me;
       return '<div class="lbRow'+(isMe?' me':'')+'">'+
         '<span>#'+(i+1)+'</span>'+
-        '<span>'+(isMe?'YOU':'PLAYER')+'</span>'+
+        '<span>'+escapeLbName(usernameMap[r.player_id]||r.player_name||(isMe?savedUsername():'PLAYER'))+'</span>'+
         '<span class="score">'+Number(r.score||0).toLocaleString()+'</span>'+
         '</div>';
     }).join('');
