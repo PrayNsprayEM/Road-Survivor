@@ -585,7 +585,7 @@ if(!ownedCars.includes('civic'))ownedCars.unshift('civic');
 // Owner-exclusive car. It is added only on the owner's exact account.
 const OWNER_PLAYER_ID='p_mtow260f_8tsv03ysgk';
 const OWNER_USERNAME='PrayNsprayEM';
-const ownerJesko={id:'ownerjesko',name:'Koenigsegg Jesko Absolut — OWNER',price:0,hp:1600,top:304,weight:3064,drive:'RWD',zero:'2.5s',desc:'OWNER EXCLUSIVE • Purple shaded Jesko Absolut • 304 MPH'};
+const ownerJesko={id:'ownerjesko',name:'Koenigsegg Jesko Absolut — OWNER',price:0,hp:1600,top:304,weight:3064,drive:'RWD',zero:'2.5s',desc:'OWNER EXCLUSIVE • Purple shaded Jesko Absolut • 304 MPH • 15× POINTS'};
 function isRoadSurvivorOwner(){
   return getPlayerId()===OWNER_PLAYER_ID && savedUsername().toLowerCase()===OWNER_USERNAME.toLowerCase();
 }
@@ -618,7 +618,12 @@ Easy:{trafficSpeed:50,spawn:1.45,max:4,truck:.02,trailer:0,power:.0025},
 Medium:{trafficSpeed:63,spawn:1.08,max:7,truck:.06,trailer:.01,power:.0023},
 Hard:{trafficSpeed:78,spawn:.82,max:10,truck:.12,trailer:.04,power:.0021},
 Extreme:{trafficSpeed:96,spawn:.58,max:15,truck:.24,trailer:.12,power:.002}
-},scoreMult={Easy:1,Medium:1.5,Hard:2,Extreme:2.5},
+},scoreMult={Easy:1,Medium:1.5,Hard:2,Extreme:2.5};
+function carPointsMultiplier(){
+  return selectedCar==='ownerjesko'&&isRoadSurvivorOwner()?15:1;
+}
+const rsUnusedScoreMultSeparator=null,
+
 upgradeItems=[
 ['Twin Turbo',5400,'Engine'],['Supercharger',3600,'Engine'],['Large Turbo',4700,'Engine'],
 ['Sport Brakes',1300,'Brakes'],['Race Brakes',2100,'Brakes'],
@@ -1931,7 +1936,7 @@ let currentWeatherBase=Math.floor(t*10+dist)+nearMissBonus;
 let gainedWeatherBase=Math.max(0,currentWeatherBase-lastWeatherBase);
 if(weather==="It's Raining Points and Coins") weatherDoubleBonus+=gainedWeatherBase;
 lastWeatherBase=currentWeatherBase;
-score=Math.floor((currentWeatherBase+weatherDoubleBonus)*scoreMult[diff]*collectionMultiplier());updateDailyLiveProgress();spawn-=dt;
+score=Math.floor((currentWeatherBase+weatherDoubleBonus)*scoreMult[diff]*collectionMultiplier()*carPointsMultiplier());updateDailyLiveProgress();spawn-=dt;
 let c=cfg[diff];
 if(spawn<=0&&traffic.length<c.max){
 let lane=Math.floor(Math.random()*3),r=Math.random(),type='car',w=29,h=50;
@@ -2028,7 +2033,7 @@ if(xGap>=hitGap&&xGap<nearGap){
 v.nearMissAwarded=true;
 updateDailyProgress('near',1,true);
 nearMissBonus+=100;
-score=Math.floor((Math.floor(t*10+dist)+nearMissBonus+weatherDoubleBonus)*scoreMult[diff]*collectionMultiplier());
+score=Math.floor((Math.floor(t*10+dist)+nearMissBonus+weatherDoubleBonus)*scoreMult[diff]*collectionMultiplier()*carPointsMultiplier());
 nearMissUntil=performance.now()+1000;
 els.nearMissToast.textContent='NEAR MISS +100';
 els.nearMissToast.style.opacity='1';
@@ -2046,7 +2051,7 @@ if(p.type==='invis')invisibleUntil=performance.now()+5000;
 if(p.type==='nos')nosUntil=performance.now()+3000;
 if(p.type==='points'){
   nearMissBonus+=p.value;
-  score=Math.floor((Math.floor(t*10+dist)+nearMissBonus+weatherDoubleBonus)*scoreMult[diff]*collectionMultiplier());
+  score=Math.floor((Math.floor(t*10+dist)+nearMissBonus+weatherDoubleBonus)*scoreMult[diff]*collectionMultiplier()*carPointsMultiplier());
   nearMissUntil=performance.now()+1100;
   els.nearMissToast.textContent='POINTS +'+p.value.toLocaleString();
   els.nearMissToast.style.opacity='1';
