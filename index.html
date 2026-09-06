@@ -949,9 +949,15 @@ async function lbRequest(path,opts={}){
     'Content-Type':'application/json'
   },opts.headers||{});
   const res=await fetch(SUPABASE_URL+'/rest/v1/'+path,Object.assign({},opts,{headers}));
-  if(!res.ok) throw new Error('Leaderboard request failed: '+res.status);
-  if(res.status===204) return null;
-  return await res.json();
+  if(!res.ok){
+    const err=new Error('Leaderboard request failed: '+res.status);
+    err.status=res.status;
+    throw err;
+  }
+  // Supabase can return a successful 201/204 with no response body.
+  // Treat that as success instead of trying to parse empty JSON.
+  const text=await res.text();
+  return text ? JSON.parse(text) : null;
 }
 
 function savedUsername(){return localStorage.getItem('rs_username')||''}
@@ -962,11 +968,40 @@ async function claimUsername(){
  btn.disabled=true;btn.textContent='CHECKING...';
  try{
   const taken=await lbRequest('player_usernames?select=player_id,username&username=ilike.'+encodeURIComponent(username));
-  if(taken.length&&taken[0].player_id!==getPlayerId()){msg.textContent='USER TAKEN';return}
-  if(!taken.length)await lbRequest('player_usernames',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({player_id:getPlayerId(),username})});
-  localStorage.setItem('rs_username',username);document.getElementById('usernameGate').classList.add('hide');start();
- }catch(e){msg.textContent=String(e).includes('409')?'USER TAKEN':'COULD NOT CHECK USERNAME'}
- finally{btn.disabled=false;btn.textContent='CONFIRM'}
+
+  // If another player already owns it, stop here. Never let them continue.
+  if(Array.isArray(taken)&&taken.length&&taken[0].player_id!==getPlayerId()){
+    msg.textContent='NAME TAKEN';
+    return;
+  }
+
+  // If this same device already claimed it during an earlier attempt,
+  // accept it immediately.
+  if(Array.isArray(taken)&&taken.length&&taken[0].player_id===getPlayerId()){
+    localStorage.setItem('rs_username',taken[0].username||username);
+    document.getElementById('usernameGate').classList.add('hide');
+    start();
+    return;
+  }
+
+  // Otherwise claim the unused name. The database unique index is the
+  // final protection in case two players try the same name at once.
+  await lbRequest('player_usernames',{
+    method:'POST',
+    headers:{'Prefer':'return=minimal'},
+    body:JSON.stringify({player_id:getPlayerId(),username})
+  });
+
+  localStorage.setItem('rs_username',username);
+  document.getElementById('usernameGate').classList.add('hide');
+  start();
+ }catch(e){
+  if(e && e.status===409) msg.textContent='NAME TAKEN';
+  else msg.textContent='COULD NOT CHECK USERNAME';
+ }finally{
+  btn.disabled=false;
+  btn.textContent='CONFIRM';
+ }
 }
 function playWithUsername(){
  if(savedUsername()){start();return}
