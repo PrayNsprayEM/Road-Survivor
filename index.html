@@ -367,6 +367,9 @@ canvas{
 }
 </style>
 
+<style id="realisticDrivingPolish">
+#game canvas{filter:saturate(.92) contrast(1.06)}
+</style>
 </head><body><div id="usernameGate" class="hide"><div class="usernameCard"><h2>USERNAME</h2><input id="usernameInput" maxlength="16" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Username"><button id="usernameConfirm">CONFIRM</button><p id="usernameMessage"></p></div></div><canvas id="c"></canvas><div id="ui">
 <div id="menu" class="p"><h1>ROAD SURVIVOR</h1><p>Dodge traffic. Survive as long as you can.</p><p>Cash: <b id="cash"></b></p><button id="play">PLAY</button><br><button id="up">UPGRADES</button><button id="dealerBtn">DEALERSHIP</button><br><button id="lb">LEADERBOARD</button><button id="set">SETTINGS</button><br><button id="challengeBtn">DAILY CHALLENGES</button><button id="rewardMenuBtn">DAILY REWARD</button><p>Difficulty</p><button id="dif" class="diff">EASY</button></div>
 
@@ -1478,6 +1481,7 @@ function bind(id,k){
 }['left','right','gas','brake'].forEach(k=>bind(k,k));
 addEventListener('keydown',e=>{if(e.key==='ArrowLeft')keys.left=1;if(e.key==='ArrowRight')keys.right=1;if(e.key==='ArrowUp')keys.gas=1;if(e.key==='ArrowDown')keys.brake=1});
 addEventListener('keyup',e=>{if(e.key==='ArrowLeft')keys.left=0;if(e.key==='ArrowRight')keys.right=0;if(e.key==='ArrowUp')keys.gas=0;if(e.key==='ArrowDown')keys.brake=0});
+let steerSmooth=0;
 let joystickSteer=0;
 function resetJoystick(){
   joystickSteer=0;
@@ -1545,7 +1549,9 @@ let brakePower=42;
 if(player.s<target)player.s=Math.min(target,player.s+accel*dt);
 else player.s=Math.max(target,player.s-(braking?brakePower:13)*dt);
 
-let steerInput=mode==='gyro'?tilt:(mode==='joystick'?joystickSteer:(keys.right-keys.left));
+let rawSteerInput=mode==='gyro'?tilt:(mode==='joystick'?joystickSteer:(keys.right-keys.left));
+steerSmooth+=(rawSteerInput-steerSmooth)*Math.min(1,dt*9);
+let steerInput=steerSmooth;
 let speedFactor=.35+Math.min(player.s/100,1)*.75;
 let lightningSteerFactor=(weather==='Storm'&&lightningDamaged)?.70:1;
 steerVel+=(steerInput*330*speedFactor*lightningSteerFactor-steerVel)*Math.min(1,dt*(lightningDamaged?5.6:8));
