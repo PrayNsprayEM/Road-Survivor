@@ -274,6 +274,9 @@ body.upgradesOpen #upgrades{
 }
 #profileBtn::after{content:"👤";color:#fff;font-size:28px!important}
 
+
+/* Road Survivor account login */
+#accountScreen{position:fixed;inset:0;background:#0d0f14f2;z-index:1700;display:none;overflow:auto;padding:28px 18px;color:#fff;font-family:system-ui,sans-serif}#accountScreen.show{display:block}.accountCard{max-width:430px;margin:0 auto;background:#20232b;border:2px solid #ffffff33;border-radius:20px;padding:20px;box-shadow:0 12px 35px #0009}.accountCard h2{margin:0 0 6px;text-align:center}.accountHint{text-align:center;opacity:.72;font-size:13px;margin-bottom:16px}.accountCard input{box-sizing:border-box;width:100%;padding:13px 14px;margin:6px 0;border-radius:11px;border:1px solid #ffffff33;background:#111318;color:#fff;font-size:16px}.accountRow{display:flex;gap:8px;margin-top:8px}.accountRow button{flex:1}#accountMsg{min-height:22px;text-align:center;font-weight:800;font-size:13px;margin-top:8px}#accountState{text-align:center;font-weight:800;margin:10px 0}#accountOpen{width:100%;margin-top:10px}
 </style>
 <style>
 /* Racing realism polish */
@@ -2949,6 +2952,7 @@ if(rsProfileCloseBtn){
    <div class="profileScoreRow"><span>🟠 Hard</span><b id="psHard">0</b></div>
    <div class="profileScoreRow"><span>🔴 Extreme</span><b id="psExtreme">0</b></div>
   </div>
+  <button type="button" id="accountOpen">ACCOUNT / LOGIN</button>
   <button type="button" id="profileClose">BACK</button>
  </div>
 </div>
@@ -2977,6 +2981,8 @@ if(rsProfileCloseBtn){
 })();
 </script>
 
+
+<div id="accountScreen"><div class="accountCard"><h2>ROAD SURVIVOR ACCOUNT</h2><div class="accountHint">Sign in so purchases and account perks can belong to you across devices.</div><div id="accountState">NOT SIGNED IN</div><input id="accountUsername" maxlength="16" autocomplete="username" placeholder="Username (3–16)"><input id="accountEmail" type="email" autocomplete="email" placeholder="Email"><input id="accountPassword" type="password" minlength="6" autocomplete="current-password" placeholder="Password (6+ characters)"><div class="accountRow"><button id="accountSignUp" type="button">CREATE ACCOUNT</button><button id="accountSignIn" type="button">SIGN IN</button></div><button id="accountSignOut" type="button" style="width:100%;margin-top:8px;display:none">SIGN OUT</button><div id="accountMsg"></div><button id="accountBack" type="button" style="width:100%;margin-top:10px">BACK</button></div></div>
 <div id="shopScreen">
   <div class="shopPanel">
     <div class="shopTop">
@@ -3051,7 +3057,24 @@ if(rsProfileCloseBtn){
 })();
 </script>
 
-</body></html>
+<script>
+(function(){
+ const AURL=SUPABASE_URL+'/auth/v1',KEY=SUPABASE_KEY;
+ const screen=document.getElementById('accountScreen'),state=document.getElementById('accountState'),msg=document.getElementById('accountMsg'),email=document.getElementById('accountEmail'),password=document.getElementById('accountPassword'),username=document.getElementById('accountUsername'),signOut=document.getElementById('accountSignOut');
+ const headers=t=>Object.assign({'apikey':KEY,'Content-Type':'application/json'},t?{'Authorization':'Bearer '+t}:{});
+ const session=()=>{try{return JSON.parse(localStorage.getItem('rs_auth_session')||'null')}catch(e){return null}};
+ function saveSession(s){if(s&&s.access_token)localStorage.setItem('rs_auth_session',JSON.stringify(s));else localStorage.removeItem('rs_auth_session')}
+ async function auth(path,body,token){const r=await fetch(AURL+path,{method:'POST',headers:headers(token),body:body?JSON.stringify(body):undefined});let d={};try{d=await r.json()}catch(e){}if(!r.ok)throw new Error(d.msg||d.message||d.error_description||d.error||('Request failed '+r.status));return d}
+ async function upsertProfile(user,u,token){u=(u||'').trim();if(!/^[A-Za-z0-9_]{3,16}$/.test(u))throw new Error('Username must be 3–16 letters, numbers, or _.');const r=await fetch(SUPABASE_URL+'/rest/v1/user_profiles?on_conflict=id',{method:'POST',headers:{'apikey':KEY,'Authorization':'Bearer '+token,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates,return=representation'},body:JSON.stringify({id:user.id,username:u,updated_at:new Date().toISOString()})});let d=[];try{d=await r.json()}catch(e){}if(!r.ok)throw new Error(r.status===409?'Username is already taken.':'Could not save profile.');localStorage.setItem('rs_username',(d[0]&&d[0].username)||u)}
+ async function render(){const s=session(),user=s&&s.user;state.textContent=user?('SIGNED IN • '+(user.email||'')):'NOT SIGNED IN';signOut.style.display=user?'block':'none';if(user){email.value=user.email||'';password.value='';try{const r=await fetch(SUPABASE_URL+'/rest/v1/user_profiles?select=username&id=eq.'+encodeURIComponent(user.id),{headers:headers(s.access_token)}),d=await r.json();if(r.ok&&d[0]&&d[0].username){username.value=d[0].username;localStorage.setItem('rs_username',d[0].username)}}catch(e){}}}
+ function open(e){if(e){e.preventDefault();e.stopPropagation()}msg.textContent='';screen.style.removeProperty('display');screen.classList.add('show');render()}
+ function close(e){if(e){e.preventDefault();e.stopPropagation()}screen.classList.remove('show');screen.style.setProperty('display','none','important')}
+ document.getElementById('accountOpen').addEventListener('click',open);document.getElementById('accountBack').addEventListener('click',close);document.getElementById('accountBack').addEventListener('pointerup',close);
+ document.getElementById('accountSignUp').onclick=async()=>{msg.textContent='CREATING...';try{const u=username.value.trim(),em=email.value.trim(),pw=password.value;if(!/^[A-Za-z0-9_]{3,16}$/.test(u))throw new Error('Username must be 3–16 letters, numbers, or _.');if(pw.length<6)throw new Error('Password must be at least 6 characters.');const d=await auth('/signup',{email:em,password:pw,data:{username:u}});if(d.access_token&&d.user){saveSession(d);await upsertProfile(d.user,u,d.access_token);msg.textContent='ACCOUNT CREATED ✓';render()}else msg.textContent='CHECK YOUR EMAIL TO CONFIRM, THEN SIGN IN.'}catch(e){msg.textContent=(e.message||'Could not create account').toUpperCase()}};
+ document.getElementById('accountSignIn').onclick=async()=>{msg.textContent='SIGNING IN...';try{const d=await auth('/token?grant_type=password',{email:email.value.trim(),password:password.value});saveSession(d);if(username.value.trim())await upsertProfile(d.user,username.value.trim(),d.access_token);msg.textContent='SIGNED IN ✓';render()}catch(e){msg.textContent=(e.message||'Could not sign in').toUpperCase()}};
+ signOut.onclick=async()=>{const s=session();try{if(s&&s.access_token)await auth('/logout',null,s.access_token)}catch(e){}saveSession(null);msg.textContent='SIGNED OUT';render()};render();
+})();
+</script>\n</body></html>
 <style>
 @media (orientation:portrait){
   #dealerCanvas{
