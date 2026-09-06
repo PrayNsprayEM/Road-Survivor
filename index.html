@@ -582,10 +582,31 @@ const cars=[
   {id:'f458',name:'Ferrari 458',price:435000,hp:562,top:210,weight:3274,drive:'RWD',zero:'3.4s',desc:'Naturally aspirated Italian supercar'}].sort((a,b)=>a.price-b.price);
 
 if(!ownedCars.includes('civic'))ownedCars.unshift('civic');
+// Owner-exclusive car. It is added only on the owner's exact account.
+const OWNER_PLAYER_ID='p_mtow260f_8tsv03ysgk';
+const OWNER_USERNAME='PrayNsprayEM';
+const ownerJesko={id:'ownerjesko',name:'Koenigsegg Jesko Absolut — OWNER',price:0,hp:1600,top:304,weight:3064,drive:'RWD',zero:'2.5s',desc:'OWNER EXCLUSIVE • Purple shaded Jesko Absolut • 304 MPH'};
+function isRoadSurvivorOwner(){
+  return getPlayerId()===OWNER_PLAYER_ID && savedUsername().toLowerCase()===OWNER_USERNAME.toLowerCase();
+}
+if(isRoadSurvivorOwner()){
+  cars.push(ownerJesko);
+  if(!ownedCars.includes('ownerjesko')){
+    ownedCars.push('ownerjesko');
+    localStorage.setItem('ownedCars',JSON.stringify(ownedCars));
+  }
+}else{
+  ownedCars=ownedCars.filter(id=>id!=='ownerjesko');
+  if(selectedCar==='ownerjesko'){
+    selectedCar='civic';
+    localStorage.setItem('selectedCar',selectedCar);
+  }
+}
+
 
 function collectionMultiplier(){
   let highestPosition=0;
-  cars.forEach((car,index)=>{
+  cars.filter(car=>car.id!=='ownerjesko').forEach((car,index)=>{
     if(ownedCars.includes(car.id)) highestPosition=Math.max(highestPosition,index+1);
   });
   return 1 + highestPosition/10;
@@ -1101,11 +1122,11 @@ function drawDealerBody(ctx,car){
   const colors={
     civic:'#e8e8e8',mx5:'#d82834',gti:'#2c64d8',wrx:'#2878b8',mustang:'#d43a2f',a3:'#c8cbd0',
     supra:'#f4f4f4',m3:'#3e6fba',corvette:'#e6b51f',gtr:'#aeb5bc',fordgt:'#2d70db','911turbo':'#c9c9c9',
-    huracan:'#e7b916','720s':'#e96b20',f458:'#d5232a'
+    huracan:'#e7b916','720s':'#e96b20',f458:'#d5232a',ownerjesko:'#7b2cff'
   };
   const body=colors[car.id]||'#f0f0f0';
-  const sport=['supra','corvette','gtr','911turbo','huracan','720s','f458'].includes(car.id);
-  const supercar=['corvette','911turbo','huracan','720s','f458'].includes(car.id);
+  const sport=['supra','corvette','gtr','911turbo','huracan','720s','f458','ownerjesko'].includes(car.id);
+  const supercar=['corvette','911turbo','huracan','720s','f458','ownerjesko'].includes(car.id);
 
   ctx.shadowColor='rgba(0,0,0,.85)';ctx.shadowBlur=22;ctx.shadowOffsetY=13;
   ctx.fillStyle=body;ctx.beginPath();
@@ -1206,19 +1227,24 @@ function dealerUI(){
   els.dealerCash.textContent='$'+cash.toLocaleString();
   els.dealerName.textContent=car.name;
   els.dealerSpecs.innerHTML='<h3>'+car.name+'</h3>'+
-    '<b>Price: $'+car.price.toLocaleString()+'</b><br>'+
+    '<b>'+(car.id==='ownerjesko'?'👑 OWNER EXCLUSIVE':'Price: $'+car.price.toLocaleString())+'</b><br>'+
     'Horsepower: '+car.hp+' HP<br>'+
     '0–60 MPH: '+car.zero+'<br>'+
     'Top speed: '+car.top+' MPH<br>'+
     'Weight: '+car.weight.toLocaleString()+' lb<br>'+
     'Drive: '+car.drive+'<br>'+
     car.desc;
-  els.dealerBuy.textContent=isSelected?'SELECTED':(isOwned?'SELECT':'BUY $'+car.price.toLocaleString());
+  els.dealerBuy.textContent=isSelected?'SELECTED':(car.id==='ownerjesko'?'SELECT':(isOwned?'SELECT':'BUY $'+car.price.toLocaleString()));
   els.dealerBuy.style.background=isSelected?'#2f9b52':'#27a9e8';
   dealerDrawCar(car);
 }
 function dealerPurchaseOrSelect(){
   const car=cars[dealerIndex];
+  if(car.id==='ownerjesko'&&!isRoadSurvivorOwner()){
+    els.dealerBuy.textContent='OWNER ONLY';
+    setTimeout(dealerUI,900);
+    return;
+  }
   if(ownedCars.includes(car.id)){
     selectedCar=car.id;
     localStorage.setItem('selectedCar',selectedCar);if(!carUpgradeOwned[selectedCar]){carUpgradeOwned[selectedCar]=[];saveCarUpgrades()}
@@ -1867,6 +1893,10 @@ function rsKeepTrafficSeparated(dt){
 function loop(now){if(!run)return;let dt=Math.min(.035,(now-last)/1000);last=now;update(dt);rsKeepTrafficSeparated(dt);rsUpdateAudio();rsUpdateBrakeClip();draw();requestAnimationFrame(loop)}
 function update(dt){
 updateWeather(dt);
+if(selectedCar==='ownerjesko'&&!isRoadSurvivorOwner()){
+  selectedCar='civic';
+  localStorage.setItem('selectedCar',selectedCar);
+}
 const carData=cars.find(c=>c.id===selectedCar)||cars[0];
 let throttle=keys.gas?1:0,braking=keys.brake?1:0;
 let target=throttle?carData.top:8;
@@ -2039,12 +2069,12 @@ let trafficPaint=(!hero && fixedColor)?fixedColor:null;
 let bodyColors={
   civic:'#d9dde2',mx5:'#e12835',gti:'#3569ce',wrx:'#2d75b9',mustang:'#c83b30',a3:'#c3c8ce',
   supra:'#ededed',m3:'#4273ba',corvette:'#e7b326',gtr:'#aab2bb',fordgt:'#2f6ed1','911turbo':'#d0d0d0',
-  huracan:'#e4b719','720s':'#e36c24',f458:'#d3262d',
+  huracan:'#e4b719','720s':'#e36c24',f458:'#d3262d',ownerjesko:'#7b2cff',
   car:'#eceff2',sedan:'#cfd5dc',hatch:'#4da85c',sports:'#2c68d8',truck:'#d18a2e',trailer:'#dedede'
 };
 let body=trafficPaint||(bodyColors[model]||bodyColors[type]||'#ececec');
 
-const sportModels=['mx5','supra','corvette','gtr','fordgt','911turbo','huracan','720s','f458','mustang'];
+const sportModels=['mx5','supra','corvette','gtr','fordgt','911turbo','huracan','720s','f458','mustang','ownerjesko'];
 const sedanModels=['civic','wrx','m3','a3'];
 let isTrailer=type==='trailer',isTruck=type==='truck';
 let isSports=type==='sports'||sportModels.includes(model);
@@ -2083,6 +2113,7 @@ if(model==='911turbo'){nose=.30;shoulder=.46;rear=.48;roofTop=-.14;roofBot=.25;}
 if(model==='huracan'){nose=.18;shoulder=.51;rear=.47;roofTop=-.08;roofBot=.18;}
 if(model==='720s'){nose=.16;shoulder=.50;rear=.43;roofTop=-.07;roofBot=.17;}
 if(model==='f458'){nose=.18;shoulder=.49;rear=.44;roofTop=-.09;roofBot=.18;}
+if(model==='ownerjesko'){nose=.13;shoulder=.52;rear=.46;roofTop=-.06;roofBot=.16;cabin=.25;}
 if(model==='mustang'){nose=.33;shoulder=.50;rear=.49;roofTop=-.18;roofBot=.25;}
 if(isTruck){nose=.45;shoulder=.48;rear=.48;roofTop=-.18;roofBot=.30;}
 
@@ -2222,6 +2253,16 @@ if(model==='civic'){
 }
 if(model==='a3'){
   X.strokeStyle='rgba(0,0,0,.24)';X.beginPath();X.moveTo(-w*.32,-h*.28);X.lineTo(-w*.27,h*.31);X.moveTo(w*.32,-h*.28);X.lineTo(w*.27,h*.31);X.stroke();
+}
+if(model==='ownerjesko'){
+  // Owner Jesko: deep purple center shading and bright violet accents.
+  let og=X.createLinearGradient(-w*.45,0,w*.45,0);
+  og.addColorStop(0,'rgba(40,0,70,.45)');
+  og.addColorStop(.5,'rgba(205,130,255,.28)');
+  og.addColorStop(1,'rgba(35,0,65,.48)');
+  X.fillStyle=og;X.fillRect(-w*.43,-h*.45,w*.86,h*.86);
+  X.fillStyle='rgba(220,170,255,.88)';
+  X.fillRect(-w*.025,-h*.47,w*.05,h*.88);
 }
 if(model==='fordgt'){
   // Ford GT top-down signature details
