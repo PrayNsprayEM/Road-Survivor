@@ -2791,7 +2791,8 @@ function rsOpenProfile(){
   document.getElementById('psHard').textContent=rsBest('Hard').toLocaleString();
   document.getElementById('psExtreme').textContent=rsBest('Extreme').toLocaleString();
   const pscreen=document.getElementById('profileScreen');
-  pscreen.style.display='';
+  pscreen.style.removeProperty('display');
+  pscreen.style.pointerEvents='auto';
   pscreen.classList.add('show');
 }
 document.getElementById('profileBtn').addEventListener('click',rsOpenProfile);
@@ -2830,6 +2831,29 @@ if(rsProfileCloseBtn){
  </div>
 </div>
 
+<script>
+// PROFILE BACK BUTTON - robust iPhone fix
+(function(){
+  const oldBtn=document.getElementById('profileClose');
+  if(!oldBtn)return;
+  const btn=oldBtn.cloneNode(true);
+  oldBtn.parentNode.replaceChild(btn,oldBtn);
+  btn.type='button';
+
+  function closeProfile(e){
+    if(e){e.preventDefault();e.stopPropagation();}
+    const screen=document.getElementById('profileScreen');
+    if(!screen)return;
+    screen.classList.remove('show');
+    screen.style.setProperty('display','none','important');
+    screen.style.pointerEvents='none';
+  }
+
+  btn.onclick=closeProfile;
+  btn.ontouchend=closeProfile;
+  btn.onpointerup=closeProfile;
+})();
+</script>
 </body></html>
 <style>
 @media (orientation:portrait){
