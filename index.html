@@ -387,6 +387,23 @@ body{
   }
 }
 </style>
+<style>
+/* Move the main menu higher on phone screens */
+#menu{
+  top:42%!important;
+  bottom:auto!important;
+}
+@media (orientation:portrait){
+  #menu{
+    top:39%!important;
+  }
+}
+@media (orientation:landscape){
+  #menu{
+    top:50%!important;
+  }
+}
+</style>
 </head><body><canvas id="c"></canvas><div id="ui">
 <div id="menu" class="p"><h1>ROAD SURVIVOR</h1><p>Dodge traffic. Survive as long as you can.</p><p>Cash: <b id="cash"></b></p><button id="play">PLAY</button><br><button id="up">UPGRADES</button><button id="dealerBtn">DEALERSHIP</button><br><button id="lb">LEADERBOARD</button><button id="set">SETTINGS</button><p>Difficulty</p><button id="dif" class="diff">EASY</button></div>
 
