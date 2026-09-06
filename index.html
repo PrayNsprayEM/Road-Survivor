@@ -370,6 +370,14 @@ canvas{
 <style id="realisticDrivingPolish">
 #game canvas{filter:saturate(.92) contrast(1.06)}
 </style>
+
+<style id="hyperRealisticCanvas">
+#game canvas{
+  filter:saturate(.94) contrast(1.08) brightness(.98);
+  image-rendering:auto;
+}
+</style>
+
 </head><body><div id="usernameGate" class="hide"><div class="usernameCard"><h2>USERNAME</h2><input id="usernameInput" maxlength="16" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Username"><button id="usernameConfirm">CONFIRM</button><p id="usernameMessage"></p></div></div><canvas id="c"></canvas><div id="ui">
 <div id="menu" class="p"><h1>ROAD SURVIVOR</h1><p>Dodge traffic. Survive as long as you can.</p><p>Cash: <b id="cash"></b></p><button id="play">PLAY</button><br><button id="up">UPGRADES</button><button id="dealerBtn">DEALERSHIP</button><br><button id="lb">LEADERBOARD</button><button id="set">SETTINGS</button><br><button id="challengeBtn">DAILY CHALLENGES</button><button id="rewardMenuBtn">DAILY REWARD</button><p>Difficulty</p><button id="dif" class="diff">EASY</button></div>
 
@@ -2012,6 +2020,8 @@ function drawRoadsideTrees(){
 function draw(){
 X.clearRect(0,0,W,H);X.save();
 drawRealisticRoadFX();
+X.translate(cameraLean*2.2,suspensionBob);
+X.rotate(cameraLean*.0018);
 if(shake>0)X.translate((Math.random()-.5)*7*shake,(Math.random()-.5)*7*shake);
 
 let grass=X.createLinearGradient(0,0,0,H);grass.addColorStop(0,'#477c43');grass.addColorStop(1,'#244923');
@@ -2038,6 +2048,7 @@ for(let y=-40+(roadOffset%48);y<H+40;y+=48){X.fillStyle='#f7ef9a';X.fillRect(roa
 traffic.forEach(v=>{
 X.save();
 if(performance.now()<invisibleUntil)X.globalAlpha=.28;
+drawVehicleShadow(v.x,v.y,v.w,v.h);
 car(v.x,v.y,v.w,v.h,false,v.type,v.color,v.signalDir,v.signalStart);
 X.restore();
 });
@@ -2060,7 +2071,10 @@ X.save();if(performance.now()<skidUntil){
   X.quadraticCurveTo(player.x+player.w*.70,player.y+player.h*.72,player.x+player.w*.35,player.y+player.h*1.25);
   X.stroke();X.restore();
 }
+drawPlayerHeadlights();
+drawVehicleShadow(player.x,player.y,player.w,player.h);
 car(player.x,player.y,player.w,player.h,true);
+drawBrakeGlow(player.x,player.y,player.w,player.h,!!keys.brake);
 
 // Sparks shoot from the wheel areas for the rest of the active storm after a lightning hit.
 if(weather==='Storm' && lightningDamaged){
@@ -2305,6 +2319,132 @@ function drawRealisticRoadFX(){
   X.restore();
 }
 
+
+function drawHyperRealismOverlay(){
+  if(!X || !player) return;
+  const mph=Math.max(0,player.s||0);
+  const wet=(weather==='Rain'||weather==='Storm');
+
+  X.save();
+
+  // Fine asphalt aggregate, seams, repairs, and tiny road imperfections.
+  X.beginPath(); X.rect(roadX,0,roadW,H); X.clip();
+
+  for(let i=0;i<95;i++){
+    const xx=roadX+((i*137+31)%Math.max(1,roadW));
+    const yy=(i*79+roadOffset*4.7)%(H+30)-15;
+    const a=.025+(i%4)*.009;
+    X.fillStyle=`rgba(${i%2?235:10},${i%2?235:10},${i%2?235:10},${a})`;
+    X.fillRect(xx,yy,1+(i%2),1);
+  }
+
+  // Worn tire paths where real traffic repeatedly runs.
+  for(let lane=0;lane<3;lane++){
+    const cx=roadX+roadW*(lane+.5)/3;
+    const g=X.createLinearGradient(cx-28,0,cx+28,0);
+    g.addColorStop(0,'rgba(0,0,0,0)');
+    g.addColorStop(.34,'rgba(0,0,0,.035)');
+    g.addColorStop(.66,'rgba(0,0,0,.035)');
+    g.addColorStop(1,'rgba(0,0,0,0)');
+    X.fillStyle=g;
+    X.fillRect(cx-30,0,60,H);
+  }
+
+  // Asphalt repair patches that move with the road.
+  for(let i=0;i<7;i++){
+    const pw=22+(i%3)*13;
+    const ph=8+(i%2)*5;
+    const px=roadX+18+((i*109)%Math.max(30,roadW-55));
+    const py=(i*173+roadOffset*3.3)%(H+90)-45;
+    X.fillStyle='rgba(20,20,20,.12)';
+    X.fillRect(px,py,pw,ph);
+    X.strokeStyle='rgba(115,115,115,.055)';
+    X.lineWidth=1;
+    X.strokeRect(px+.5,py+.5,pw-1,ph-1);
+  }
+
+  // Small cracks.
+  X.strokeStyle='rgba(8,8,8,.15)';
+  X.lineWidth=1;
+  for(let i=0;i<8;i++){
+    const px=roadX+20+((i*97)%Math.max(30,roadW-40));
+    const py=(i*141+roadOffset*4)%(H+50)-25;
+    X.beginPath();
+    X.moveTo(px,py);
+    X.lineTo(px+5,py+7);
+    X.lineTo(px+2,py+13);
+    X.lineTo(px+8,py+20);
+    X.stroke();
+  }
+
+  // Wet-road sheen and elongated reflections during rain/storm.
+  if(wet){
+    const sheen=X.createLinearGradient(roadX,0,roadX+roadW,0);
+    sheen.addColorStop(0,'rgba(180,210,225,.025)');
+    sheen.addColorStop(.5,'rgba(230,240,245,.10)');
+    sheen.addColorStop(1,'rgba(180,210,225,.025)');
+    X.fillStyle=sheen; X.fillRect(roadX,0,roadW,H);
+
+    for(let i=0;i<13;i++){
+      const x=roadX+12+((i*73)%Math.max(20,roadW-24));
+      const y=(i*91+roadOffset*5.2)%(H+100)-50;
+      const grad=X.createLinearGradient(x,y,x,y+42);
+      grad.addColorStop(0,'rgba(225,235,245,.12)');
+      grad.addColorStop(1,'rgba(225,235,245,0)');
+      X.fillStyle=grad;
+      X.fillRect(x,y,2+(i%3),42);
+    }
+  }
+
+  X.restore();
+
+  // Peripheral motion blur grows naturally with speed.
+  if(mph>65){
+    const alpha=Math.min(.18,(mph-65)/520);
+    X.save();
+    X.globalAlpha=alpha;
+    X.strokeStyle='#e9ecef';
+    X.lineWidth=1.4;
+    for(let i=0;i<18;i++){
+      const y=(i*53+roadOffset*7)%(H+80)-40;
+      const len=12+Math.min(40,mph*.13);
+      X.beginPath();X.moveTo(roadX-5,y);X.lineTo(roadX-5,y+len);X.stroke();
+      X.beginPath();X.moveTo(roadX+roadW+5,y);X.lineTo(roadX+roadW+5,y+len);X.stroke();
+    }
+    X.restore();
+  }
+
+  // Natural camera lens vignette / exposure falloff.
+  X.save();
+  const vg=X.createRadialGradient(W*.5,H*.48,Math.min(W,H)*.24,W*.5,H*.48,Math.max(W,H)*.76);
+  vg.addColorStop(.58,'rgba(0,0,0,0)');
+  vg.addColorStop(1,'rgba(0,0,0,.16)');
+  X.fillStyle=vg; X.fillRect(0,0,W,H);
+  X.restore();
+}
+
+function drawPlayerHeadlights(){
+  if(!X || !player) return;
+  if(weather!=='Night' && weather!=='Storm' && weather!=='Fog') return;
+  X.save();
+  X.globalCompositeOperation='screen';
+  const beamLen=Math.min(H*.42,240);
+  const left=player.x-player.w*.22, right=player.x+player.w*.22;
+  [left,right].forEach(x=>{
+    const g=X.createLinearGradient(x,player.y-player.h*.35,x,player.y-beamLen);
+    g.addColorStop(0,'rgba(255,248,205,.30)');
+    g.addColorStop(1,'rgba(255,248,205,0)');
+    X.fillStyle=g;
+    X.beginPath();
+    X.moveTo(x-4,player.y-player.h*.32);
+    X.lineTo(x-38,player.y-beamLen);
+    X.lineTo(x+38,player.y-beamLen);
+    X.closePath();
+    X.fill();
+  });
+  X.restore();
+}
+
 function drawVehicleShadow(x,y,w,h){
   if(!X) return;
   X.save();
@@ -2326,7 +2466,8 @@ function drawBrakeGlow(x,y,w,h,on){
   X.fillStyle='#ff3030';
   X.fillRect(x-w*.26,y+h*.32,w*.12,5);
   X.fillRect(x+w*.14,y+h*.32,w*.12,5);
-  X.restore();
+  drawHyperRealismOverlay();
+X.restore();
 }
 
 let crashExplosionRAF=0;
