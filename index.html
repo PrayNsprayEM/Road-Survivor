@@ -404,6 +404,16 @@ canvas{
 }
 </style>
 
+
+<style>
+/* Control-mode visibility fix */
+body.rs-joystick-mode #steerControls{display:none!important}
+body.rs-joystick-mode #joystick{display:block!important}
+body.rs-buttons-mode #steerControls{display:flex!important}
+body.rs-buttons-mode #joystick{display:none!important}
+body.rs-gyro-mode #steerControls{display:none!important}
+body.rs-gyro-mode #joystick{display:none!important}
+</style>
 </head><body><div id="usernameGate" class="hide"><div class="usernameCard"><h2>USERNAME</h2><input id="usernameInput" maxlength="16" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Username"><button id="usernameConfirm">CONFIRM</button><p id="usernameMessage"></p></div></div><canvas id="c"></canvas><div id="ui">
 <div id="menu" class="p"><h1>ROAD SURVIVOR</h1><p>Dodge traffic. Survive as long as you can.</p><p>Cash: <b id="cash"></b></p><button id="play">PLAY</button><br><button id="up">UPGRADES</button><button id="dealerBtn">DEALERSHIP</button><br><button id="lb">LEADERBOARD</button><button id="profileBtn">👤 PROFILE</button><button id="set">SETTINGS</button><br><button id="challengeBtn">DAILY CHALLENGES</button><button id="rewardMenuBtn">DAILY REWARD</button><p>Difficulty</p><button id="dif" class="diff">EASY</button></div>
 
@@ -1203,6 +1213,9 @@ function modeBtn(){els.mode.textContent=mode==='buttons'?'BUTTONS':mode==='gyro'
 function controlLayout(){
   const usingButtons=mode==='buttons';
   const usingJoystick=mode==='joystick';
+
+  document.body.classList.remove('rs-buttons-mode','rs-joystick-mode','rs-gyro-mode');
+  document.body.classList.add(mode==='joystick'?'rs-joystick-mode':mode==='gyro'?'rs-gyro-mode':'rs-buttons-mode');
 
   // Only show the arrow buttons in BUTTONS mode.
   els.steerControls.style.display=usingButtons?'flex':'none';
