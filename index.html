@@ -286,8 +286,52 @@ canvas{
 .dailyDone{color:#50e27c;font-weight:1000}
 </style>
 
+
+<style>
+#dailyReward.p{
+  width:min(94%,560px);
+  max-height:calc(100% - 24px);
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+}
+.rewardGrid{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:8px;
+  margin:14px 0;
+}
+.rewardDay{
+  min-width:0;
+  border:2px solid #3c4654;
+  border-radius:12px;
+  background:#1b2028;
+  padding:10px 5px;
+}
+.rewardDay strong{display:block;font-size:12px;opacity:.75}
+.rewardDay span{display:block;margin-top:5px;font-weight:1000;color:#ffd54a}
+.rewardDay.claimed{border-color:#2ebd63;background:#173121;opacity:.72}
+.rewardDay.today{border-color:#38bdf8;box-shadow:inset 0 0 0 2px #38bdf833}
+#rewardClaim{
+  background:#2e9b4b;
+  min-width:190px;
+}
+#rewardClaim:disabled{
+  opacity:.5;
+  filter:grayscale(.5);
+}
+.rewardStatus{font-weight:900;margin:8px 0 2px}
+.rewardStreak{opacity:.78;font-size:14px}
+#rewardMenuBtn.claimable{
+  border-color:#ffd54a;
+  box-shadow:0 0 0 2px #ffd54a33;
+}
+@media(max-width:520px){
+  .rewardGrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+</style>
+
 </head><body><div id="usernameGate" class="hide"><div class="usernameCard"><h2>USERNAME</h2><input id="usernameInput" maxlength="16" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Username"><button id="usernameConfirm">CONFIRM</button><p id="usernameMessage"></p></div></div><canvas id="c"></canvas><div id="ui">
-<div id="menu" class="p"><h1>ROAD SURVIVOR</h1><p>Dodge traffic. Survive as long as you can.</p><p>Cash: <b id="cash"></b></p><button id="play">PLAY</button><br><button id="up">UPGRADES</button><button id="dealerBtn">DEALERSHIP</button><br><button id="lb">LEADERBOARD</button><button id="set">SETTINGS</button><br><button id="challengeBtn">DAILY CHALLENGES</button><p>Difficulty</p><button id="dif" class="diff">EASY</button></div>
+<div id="menu" class="p"><h1>ROAD SURVIVOR</h1><p>Dodge traffic. Survive as long as you can.</p><p>Cash: <b id="cash"></b></p><button id="play">PLAY</button><br><button id="up">UPGRADES</button><button id="dealerBtn">DEALERSHIP</button><br><button id="lb">LEADERBOARD</button><button id="set">SETTINGS</button><br><button id="challengeBtn">DAILY CHALLENGES</button><button id="rewardMenuBtn">DAILY REWARD</button><p>Difficulty</p><button id="dif" class="diff">EASY</button></div>
 
 <div id="dealership" class="p dealer hide">
   <div class="dealerTop">
@@ -381,6 +425,16 @@ canvas{
   <button id="challengeBack">BACK</button>
 </div>
 
+
+<div id="dailyReward" class="p hide">
+  <h2>DAILY REWARD</h2>
+  <div class="rewardStreak">Login streak: <b id="rewardStreak">Day 1</b></div>
+  <div id="rewardGrid" class="rewardGrid"></div>
+  <div id="rewardStatus" class="rewardStatus">Come back every day for bigger rewards.</div>
+  <button id="rewardClaim">CLAIM</button><br>
+  <button id="rewardBack">BACK</button>
+</div>
+
 <div id="settings" class="p hide"><h2>SETTINGS</h2><div class="card">Driving controls<br><button id="mode">BUTTONS</button></div><div class="card">Music <input id="music" type="range" min="0" max="100"></div><div class="card">SFX <input id="sfx" type="range" min="0" max="100"></div><div class="card">Song<br><button id="song">TRACK 1</button></div><button id="sb">BACK</button></div>
 <div id="crash" class="p hide"><h2>CRASH!</h2><p>Time: <b id="ft"></b></p><p>Distance: <b id="fd"></b></p><p>Score: <b id="fs"></b></p><p>Run earnings: <b id="earnings">$0</b></p><p>Best: <b id="fb"></b></p><button id="retry">RETRY</button><button id="cm">MENU</button><button id="cl">LEADERBOARD</button></div>
 <div id="hud" class="hide"><div id="speed" class="stat leftstat">0 MPH</div><div id="score" class="stat rightstat">0</div><div id="status" class="status"></div><div id="nearMissToast">NEAR MISS +100</div><div class="controls" id="controls"><div id="steerControls"><button class="ctrl" id="left">◀</button><button class="ctrl" id="right">▶</button></div><div id="joystick"><div id="joystickKnob"></div></div><div id="pedalControls"><button class="ctrl pedal brake" id="brake">BRAKE</button><button class="ctrl pedal gas" id="gas">GAS</button></div></div></div></div>
@@ -388,8 +442,8 @@ canvas{
 if(!CanvasRenderingContext2D.prototype.roundRect){CanvasRenderingContext2D.prototype.roundRect=function(x,y,w,h,r){this.rect(x,y,w,h);return this}};
 const C=document.getElementById('c'),X=C.getContext('2d');
 const els={
-  menu:document.getElementById('menu'),upgrades:document.getElementById('upgrades'),leader:document.getElementById('leader'),challenges:document.getElementById('challenges'),settings:document.getElementById('settings'),crash:document.getElementById('crash'),
-  cash:document.getElementById('cash'),play:document.getElementById('play'),up:document.getElementById('up'),dealerBtn:document.getElementById('dealerBtn'),lb:document.getElementById('lb'),set:document.getElementById('set'),challengeBtn:document.getElementById('challengeBtn'),challengeBack:document.getElementById('challengeBack'),dailyList:document.getElementById('dailyList'),dailyRewardTotal:document.getElementById('dailyRewardTotal'),dif:document.getElementById('dif'),
+  menu:document.getElementById('menu'),upgrades:document.getElementById('upgrades'),leader:document.getElementById('leader'),challenges:document.getElementById('challenges'),dailyReward:document.getElementById('dailyReward'),settings:document.getElementById('settings'),crash:document.getElementById('crash'),
+  cash:document.getElementById('cash'),play:document.getElementById('play'),up:document.getElementById('up'),dealerBtn:document.getElementById('dealerBtn'),lb:document.getElementById('lb'),set:document.getElementById('set'),challengeBtn:document.getElementById('challengeBtn'),challengeBack:document.getElementById('challengeBack'),dailyList:document.getElementById('dailyList'),dailyRewardTotal:document.getElementById('dailyRewardTotal'),rewardMenuBtn:document.getElementById('rewardMenuBtn'),rewardBack:document.getElementById('rewardBack'),rewardClaim:document.getElementById('rewardClaim'),rewardGrid:document.getElementById('rewardGrid'),rewardStatus:document.getElementById('rewardStatus'),rewardStreak:document.getElementById('rewardStreak'),dif:document.getElementById('dif'),
   dealership:document.getElementById('dealership'),dealerCash:document.getElementById('dealerCash'),dealerBack:document.getElementById('dealerBack'),dealerPrev:document.getElementById('dealerPrev'),dealerNext:document.getElementById('dealerNext'),dealerCanvas:document.getElementById('dealerCanvas'),dealerName:document.getElementById('dealerName'),dealerBuy:document.getElementById('dealerBuy'),dealerSpecs:document.getElementById('dealerSpecs'),
   ul:document.getElementById('ul'),ub:document.getElementById('ub'),upgrades:document.getElementById('upgrades'),upgradeCats:document.getElementById('upgradeCats'),upgradeDetail:document.getElementById('upgradeDetail'),upgradeCatBack:document.getElementById('upgradeCatBack'),upgradeCatTitle:document.getElementById('upgradeCatTitle'),upgradeCarName:document.getElementById('upgradeCarName'),scores:document.getElementById('scores'),lbback:document.getElementById('lbback'),
   mode:document.getElementById('mode'),music:document.getElementById('music'),sfx:document.getElementById('sfx'),song:document.getElementById('song'),sb:document.getElementById('sb'),
@@ -448,7 +502,7 @@ function ownedForCar(){if(!carUpgradeOwned[selectedCar])carUpgradeOwned[selected
 function saveCarUpgrades(){localStorage.setItem('carUpgradeOwned',JSON.stringify(carUpgradeOwned))}
 let activeUpgradeCategory=null;
 function resize(){W=innerWidth;H=innerHeight;C.width=W*devicePixelRatio;C.height=H*devicePixelRatio;X.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);roadW=Math.min(W*.72,520);roadX=(W-roadW)/2}addEventListener('resize',resize);resize();
-function panels(id){document.body.classList.toggle('upgradesOpen',id==='upgrades');['menu','dealership','upgrades','leader','challenges','settings','crash'].forEach(k=>els[k].classList.toggle('hide',k!==id));}
+function panels(id){document.body.classList.toggle('upgradesOpen',id==='upgrades');['menu','dealership','upgrades','leader','challenges','dailyReward','settings','crash'].forEach(k=>els[k].classList.toggle('hide',k!==id));}
 
 const DAILY_CHALLENGE_DEFS=[
   {id:'near5',type:'near',label:'Get 5 near misses',target:5,reward:1500},
@@ -497,6 +551,90 @@ function finishDailyChallenge(def,state){
 }
 function updateDailyProgress(kind,value,add=false){
   const s=loadDailyState();
+
+const DAILY_REWARDS=[500,750,1000,1500,2000,3000,5000];
+
+function rewardDateKey(d=new Date()){
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function rewardDateFromKey(key){
+  const [y,m,d]=String(key||'').split('-').map(Number);
+  return new Date(y||2000,(m||1)-1,d||1);
+}
+function dayDiff(a,b){
+  const A=new Date(a.getFullYear(),a.getMonth(),a.getDate());
+  const B=new Date(b.getFullYear(),b.getMonth(),b.getDate());
+  return Math.round((A-B)/86400000);
+}
+function loadRewardState(){
+  let s=null;
+  try{s=JSON.parse(localStorage.getItem('rs_daily_reward')||'null')}catch(e){}
+  if(!s)s={streak:0,lastClaim:'',claimedToday:false};
+  const today=rewardDateKey();
+  if(s.lastClaim===today){
+    s.claimedToday=true;
+  }else{
+    s.claimedToday=false;
+    if(s.lastClaim){
+      const gap=dayDiff(new Date(),rewardDateFromKey(s.lastClaim));
+      if(gap>1)s.streak=0;
+    }
+  }
+  s.streak=Math.max(0,Math.min(7,Number(s.streak)||0));
+  localStorage.setItem('rs_daily_reward',JSON.stringify(s));
+  return s;
+}
+function rewardUI(){
+  const s=loadRewardState();
+  const todayIndex=s.claimedToday?Math.max(0,s.streak-1):Math.min(6,s.streak);
+  els.rewardGrid.innerHTML=DAILY_REWARDS.map((amt,i)=>{
+    const claimed=i<s.streak || (s.claimedToday&&i===todayIndex);
+    const active=!s.claimedToday&&i===todayIndex;
+    return '<div class="rewardDay '+(claimed?'claimed ':'')+(active?'today':'')+'">'+
+      '<strong>DAY '+(i+1)+'</strong><span>$'+amt.toLocaleString()+'</span></div>';
+  }).join('');
+  els.rewardStreak.textContent='Day '+Math.max(1,Math.min(7,s.claimedToday?s.streak:s.streak+1));
+  if(s.claimedToday){
+    els.rewardStatus.textContent='CLAIMED TODAY ✓';
+    els.rewardClaim.textContent='CLAIMED';
+    els.rewardClaim.disabled=true;
+    els.rewardMenuBtn.classList.remove('claimable');
+  }else{
+    const amt=DAILY_REWARDS[todayIndex];
+    els.rewardStatus.textContent='Today: $'+amt.toLocaleString();
+    els.rewardClaim.textContent='CLAIM $'+amt.toLocaleString();
+    els.rewardClaim.disabled=false;
+    els.rewardMenuBtn.classList.add('claimable');
+  }
+}
+function claimDailyReward(){
+  const s=loadRewardState();
+  if(s.claimedToday)return rewardUI();
+
+  const today=new Date();
+  if(s.lastClaim){
+    const gap=dayDiff(today,rewardDateFromKey(s.lastClaim));
+    if(gap===1)s.streak=Math.min(7,s.streak+1);
+    else s.streak=1;
+  }else{
+    s.streak=1;
+  }
+
+  const rewardIndex=Math.max(0,Math.min(6,s.streak-1));
+  const amount=DAILY_REWARDS[rewardIndex];
+  cash+=amount;
+  localStorage.setItem('cash',cash);
+  cashUI();
+
+  s.lastClaim=rewardDateKey(today);
+  s.claimedToday=true;
+  localStorage.setItem('rs_daily_reward',JSON.stringify(s));
+
+  dailyToast('DAILY REWARD +$'+amount.toLocaleString());
+  rewardUI();
+}
+rewardUI();
+
   let changed=false,completed=false;
   DAILY_CHALLENGE_DEFS.forEach(def=>{
     if(def.type!==kind)return;
@@ -2240,7 +2378,7 @@ els.dealerBuy.onclick=dealerPurchaseOrSelect;
 document.querySelectorAll('.lbDiff').forEach(btn=>{
   btn.onclick=()=>{lbSelected=btn.dataset.lbdiff;scores();};
 });
-els.lb.onclick=()=>{scores();panels('leader')};els.lbback.onclick=()=>panels('menu');els.challengeBtn.onclick=()=>{dailyChallengesUI();panels('challenges')};els.challengeBack.onclick=()=>panels('menu');els.set.onclick=()=>{settingsUI();panels('settings')};els.sb.onclick=()=>{saveSettings();panels('menu')};els.cm.onclick=()=>panels('menu');els.cl.onclick=()=>{scores();panels('leader')};
+els.lb.onclick=()=>{scores();panels('leader')};els.lbback.onclick=()=>panels('menu');els.challengeBtn.onclick=()=>{dailyChallengesUI();panels('challenges')};els.challengeBack.onclick=()=>panels('menu');els.rewardMenuBtn.onclick=()=>{rewardUI();panels('dailyReward')};els.rewardBack.onclick=()=>panels('menu');els.rewardClaim.onclick=claimDailyReward;els.set.onclick=()=>{settingsUI();panels('settings')};els.sb.onclick=()=>{saveSettings();panels('menu')};els.cm.onclick=()=>panels('menu');els.cl.onclick=()=>{scores();panels('leader')};
 els.mode.onclick=async()=>{
   if(mode==='buttons'){
     const ok=await requestGyroPermission();
