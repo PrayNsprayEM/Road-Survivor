@@ -851,16 +851,17 @@ function dealerPurchaseOrSelect(){
 
 function modeBtn(){els.mode.textContent=mode==='buttons'?'BUTTONS':mode==='gyro'?'GYRO':'JOYSTICK'}
 function controlLayout(){
-  const gyro=mode==='gyro',joy=mode==='joystick';
-  els.steerControls.style.display=(gyro||joy)?'none':'block';
-  els.joystick.style.display=joy?'block':'none';
-  els.pedalControls.style.display='flex';
-  els.pedalControls.style.flexDirection='column';
-  els.pedalControls.style.gap='8px';
-  els.pedalControls.style.width='auto';
-  els.pedalControls.style.justifyContent='flex-start';
-  els.pedalControls.style.alignItems='flex-end';
-  els.controls.style.justifyContent='space-between';
+  const usingButtons=mode==='buttons';
+  const usingJoystick=mode==='joystick';
+
+  // Only show the arrow buttons in BUTTONS mode.
+  els.steerControls.style.display=usingButtons?'flex':'none';
+
+  // Only show the joystick in JOYSTICK mode.
+  els.joystick.style.display=usingJoystick?'block':'none';
+
+  // Pedals remain available in every driving mode.
+  if(els.pedalControls) els.pedalControls.style.display='flex';
 }
 
 // Background music — iPhone/Safari-safe playback.
